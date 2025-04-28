@@ -1,0 +1,96 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.4'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'org.ru'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+ext {
+    // Spring Boot
+    springBootVersion = '3.4.4'
+
+    // Database
+    postgresqlVersion = '42.7.3'
+
+    // Security
+    nimbusJoseJwtVersion = '9.31'
+
+    // AWS & Storage
+    awsSdkVersion = '2.20.0'
+    minioVersion = '8.5.17'
+
+    // Documentation
+    springdocOpenapiVersion = '2.8.6'
+
+    // Lombok
+    lombokVersion = '1.18.32'
+
+    // Testing
+    junitPlatformVersion = '1.10.2'
+
+    mapStructVersion = '1.6.0'
+}
+
+dependencies {
+    // Spring Boot Starters
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Database
+    runtimeOnly "org.postgresql:postgresql:${postgresqlVersion}"
+
+    // Security
+    implementation "com.nimbusds:nimbus-jose-jwt:${nimbusJoseJwtVersion}"
+
+    // AWS & Storage
+    implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
+    implementation "io.minio:minio:${minioVersion}"
+
+    // Documentation
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocOpenapiVersion}"
+
+    // Lombok
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+    // MapStruct
+    implementation "org.mapstruct:mapstruct:${mapStructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapStructVersion}"
+
+
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('compileJava') {
+    options.annotationProcessorPath = configurations.annotationProcessor
+    options.compilerArgs += [
+            '-Amapstruct.defaultComponentModel=spring' // Optional: Set default component model
+    ]}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

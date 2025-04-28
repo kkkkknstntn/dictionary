@@ -1,0 +1,152 @@
+package org.ru.dictionary.config;
+
+import com.nimbusds.jose.crypto.*;
+import com.nimbusds.jose.jwk.OctetSequenceKey;
+import lombok.RequiredArgsConstructor;
+import org.ru.dictionary.entity.Role;
+import org.ru.dictionary.enums.Authorities;
+import org.ru.dictionary.repository.DeactivatedTokenRepository;
+import org.ru.dictionary.repository.UserRepository;
+import org.ru.dictionary.security.TokenAuthenticationUserDetailsService;
+import org.ru.dictionary.security.filter.JwtLogoutFilter;
+import org.ru.dictionary.security.filter.RefreshTokenFilter;
+import org.ru.dictionary.security.filter.RequestJwtTokensFilter;
+import org.ru.dictionary.security.filter.JwtAuthenticationFilter;
+import org.ru.dictionary.security.jwt.access.AccessTokenJwsStringDeserializer;
+import org.ru.dictionary.security.jwt.access.AccessTokenJwsStringSerializer;
+import org.ru.dictionary.security.jwt.refresh.RefreshTokenJweStringDeserializer;
+import org.ru.dictionary.security.jwt.refresh.RefreshTokenJweStringSerializer;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.ExceptionTranslationFilter;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+@Configuration
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final TokenAuthenticationUserDetailsService tokenAuthenticationUserDetailsService;
+
+    @Value("${jwt.access-token-key}")
+    private String accessTokenKey;
+
+    @Value("${jwt.refresh-token-key}")
+    private String refreshTokenKey;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        var authenticationProvider = new PreAuthenticatedAuthenticationProvider();
+        authenticationProvider.setPreAuthenticatedUserDetailsService(tokenAuthenticationUserDetailsService);
+
+        return new ProviderManager(authenticationProvider);
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return username -> userRepository.findByUsername(username)
+                .map(user -> User.builder()
+                        .username(user.getUsername())
+                        .password(user.getPassword())
+                        .authorities(user.getRoles().stream()
+                                .map(Role::getName)
+                                .map(SimpleGrantedAuthority::new)
+                                .toList())
+                        .build())
+                .orElseThrow(() -> new UsernameNotFoundException("User '" + username + "' not found"));
+    }
+
+    @Bean
+    public RequestJwtTokensFilter requestJwtTokensFilter(UserDetailsService userDetailsService) throws Exception {
+        var filter = new RequestJwtTokensFilter();
+        filter.setUserDetailsService(userDetailsService);
+        filter.setPasswordEncoder(passwordEncoder());
+        filter.setAccessTokenStringSerializer(new AccessTokenJwsStringSerializer(
+                new MACSigner(OctetSequenceKey.parse(accessTokenKey))
+        ));
+        filter.setRefreshTokenStringSerializer(new RefreshTokenJweStringSerializer(
+                new DirectEncrypter(OctetSequenceKey.parse(refreshTokenKey))
+        ));
+        return filter;
+    }
+
+    @Bean
+    public RefreshTokenFilter refreshTokenFilter() throws Exception {
+        var filter = new RefreshTokenFilter();
+        filter.setAccessTokenStringSerializer(new AccessTokenJwsStringSerializer(
+                new MACSigner(OctetSequenceKey.parse(accessTokenKey))
+        ));
+        return filter;
+    }
+
+    @Bean
+    @Order(1)
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   AuthenticationManager authenticationManager,
+                                                   RequestJwtTokensFilter requestJwtTokensFilter,
+                                                   DeactivatedTokenRepository deactivatedTokenRepository,
+                                                   RefreshTokenFilter refreshTokenFilter) throws Exception {
+
+        var jwtAuthenticationFilter = new JwtAuthenticationFilter(
+                new AccessTokenJwsStringDeserializer(new MACVerifier(OctetSequenceKey.parse(accessTokenKey))),
+                new RefreshTokenJweStringDeserializer(new DirectDecrypter(OctetSequenceKey.parse(refreshTokenKey))),
+                authenticationManager
+        );
+
+        var authenticationProvider = new PreAuthenticatedAuthenticationProvider();
+        authenticationProvider.setPreAuthenticatedUserDetailsService(tokenAuthenticationUserDetailsService);
+
+        var jwtLogoutFilter = new JwtLogoutFilter(deactivatedTokenRepository);
+
+        return http
+                .securityMatcher("/api/**")
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/**")
+                )
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers(new AntPathRequestMatcher("/jwt/tokens", "POST")))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider)
+                .addFilterAfter(requestJwtTokensFilter, ExceptionTranslationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, CsrfFilter.class)
+                .addFilterAfter(refreshTokenFilter, ExceptionTranslationFilter.class)
+                .addFilterAfter(jwtLogoutFilter, ExceptionTranslationFilter.class)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/words").hasAuthority(Authorities.ROLE_USER.name())
+                        .anyRequest().authenticated())
+                .build();
+    }
+
+    @Bean
+    @Order(2)
+    public SecurityFilterChain permitAllSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher("/api/users")
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(authz -> authz.anyRequest().permitAll())
+                .build();
+    }
+}

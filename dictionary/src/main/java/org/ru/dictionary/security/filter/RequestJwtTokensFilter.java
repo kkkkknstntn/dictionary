@@ -1,0 +1,94 @@
+package org.ru.dictionary.security.filter;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.ru.dictionary.security.Token;
+import org.ru.dictionary.security.Tokens;
+import org.ru.dictionary.security.access.DefaultAccessTokenFactory;
+import org.ru.dictionary.security.refresh.DefaultRefreshTokenFactory;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.function.Function;
+
+@Setter
+@Slf4j
+public class RequestJwtTokensFilter extends OncePerRequestFilter {
+
+    private RequestMatcher requestMatcher = new AntPathRequestMatcher("/jwt/tokens", HttpMethod.POST.name());
+
+    private Function<Authentication, Token> refreshTokenFactory = new DefaultRefreshTokenFactory();
+
+    private Function<Token, Token> accessTokenFactory = new DefaultAccessTokenFactory();
+
+    private Function<Token, String> refreshTokenStringSerializer = Object::toString;
+
+    private Function<Token, String> accessTokenStringSerializer = Object::toString;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    private UserDetailsService userDetailsService;
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        if (requestMatcher.matches(request)) {
+            try {
+                    JsonNode jsonNode = objectMapper.readTree(request.getInputStream());
+                    String username = jsonNode.get("username").asText();
+                    String password = jsonNode.get("password").asText();
+
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                    if (!passwordEncoder.matches(password, userDetails.getPassword())) {
+                        throw new BadCredentialsException("Invalid password");
+                    }
+
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+
+
+                    var refreshToken = this.refreshTokenFactory.apply(authentication);
+                    var accessToken = this.accessTokenFactory.apply(refreshToken);
+
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    objectMapper.writeValue(response.getWriter(), new Tokens(
+                            accessTokenStringSerializer.apply(accessToken),
+                            accessToken.expiresAt().toString(),
+                            refreshTokenStringSerializer.apply(refreshToken),
+                            refreshToken.expiresAt().toString()));
+                            return;
+
+            } catch (IOException e) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid request format");
+            } catch (UsernameNotFoundException | BadCredentialsException e) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed");
+            } catch (Exception e) {
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+            }
+            return;
+        }
+        filterChain.doFilter(request, response);
+    }
+
+}
+
