@@ -24,4 +24,7 @@ public class Word {
 
     @Column(name = "videoPath")
     private String videoPath;
+
+    @Column(name = "imagePath")
+    private String imagePath;
 }

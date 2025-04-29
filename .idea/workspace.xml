@@ -4,7 +4,57 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="707c0f13-9a20-4185-8440-364aff6fb4e4" name="Changes" comment="" />
+    <list default="true" id="707c0f13-9a20-4185-8440-364aff6fb4e4" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/controller/LearningController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/dto/AnswerResultDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/dto/AnswerSubmissionDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/dto/LearningMaterialDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/dto/course/CourseRequestDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/dto/course/CourseResponseDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/dto/level/LevelResponseDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/dto/word/WordResponseDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/enums/LearningType.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/mapper/CourseMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/mapper/WordMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/repository/LevelRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/repository/ProgressRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/service/LearningService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/service/ProgressService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/validation/ValidationGroups.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/1249" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/1249" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/1259" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/1259" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/16445" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/16445" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2579" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2579" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2606" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2606" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2608" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2608" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2658" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2658" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2659" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2659" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2664" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2664" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2665" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2665" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2666" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2666" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2667" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2667" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2673" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2673" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2674" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/base/16384/2674" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/global/pg_control" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/global/pg_control" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/pg_wal/000000010000000000000001" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/pg_wal/000000010000000000000001" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/postgres_data/pg_xact/0000" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/postgres_data/pg_xact/0000" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/controller/WordController.java" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/controller/WordController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/dto/User/UserRequestDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/dto/user/UserRequestDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/dto/User/UserResponseDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/dto/user/UserResponseDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/entity/Progress.java" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/entity/Progress.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/entity/Role.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/entity/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/entity/Word.java" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/entity/Word.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/mapper/UserMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/mapper/UserMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/repository/RoleRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/security/Token.java" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/security/Token.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/service/WordServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/dictionary/src/main/java/org/ru/dictionary/service/WordServiceImpl.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -55,6 +105,21 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;kkkkknstntn&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:kkkkknstntn/dictionary.git&quot;,
+    &quot;accountId&quot;: &quot;e459abf7-114c-4b64-b290-fecd30026548&quot;
+  }
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 0
 }</component>
@@ -63,29 +128,30 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Gradle.Build dictionary.executor": "Run",
-    "Gradle.dictionary [build].executor": "Run",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "Spring Boot.DictionaryApplication.executor": "Run",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Gradle.Build dictionary.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.dictionary [build].executor&quot;: &quot;Run&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;Spring Boot.DictionaryApplication.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "postgresql"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Spring Boot.DictionaryApplication">
     <configuration name="dictionary [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
@@ -139,7 +205,7 @@
       <option name="presentableId" value="Default" />
       <updated>1744048071428</updated>
       <workItem from="1744048072407" duration="23278000" />
-      <workItem from="1745757332041" duration="42559000" />
+      <workItem from="1745757332041" duration="43999000" />
     </task>
     <servers />
   </component>

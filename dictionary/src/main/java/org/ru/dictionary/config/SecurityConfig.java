@@ -3,7 +3,6 @@ package org.ru.dictionary.config;
 import com.nimbusds.jose.crypto.*;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import lombok.RequiredArgsConstructor;
-import org.ru.dictionary.entity.Role;
 import org.ru.dictionary.enums.Authorities;
 import org.ru.dictionary.repository.DeactivatedTokenRepository;
 import org.ru.dictionary.repository.UserRepository;
@@ -22,7 +21,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -36,7 +34,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.csrf.CsrfFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @RequiredArgsConstructor
@@ -70,7 +67,7 @@ public class SecurityConfig {
                         .username(user.getUsername())
                         .password(user.getPassword())
                         .authorities(user.getRoles().stream()
-                                .map(Role::getName)
+                                .map(Authorities::name)
                                 .map(SimpleGrantedAuthority::new)
                                 .toList())
                         .build())
@@ -124,8 +121,6 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**")
                 )
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(new AntPathRequestMatcher("/jwt/tokens", "POST")))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
@@ -134,7 +129,9 @@ public class SecurityConfig {
                 .addFilterAfter(refreshTokenFilter, ExceptionTranslationFilter.class)
                 .addFilterAfter(jwtLogoutFilter, ExceptionTranslationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/words").hasAuthority(Authorities.ROLE_USER.name())
+//                        .requestMatchers("/api/words").hasAuthority(Authorities.ROLE_USER.name())
+                        .requestMatchers("/api/words").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
                 .build();
     }

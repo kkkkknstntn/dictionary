@@ -18,10 +18,11 @@ public class WordServiceImpl {
     private final S3Service s3Service;
 
     public Word addWord(String wordText, String definition,
-                        MultipartFile audioFile, MultipartFile videoFile) throws Exception {
+                        MultipartFile audioFile, MultipartFile videoFile, MultipartFile image) throws Exception {
 
         String audioUrl = null;
         String videoUrl = null;
+        String imageUrl = null;
 
         if (audioFile != null && !audioFile.isEmpty()) {
             audioUrl = s3Service.uploadFile(audioFile);
@@ -31,11 +32,16 @@ public class WordServiceImpl {
             videoUrl = s3Service.uploadFile(videoFile);
         }
 
+        if (image != null && !image.isEmpty()) {
+            imageUrl = s3Service.uploadFile(image);
+        }
+
         Word word = new Word();
         word.setWord(wordText);
         word.setDefinition(definition);
         word.setAudioPath(audioUrl);
         word.setVideoPath(videoUrl);
+        word.setImagePath(imageUrl);
         log.info("Adding word: {}", word);
         return wordRepository.save(word);
     }

@@ -32,7 +32,7 @@ import java.util.function.Function;
 @Slf4j
 public class RequestJwtTokensFilter extends OncePerRequestFilter {
 
-    private RequestMatcher requestMatcher = new AntPathRequestMatcher("/jwt/tokens", HttpMethod.POST.name());
+    private RequestMatcher requestMatcher = new AntPathRequestMatcher("/api/login", HttpMethod.POST.name());
 
     private Function<Authentication, Token> refreshTokenFactory = new DefaultRefreshTokenFactory();
 

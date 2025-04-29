@@ -28,11 +28,12 @@ public class WordController {
             @RequestParam String word,
             @RequestParam String definition,
             @RequestParam(value = "audioFile", required = false) MultipartFile audioFile,
-            @RequestParam(value = "videoFile", required = false) MultipartFile videoFile
+            @RequestParam(value = "videoFile", required = false) MultipartFile videoFile,
+            @RequestParam(value = "image", required = false) MultipartFile image
     ) throws Exception {
         System.out.println(word);
         System.out.println(definition);
-        Word savedWord = wordService.addWord(word, definition, audioFile, videoFile);
+        Word savedWord = wordService.addWord(word, definition, audioFile, videoFile, image);
         return ResponseEntity.ok(savedWord);
     }
 }

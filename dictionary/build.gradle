@@ -1,7 +1,8 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.4'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '3.2.5'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'io.freefair.lombok' version '8.6'
 }
 
 group = 'org.ru'
@@ -24,73 +25,69 @@ configurations {
 }
 
 ext {
-    // Spring Boot
-    springBootVersion = '3.4.4'
-
-    // Database
+    springBootVersion = '3.2.5'
     postgresqlVersion = '42.7.3'
-
-    // Security
-    nimbusJoseJwtVersion = '9.31'
-
-    // AWS & Storage
-    awsSdkVersion = '2.20.0'
+    nimbusJoseJwtVersion = '9.37'
+    awsSdkVersion = '2.25.53'
     minioVersion = '8.5.17'
-
-    // Documentation
-    springdocOpenapiVersion = '2.8.6'
-
-    // Lombok
+    springdocVersion = '2.3.0'
     lombokVersion = '1.18.32'
-
-    // Testing
-    junitPlatformVersion = '1.10.2'
-
-    mapStructVersion = '1.6.0'
+    mapStructVersion = '1.5.5.Final'
+    testContainersVersion = '1.19.7'
 }
 
 dependencies {
-    // Spring Boot Starters
-    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation "org.springframework.boot:spring-boot-starter-data-elasticsearch"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+    implementation "org.springframework.boot:spring-boot-starter-data-redis"
+    implementation "org.springframework.boot:spring-boot-starter-security"
+    implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation "org.springframework.boot:spring-boot-starter-validation" // Добавлено для валидации
 
-    // Database
     runtimeOnly "org.postgresql:postgresql:${postgresqlVersion}"
 
-    // Security
     implementation "com.nimbusds:nimbus-jose-jwt:${nimbusJoseJwtVersion}"
 
-    // AWS & Storage
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
     implementation "io.minio:minio:${minioVersion}"
 
-    // Documentation
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocOpenapiVersion}"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
 
-    // Lombok
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-
-    // MapStruct
     implementation "org.mapstruct:mapstruct:${mapStructVersion}"
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapStructVersion}"
 
-
-    // Testing
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "org.springframework.security:spring-security-test"
+    testImplementation "org.testcontainers:junit-jupiter:${testContainersVersion}"
+    testImplementation "org.testcontainers:postgresql:${testContainersVersion}"
+    testImplementation "org.testcontainers:elasticsearch:${testContainersVersion}"
 }
 
 tasks.named('compileJava') {
     options.annotationProcessorPath = configurations.annotationProcessor
     options.compilerArgs += [
-            '-Amapstruct.defaultComponentModel=spring' // Optional: Set default component model
-    ]}
+            '-Amapstruct.defaultComponentModel=spring',
+            '-Amapstruct.unmappedTargetPolicy=IGNORE'
+    ]
+}
 
 tasks.named('test') {
     useJUnitPlatform()
+    systemProperty 'spring.profiles.active', 'test'
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.deprecation = true
+    options.incremental = true
+}
+
+// plugins.apply('checkstyle')
+// plugins.apply('pmd')
+
+// plugins.apply('jacoco')

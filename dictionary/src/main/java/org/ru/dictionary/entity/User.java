@@ -2,6 +2,10 @@ package org.ru.dictionary.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.ru.dictionary.enums.Authorities;
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -18,6 +22,14 @@ public class User {
 
     private String password;
 
-    @ManyToMany
-    private Set<Role> roles;
+    private LocalDateTime createdAt;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id")
+    )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private Set<Authorities> roles = new HashSet<>();
 }
