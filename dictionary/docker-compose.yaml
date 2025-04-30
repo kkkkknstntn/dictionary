@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: dict_db
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     ports:
       - '5432:5432'
   minio:
@@ -24,3 +24,6 @@ services:
       MINIO_ROOT_PASSWORD: 'minioadmin'
       MINIO_ADDRESS: ':9000'
       MINIO_CONSOLE_ADDRESS: ':9001'
+
+volumes:
+  pgdata:

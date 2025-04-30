@@ -75,17 +75,6 @@ public class OpenApiConfig {
                                                         new Operation()
                                                                 .tags(Collections.singletonList("Authentication"))
                                                                 .summary("Refresh access token")
-                                                                .requestBody(new RequestBody()
-                                                                        .content(new Content()
-                                                                                .addMediaType("application/json",
-                                                                                        new MediaType().schema(new Schema()
-                                                                                                .type("object")
-                                                                                                .addProperties("refreshToken",
-                                                                                                        new Schema().type("string"))
-                                                                                        )
-                                                                                )
-                                                                        )
-                                                                )
                                                                 .responses(new ApiResponses()
                                                                         .addApiResponse("200", new ApiResponse()
                                                                                 .description("Success. Returns new access token"))

@@ -14,4 +14,5 @@ public class WordResponseDTO {
     private String imagePath;
     private String audioPath;
     private String videoPath;
+    private boolean activeForTesting;
 }

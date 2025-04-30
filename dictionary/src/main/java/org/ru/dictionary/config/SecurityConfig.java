@@ -98,7 +98,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(1)
+    @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    AuthenticationManager authenticationManager,
                                                    RequestJwtTokensFilter requestJwtTokensFilter,
@@ -137,7 +137,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(2)
+    @Order(1)
     public SecurityFilterChain permitAllSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/api/users")

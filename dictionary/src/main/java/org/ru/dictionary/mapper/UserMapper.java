@@ -3,7 +3,6 @@ package org.ru.dictionary.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-
 import org.ru.dictionary.dto.user.UserRequestDTO;
 import org.ru.dictionary.dto.user.UserResponseDTO;
 import org.ru.dictionary.entity.User;
@@ -18,13 +17,13 @@ public abstract class UserMapper {
     @Mapping(target = "roles", source = "roles", qualifiedByName = "rolesToAuthorities")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    abstract User toEntity(UserRequestDTO dto);
+    public abstract User toEntity(UserRequestDTO dto);
 
     @Mapping(target = "roles", source = "roles", qualifiedByName = "authoritiesToRoles")
     public abstract UserResponseDTO toResponseDTO(User user);
 
     @Named("rolesToAuthorities")
-    public Set<Authorities> mapRolesToAuthorities(Set<String> roles) {
+    public Set<Authorities> rolesToAuthorities(Set<String> roles) {
         return roles.stream()
                 .map(role -> {
                     try {
@@ -37,7 +36,7 @@ public abstract class UserMapper {
     }
 
     @Named("authoritiesToRoles")
-    public Set<String> mapAuthoritiesToRoles(Set<Authorities> authorities) {
+    public Set<String> authoritiesToRoles(Set<Authorities> authorities) {
         return authorities.stream()
                 .map(Enum::name)
                 .collect(Collectors.toSet());

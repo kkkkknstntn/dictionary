@@ -1,7 +1,10 @@
 package org.ru.dictionary.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -11,9 +14,11 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
-@Table(name = "courses",
-        indexes = @Index(columnList = "author_id"))
+@Table(indexes = @Index(columnList = "author_id"))
 @Data
+@NoArgsConstructor
+@Builder
+@AllArgsConstructor
 public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

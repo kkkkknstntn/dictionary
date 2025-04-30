@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "levels")
+@Table
 @Data
 public class Level {
     @Id
@@ -23,11 +23,7 @@ public class Level {
 
     private int orderNumber;
 
-    @ManyToMany
-    @JoinTable(
-            name = "level_words",
-            joinColumns = @JoinColumn(name = "level_id"),
-            inverseJoinColumns = @JoinColumn(name = "word_id")
-    )
+    @OneToMany(mappedBy = "level", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orderNumber ASC")
     private Set<Word> words = new HashSet<>();
 }

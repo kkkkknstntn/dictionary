@@ -1,13 +1,17 @@
 package org.ru.dictionary.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 @Data
 @RequiredArgsConstructor
 @Entity
-@Table(name = "word")
+@Table
+@Builder
+@AllArgsConstructor
 public class Word {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -27,4 +31,13 @@ public class Word {
 
     @Column(name = "imagePath")
     private String imagePath;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "level_id", nullable = false)
+    private Level level;
+
+    @Column(name = "active_for_testing", columnDefinition = "boolean default true")
+    private boolean activeForTesting = true;
+
+    private Integer orderNumber;
 }

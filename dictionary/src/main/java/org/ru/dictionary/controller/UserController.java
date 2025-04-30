@@ -1,10 +1,9 @@
 package org.ru.dictionary.controller;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.ru.dictionary.dto.user.UserRequestDTO;
 import org.ru.dictionary.dto.user.UserResponseDTO;
-import org.ru.dictionary.service.UserService;
+import org.ru.dictionary.service.UserServiceImpl;
 import org.ru.dictionary.validation.ValidationGroups;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -15,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 @RequiredArgsConstructor
 public class UserController {
-    private final UserService userService;
+    private final UserServiceImpl userService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
