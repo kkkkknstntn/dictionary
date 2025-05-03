@@ -45,10 +45,9 @@ public class UserServiceImpl implements UserService {
 
         User user = new User();
         user.setUsername(request.getUsername());
+        user.getRoles().add(Authorities.ROLE_USER);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        Optional.ofNullable(request.getRoles())
-                .ifPresent(roles -> user.setRoles(getRolesFromNames(roles)));
 
         return userMapper.toResponseDTO(userRepository.save(user));
     }
@@ -64,8 +63,6 @@ public class UserServiceImpl implements UserService {
         Optional.ofNullable(dto.getUsername()).ifPresent(user::setUsername);
         Optional.ofNullable(dto.getPassword())
                 .ifPresent(pass -> user.setPassword(passwordEncoder.encode(pass)));
-        Optional.ofNullable(dto.getRoles())
-                .ifPresent(roles -> user.setRoles(getRolesFromNames(roles)));
 
         return userMapper.toResponseDTO(userRepository.save(user));
     }

@@ -53,7 +53,6 @@ public class CourseServiceImpl implements CourseService {
 
         Course course = courseMapper.toEntity(dto);
         course.setAuthor(author);
-        course.setParticipants(resolveParticipants(dto.getParticipantIds()));
 
         return courseMapper.toResponseDTO(courseRepository.save(course));
     }
@@ -67,7 +66,6 @@ public class CourseServiceImpl implements CourseService {
         checkAuthorOrAdmin(course, userDetails);
 
         courseMapper.updateFromDto(dto, course);
-        course.setParticipants(resolveParticipants(dto.getParticipantIds()));
 
         return courseMapper.toResponseDTO(courseRepository.save(course));
     }

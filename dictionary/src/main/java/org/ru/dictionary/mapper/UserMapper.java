@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public abstract class UserMapper {
 
-    @Mapping(target = "roles", source = "roles", qualifiedByName = "rolesToAuthorities")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     public abstract User toEntity(UserRequestDTO dto);
