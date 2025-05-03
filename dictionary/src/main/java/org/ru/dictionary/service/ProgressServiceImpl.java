@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProgressServiceImpl {
 
     private final ProgressRepository progressRepository;
-    private final UserRepository userRepository;
     private final WordRepository wordRepository;
 
     @Transactional

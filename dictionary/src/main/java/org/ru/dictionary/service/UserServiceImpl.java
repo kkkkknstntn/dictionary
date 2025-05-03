@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,6 +25,13 @@ public class UserServiceImpl {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+
+    public List<UserResponseDTO> getAllUsers() {
+
+        return userRepository.findAll().stream()
+                .map(userMapper::toResponseDTO)
+                .toList();
+    }
 
     @Transactional
     public UserResponseDTO createUser(UserRequestDTO request) {

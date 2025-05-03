@@ -9,7 +9,6 @@ import org.ru.dictionary.mapper.LevelMapper;
 import org.ru.dictionary.repository.CourseRepository;
 import org.ru.dictionary.repository.LevelRepository;
 import org.springframework.data.elasticsearch.ResourceNotFoundException;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +30,7 @@ public class LevelServiceImpl {
         Course course = courseRepository.findById(dto.getCourseId())
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
 
-        courseService.checkAuthor(course, userDetails);
+        courseService.checkAuthorOrAdmin(course, userDetails);
 
         Level level = levelMapper.toEntity(dto);
         level.setCourse(course);
@@ -57,7 +56,7 @@ public class LevelServiceImpl {
         Level level = levelRepository.findById(levelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Level not found"));
 
-        courseService.checkAuthor(level.getCourse(), userDetails);
+        courseService.checkAuthorOrAdmin(level.getCourse(), userDetails);
 
         levelMapper.updateFromDto(dto, level);
         return levelMapper.toResponseDTO(levelRepository.save(level));
@@ -68,7 +67,7 @@ public class LevelServiceImpl {
         Level level = levelRepository.findById(levelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Level not found"));
 
-        courseService.checkAuthor(level.getCourse(), userDetails);
+        courseService.checkAuthorOrAdmin(level.getCourse(), userDetails);
 
         levelRepository.delete(level);
         reorderLevelsAfterDeletion(level.getCourse());

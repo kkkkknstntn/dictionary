@@ -20,4 +20,8 @@ public class WordRequestDTO {
     private Long levelId;
 
     private boolean activeForTesting = true;
+
+    private MultipartFile audioFile;
+    private MultipartFile videoFile;
+    private MultipartFile imageFile;
 }

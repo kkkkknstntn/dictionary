@@ -5,6 +5,7 @@ import org.ru.dictionary.dto.course.CourseRequestDTO;
 import org.ru.dictionary.dto.course.CourseResponseDTO;
 import org.ru.dictionary.entity.Course;
 import org.ru.dictionary.entity.User;
+import org.ru.dictionary.enums.Authorities;
 import org.ru.dictionary.mapper.CourseMapper;
 import org.ru.dictionary.repository.CourseRepository;
 import org.ru.dictionary.repository.UserRepository;
@@ -27,9 +28,16 @@ public class CourseServiceImpl {
     private final UserRepository userRepository;
     private final CourseMapper courseMapper;
 
-    public void checkAuthor(Course course, UserDetails userDetails) {
-        if (!course.getAuthor().getUsername().equals(userDetails.getUsername())) {
-            throw new AccessDeniedException("Only course author can modify the course");
+
+    public void checkAuthorOrAdmin(Course course, UserDetails userDetails) {
+
+        boolean isAuthor = course.getAuthor().getUsername().equals(userDetails.getUsername());
+
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals(Authorities.ROLE_ADMIN.name()));
+
+        if (!isAuthor && !isAdmin) {
+            throw new AccessDeniedException("Access denied: you are not allowed to modify this course");
         }
     }
 
@@ -50,7 +58,7 @@ public class CourseServiceImpl {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
 
-        checkAuthor(course, userDetails);
+        checkAuthorOrAdmin(course, userDetails);
 
         courseMapper.updateFromDto(dto, course);
         course.setParticipants(resolveParticipants(dto.getParticipantIds()));
@@ -76,7 +84,7 @@ public class CourseServiceImpl {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
 
-        checkAuthor(course, userDetails);
+        checkAuthorOrAdmin(course, userDetails);
 
         courseRepository.delete(course);
     }
@@ -88,5 +96,19 @@ public class CourseServiceImpl {
                 .map(id -> userRepository.findById(id)
                         .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id)))
                 .collect(Collectors.toSet());
+    }
+
+    @Transactional
+    public void joinCourse(Long courseId, UserDetails userDetails) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
+
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!course.getParticipants().contains(user)) {
+            course.getParticipants().add(user);
+            courseRepository.save(course);
+        }
     }
 }

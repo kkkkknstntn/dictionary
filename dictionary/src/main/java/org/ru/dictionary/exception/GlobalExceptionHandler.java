@@ -1,13 +1,16 @@
 package org.ru.dictionary.exception;
 
+import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.ru.dictionary.enums.BusinessErrorCodes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashSet;
@@ -23,6 +26,18 @@ public class GlobalExceptionHandler {
                         new ExceptionResponse(
                                 BusinessErrorCodes.INVALID_TOKEN.getCode(),
                                 BusinessErrorCodes.INVALID_TOKEN.getDescription(),
+                                exp.getMessage()
+                        )
+                );
+    }
+
+    @ExceptionHandler(FileUploadException.class)
+    public ResponseEntity<ExceptionResponse> handleFileUploadException(FileUploadException exp) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(
+                        new ExceptionResponse(
+                               null,
+                                null,
                                 exp.getMessage()
                         )
                 );

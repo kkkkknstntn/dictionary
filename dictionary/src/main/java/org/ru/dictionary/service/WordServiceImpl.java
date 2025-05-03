@@ -13,7 +13,6 @@ import org.springframework.data.elasticsearch.ResourceNotFoundException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,36 +29,24 @@ public class WordServiceImpl {
     private final S3Service s3Service;
 
     @Transactional
-    public WordResponseDTO createWord(String word, String definition, Long levelId, UserDetails userDetails, MultipartFile audioFile, MultipartFile videoFile, MultipartFile imageFile) throws IOException {
-        Level level = levelRepository.findById(levelId)
+    public WordResponseDTO createWord(WordRequestDTO dto, UserDetails userDetails) throws IOException {
+        Level level = levelRepository.findById(dto.getLevelId())
                 .orElseThrow(() -> new ResourceNotFoundException("Level not found"));
 
-        courseService.checkAuthor(level.getCourse(), userDetails);
+        courseService.checkAuthorOrAdmin(level.getCourse(), userDetails);
 
-        String audioUrl = null;
-        String videoUrl = null;
-        String imageUrl = null;
+        String audioUrl = dto.getAudioFile() != null && !dto.getAudioFile().isEmpty() ?
+                s3Service.uploadFile(dto.getAudioFile()) : null;
 
-        if (audioFile != null && !audioFile.isEmpty()) {
-            audioUrl = s3Service.uploadFile(audioFile);
-        }
+        String videoUrl = dto.getVideoFile() != null && !dto.getVideoFile().isEmpty() ?
+                s3Service.uploadFile(dto.getVideoFile()) : null;
 
-        if (videoFile != null && !videoFile.isEmpty()) {
-            videoUrl = s3Service.uploadFile(videoFile);
-        }
+        String imageUrl = dto.getImageFile() != null && !dto.getImageFile().isEmpty() ?
+                s3Service.uploadFile(dto.getImageFile()) : null;
 
-        if (imageFile != null && !imageFile.isEmpty()) {
-            imageUrl = s3Service.uploadFile(imageFile);
-        }
+        Integer lastOrderNumber = wordRepository.findTopByLevelIdOrderByOrderNumberDesc(dto.getLevelId()).map(Word::getOrderNumber).orElse(0);
 
-        Word newWord = Word.builder()
-                .word(word)
-                .level(level)
-                .definition(definition)
-                .audioPath(audioUrl)
-                .videoPath(videoUrl)
-                .imagePath(imageUrl)
-                .build();
+        Word newWord = wordMapper.toEntity(dto, imageUrl, audioUrl, videoUrl, lastOrderNumber + 1, level);
 
         return wordMapper.toWordDto(wordRepository.save(newWord));
     }
@@ -77,11 +64,11 @@ public class WordServiceImpl {
     }
 
     @Transactional
-    public WordResponseDTO updateWord(Long id, WordRequestDTO dto, UserDetails userDetails) {
+    public WordResponseDTO updateWord(Long id, WordRequestDTO dto, UserDetails userDetails) throws IOException {
         Word word = wordRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Word not found"));
 
-        courseService.checkAuthor(word.getLevel().getCourse(), userDetails);
+        courseService.checkAuthorOrAdmin(word.getLevel().getCourse(), userDetails);
 
         Level newLevel = levelRepository.findById(dto.getLevelId())
                 .orElseThrow(() -> new ResourceNotFoundException("Level not found"));
@@ -91,7 +78,27 @@ public class WordServiceImpl {
         }
 
         wordMapper.updateFromDto(dto, word);
+
+        String audioUrl = dto.getAudioFile() != null && !dto.getAudioFile().isEmpty() ?
+                s3Service.uploadFile(dto.getAudioFile()) : null;
+
+        String videoUrl = dto.getVideoFile() != null && !dto.getVideoFile().isEmpty() ?
+                s3Service.uploadFile(dto.getVideoFile()) : null;
+
+        String imageUrl = dto.getImageFile() != null && !dto.getImageFile().isEmpty() ?
+                s3Service.uploadFile(dto.getImageFile()) : null;
+
         word.setLevel(newLevel);
+        if (audioUrl != null) {
+            word.setAudioPath(audioUrl);
+        }
+        if (videoUrl != null) {
+            word.setVideoPath(videoUrl);
+        }
+        if (imageUrl != null) {
+            word.setImagePath(imageUrl);
+        }
+
         return wordMapper.toWordDto(wordRepository.save(word));
     }
 
@@ -100,7 +107,7 @@ public class WordServiceImpl {
         Word word = wordRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Word not found"));
 
-        courseService.checkAuthor(word.getLevel().getCourse(), userDetails);
+        courseService.checkAuthorOrAdmin(word.getLevel().getCourse(), userDetails);
         wordRepository.delete(word);
     }
 }
