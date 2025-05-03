@@ -4,37 +4,24 @@ package org.ru.dictionary.exception;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Map;
 import java.util.Set;
 
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-@Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
+@AllArgsConstructor
 public class ExceptionResponse {
-    private Integer businessErrorCode;
-    private String businessErrorDescription;
-    private String error;
-    private Set<String> validationErrors;
-    private Map<String, String> errors;
+    private String errorType;
+    private String description;
+    private String message;
+    private Integer code;
 
-    public ExceptionResponse() {
-    }
-
-    public ExceptionResponse(Integer businessErrorCode, String businessErrorDescription, String error) {
-        this.businessErrorCode = businessErrorCode;
-        this.businessErrorDescription = businessErrorDescription;
-        this.error = error;
-    }
-
-    public ExceptionResponse(Set<String> validationErrors) {
-        this.validationErrors = validationErrors;
-    }
-
-    public ExceptionResponse(String error) {
-        this.error = error;
+    public ExceptionResponse(String message, int status) {
+        this.message = message;
+        this.code = status;
     }
 }

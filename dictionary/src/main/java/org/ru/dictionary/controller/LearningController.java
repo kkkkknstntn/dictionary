@@ -11,7 +11,7 @@ import org.ru.dictionary.dto.AnswerResultDTO;
 import org.ru.dictionary.dto.AnswerSubmissionDTO;
 import org.ru.dictionary.dto.LearningMaterialDTO;
 import org.ru.dictionary.enums.LearningType;
-import org.ru.dictionary.service.LearningServiceImpl;
+import org.ru.dictionary.service.LearningService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Learning", description = "API для процесса обучения и проверки знаний")
 public class LearningController {
 
-    private final LearningServiceImpl learningService;
+    private final LearningService learningService;
 
     @Operation(
             summary = "Получить учебный материал",

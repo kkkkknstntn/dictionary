@@ -9,7 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.ru.dictionary.dto.level.LevelRequestDTO;
 import org.ru.dictionary.dto.level.LevelResponseDTO;
-import org.ru.dictionary.service.LevelServiceImpl;
+import org.ru.dictionary.service.LevelService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,7 +26,7 @@ import java.util.List;
 @Tag(name = "Levels", description = "Управление уровнями курсов")
 public class LevelController {
 
-    private final LevelServiceImpl levelService;
+    private final LevelService levelService;
 
     @Operation(
             summary = "Создать новый уровень",

@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.ru.dictionary.dto.course.CourseRequestDTO;
 import org.ru.dictionary.dto.course.CourseResponseDTO;
-import org.ru.dictionary.service.CourseServiceImpl;
+import org.ru.dictionary.service.CourseService;
 import org.ru.dictionary.validation.ValidationGroups;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,7 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CourseController {
 
-    private final CourseServiceImpl courseService;
+    private final CourseService courseService;
 
     @Operation(
             summary = "Создать новый курс",

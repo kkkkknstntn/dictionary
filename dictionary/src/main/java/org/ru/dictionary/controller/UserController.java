@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.ru.dictionary.dto.user.UserRequestDTO;
 import org.ru.dictionary.dto.user.UserResponseDTO;
-import org.ru.dictionary.service.UserServiceImpl;
+import org.ru.dictionary.service.UserService;
 import org.ru.dictionary.validation.ValidationGroups;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -22,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "Users", description = "Управление пользователями системы")
 public class UserController {
-    private final UserServiceImpl userService;
+    private final UserService userService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

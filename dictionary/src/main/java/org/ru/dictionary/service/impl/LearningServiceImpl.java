@@ -1,19 +1,22 @@
-package org.ru.dictionary.service;
+package org.ru.dictionary.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.ru.dictionary.dto.AnswerResultDTO;
 import org.ru.dictionary.dto.AnswerSubmissionDTO;
 import org.ru.dictionary.dto.LearningMaterialDTO;
-import org.ru.dictionary.dto.word.WordResponseDTO;
 import org.ru.dictionary.entity.User;
 import org.ru.dictionary.entity.Word;
 import org.ru.dictionary.entity.Progress;
 import org.ru.dictionary.enums.LearningType;
+import org.ru.dictionary.exception.ApiException;
+import org.ru.dictionary.mapper.WordMapper;
 import org.ru.dictionary.repository.LevelRepository;
 import org.ru.dictionary.repository.ProgressRepository;
 import org.ru.dictionary.repository.UserRepository;
 import org.ru.dictionary.repository.WordRepository;
-import org.springframework.data.elasticsearch.ResourceNotFoundException;
+import org.ru.dictionary.enums.BusinessErrorCodes;
+import org.ru.dictionary.service.LearningService;
+import org.ru.dictionary.service.ProgressService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,25 +26,29 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class LearningServiceImpl {
+public class LearningServiceImpl implements LearningService {
 
-    private final ProgressServiceImpl progressService;
+    private final ProgressService progressService;
     private final LevelRepository levelRepository;
     private final WordRepository wordRepository;
+    private final WordMapper wordMapper;
     private final ProgressRepository progressRepository;
-    private final Random random = new Random();
     private final UserRepository userRepository;
+    private final Random random = new Random();
 
     @Transactional
     public AnswerResultDTO processAnswer(AnswerSubmissionDTO submission, UserDetails userDetails) {
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.USER_NOT_FOUND,
+                        "User not found: " + userDetails.getUsername()
+                ));
+
         boolean isCorrect = validateAnswer(
                 submission.getWordId(),
                 submission.getAnswer(),
                 submission.getType()
         );
-
-        User user = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with userName: " + userDetails.getUsername()));
 
         progressService.updateProgress(
                 user,
@@ -56,7 +63,10 @@ public class LearningServiceImpl {
 
     private boolean validateAnswer(Long wordId, String answer, LearningType type) {
         Word word = wordRepository.findById(wordId)
-                .orElseThrow(() -> new ResourceNotFoundException("Word not found"));
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.WORD_NOT_FOUND,
+                        "Word ID: " + wordId
+                ));
 
         return switch (type) {
             case WORD_TO_IMAGE -> word.getImagePath().equals(answer);
@@ -68,36 +78,42 @@ public class LearningServiceImpl {
         List<Word> words = wordRepository.findByLevelIdAndActiveForTestingTrue(levelId);
 
         if (words.isEmpty()) {
-            throw new ResourceNotFoundException("No active words found for level");
+            throw new ApiException(
+                    BusinessErrorCodes.NO_ACTIVE_WORD,
+                    "No active words in level ID: " + levelId
+            );
         }
 
-       levelRepository.findById(levelId)
-                .orElseThrow(() -> new ResourceNotFoundException("Level not found"));
+        levelRepository.findById(levelId)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.LEVEL_NOT_FOUND,
+                        "Level ID: " + levelId
+                ));
 
         return userRepository.findByUsername(userDetails.getUsername())
-               .map(user -> {
-                   Word targetWord = selectWordBasedOnProgress(words, user.getId());
-                   List<String> options = generateOptions(targetWord, words, type);
-
-                   return new LearningMaterialDTO(
-                           mapToWordDTO(targetWord),
-                           options,
-                           type
-                   );
-               })
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .map(user -> {
+                    Word targetWord = selectWordBasedOnProgress(words, user.getId());
+                    List<String> options = generateOptions(targetWord, words, type);
+                    return new LearningMaterialDTO(
+                            wordMapper.toWordDto(targetWord),
+                            options,
+                            type
+                    );
+                })
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.USER_NOT_FOUND,
+                        "User: " + userDetails.getUsername()
+                ));
     }
 
     private Word selectWordBasedOnProgress(List<Word> words, Long userId) {
         Map<Word, Integer> weights = new HashMap<>();
-
         for (Word word : words) {
             int progress = progressRepository.findByUserIdAndWordId(userId, word.getId())
                     .map(Progress::getProgressValue)
                     .orElse(0);
             weights.put(word, 100 - progress);
         }
-
         return WeightedRandomSelector.select(words, weights);
     }
 
@@ -127,18 +143,6 @@ public class LearningServiceImpl {
         return options;
     }
 
-    private WordResponseDTO mapToWordDTO(Word word) {
-        return new WordResponseDTO(
-                word.getId(),
-                word.getWord(),
-                word.getDefinition(),
-                word.getImagePath(),
-                word.getAudioPath(),
-                word.getVideoPath(),
-                word.isActiveForTesting()
-        );
-    }
-
     private static class WeightedRandomSelector {
         public static <T> T select(List<T> items, Map<T, Integer> weights) {
             int totalWeight = weights.values().stream().mapToInt(Integer::intValue).sum();
@@ -151,7 +155,7 @@ public class LearningServiceImpl {
                     return item;
                 }
             }
-            return items.get(items.size()-1);
+            return items.get(items.size() - 1);
         }
     }
 }

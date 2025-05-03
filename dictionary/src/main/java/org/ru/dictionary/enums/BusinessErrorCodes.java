@@ -15,7 +15,20 @@ public enum BusinessErrorCodes {
     USER_ALREADY_EXISTS(305, HttpStatus.BAD_REQUEST, "User already exists"),
     INVALID_TOKEN(306, HttpStatus.UNAUTHORIZED, "Invalid token"),
     TOKEN_EXPIRED(307, HttpStatus.UNAUTHORIZED, "Token has expired"),
-    USER_NOT_FOUND(308, HttpStatus.NOT_FOUND, "User not found");
+    USER_NOT_FOUND(308, HttpStatus.NOT_FOUND, "User not found"),
+    COURSE_NOT_FOUND(1001, HttpStatus.NOT_FOUND, "Course not found"),
+    LEVEL_NOT_FOUND(1002, HttpStatus.NOT_FOUND,"Level not found"),
+    WORD_NOT_FOUND(1003, HttpStatus.NOT_FOUND,"Word not found"),
+    USER_EXISTS(2001, HttpStatus.CONFLICT, "User already exists"),
+    FILE_UPLOAD_FAILED(3001, HttpStatus.PAYLOAD_TOO_LARGE, "File upload failed"),
+    COURSE_ACCESS_DENIED(4001, HttpStatus.FORBIDDEN, "Course access denied"),
+    VALIDATION_ERROR(4002, HttpStatus.BAD_REQUEST, "Validation error"),
+    NO_ACTIVE_WORD(4003, HttpStatus.BAD_REQUEST, "No active word"),
+    INVALID_ROLE(4004, HttpStatus.BAD_REQUEST, "Invalid role name"),
+    INVALID_OPERATION(4005, HttpStatus.BAD_REQUEST, "Invalid operation"),
+    INTERNAL_SERVER_ERROR(5000, HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+
+
 
     private final int code;
     private final HttpStatus httpStatus;
