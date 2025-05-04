@@ -13,6 +13,9 @@ import org.ru.dictionary.repository.WordRepository;
 import org.ru.dictionary.service.CourseService;
 import org.ru.dictionary.service.S3Service;
 import org.ru.dictionary.service.WordService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +36,11 @@ public class WordServiceImpl implements WordService {
     private final S3Service s3Service;
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "wordDetails", key = "#result.id"),
+            @CacheEvict(value = "levelWords", key = "#dto.levelId"),
+            @CacheEvict(value = "userLearningMaterials", allEntries = true)
+    })
     public WordResponseDTO createWord(WordRequestDTO dto, UserDetails userDetails) {
         Level level = levelRepository.findById(dto.getLevelId())
                 .orElseThrow(() -> new ApiException(
@@ -54,6 +62,7 @@ public class WordServiceImpl implements WordService {
         return wordMapper.toWordDto(wordRepository.save(newWord));
     }
 
+    @Cacheable(value = "wordDetails", key = "#id")
     public WordResponseDTO getWordById(Long id) {
         return wordRepository.findById(id)
                 .map(wordMapper::toWordDto)
@@ -63,6 +72,7 @@ public class WordServiceImpl implements WordService {
                 ));
     }
 
+    @Cacheable(value = "levelWords", key = "#levelId")
     public List<WordResponseDTO> getWordsByLevel(Long levelId) {
         if (!levelRepository.existsById(levelId)) {
             throw new ApiException(
@@ -77,6 +87,11 @@ public class WordServiceImpl implements WordService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "wordDetails", key = "#id"),
+            @CacheEvict(value = "levelWords", key = "#word.level.id"),
+            @CacheEvict(value = "userWordProgress", key = "{#userDetails.username, #id}")
+    })
     public WordResponseDTO updateWord(Long id, WordRequestDTO dto, UserDetails userDetails) {
         Word word = wordRepository.findById(id)
                 .orElseThrow(() -> new ApiException(
@@ -105,6 +120,11 @@ public class WordServiceImpl implements WordService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "wordDetails", key = "#id"),
+            @CacheEvict(value = "levelWords", key = "#word.level.id"),
+            @CacheEvict(value = "userWordProgress", key = "{#userDetails.username, #id}")
+    })
     public void deleteWord(Long id, UserDetails userDetails) {
         Word word = wordRepository.findById(id)
                 .orElseThrow(() -> new ApiException(

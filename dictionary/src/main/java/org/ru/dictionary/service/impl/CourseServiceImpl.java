@@ -9,12 +9,15 @@ import org.ru.dictionary.enums.Authorities;
 import org.ru.dictionary.enums.BusinessErrorCodes;
 import org.ru.dictionary.exception.ApiException;
 import org.ru.dictionary.mapper.CourseMapper;
+import org.ru.dictionary.repository.CourseDocumentRepository;
 import org.ru.dictionary.repository.CourseRepository;
 import org.ru.dictionary.repository.UserRepository;
 import org.ru.dictionary.service.CourseService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +31,7 @@ public class CourseServiceImpl implements CourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final CourseMapper courseMapper;
+    private final CourseDocumentRepository courseDocumentRepository;
 
     public void checkAuthorOrAdmin(Course course, UserDetails userDetails) {
         boolean isAuthor = course.getAuthor().getUsername().equals(userDetails.getUsername());
@@ -39,13 +43,24 @@ public class CourseServiceImpl implements CourseService {
         }
     }
 
+    @Cacheable("allCourses")
     public List<CourseResponseDTO> getAllCourses() {
         return courseRepository.findAll().stream()
                 .map(courseMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Cacheable(value = "courses", key = "#query")
+    public List<CourseResponseDTO> getCourses(String query) {
+        return courseDocumentRepository.searchCourses(query)
+                .stream()
+                .map(courseMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
+    @Cacheable(value = "userCourses", key = "#userDetails.username")
     public CourseResponseDTO createCourse(CourseRequestDTO dto, UserDetails userDetails) {
         User author = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND,
@@ -58,6 +73,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Transactional
+    @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
     public CourseResponseDTO updateCourse(Long courseId, CourseRequestDTO dto, UserDetails userDetails) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,
@@ -70,6 +86,7 @@ public class CourseServiceImpl implements CourseService {
         return courseMapper.toResponseDTO(courseRepository.save(course));
     }
 
+    @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
     public List<CourseResponseDTO> getUserCourses(UserDetails userDetails) {
         return userRepository.findByUsername(userDetails.getUsername())
                 .map(user -> courseRepository.findByParticipantsContaining(user)
@@ -81,6 +98,7 @@ public class CourseServiceImpl implements CourseService {
 
 
     @Transactional
+    @CacheEvict(value = {"allCourses", "courses", "userCourses"}, allEntries = true)
     public void deleteCourse(Long courseId, UserDetails userDetails) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,
@@ -101,6 +119,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Transactional
+    @CacheEvict(value = "userCourses", key = "#userDetails.username")
     public void joinCourse(Long courseId, UserDetails userDetails) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,

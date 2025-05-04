@@ -19,10 +19,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -34,6 +34,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @RequiredArgsConstructor
@@ -130,20 +131,9 @@ public class SecurityConfig {
                 .addFilterAfter(jwtLogoutFilter, ExceptionTranslationFilter.class)
                 .authorizeHttpRequests(auth -> auth
 //                        .requestMatchers("/api/words").hasAuthority(Authorities.ROLE_USER.name())
-                        .requestMatchers("/api/words").permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/users", HttpMethod.POST.name())).permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
-                .build();
-    }
-
-    @Bean
-    @Order(1)
-    public SecurityFilterChain permitAllSecurityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .securityMatcher("/api/users")
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authz -> authz.anyRequest().permitAll())
                 .build();
     }
 }

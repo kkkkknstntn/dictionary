@@ -112,4 +112,11 @@ public class CourseController {
             @AuthenticationPrincipal UserDetails userDetails) {
         courseService.joinCourse(id, userDetails);
     }
+
+    @Operation(summary = "Получить курсы по строке", description = "Публичный доступ")
+    @ApiResponse(responseCode = "200", description = "Список курсов")
+    @GetMapping("/search")
+    public List<CourseResponseDTO> getCourses(@RequestParam String query) {
+        return courseService.getCourses(query);
+    }
 }

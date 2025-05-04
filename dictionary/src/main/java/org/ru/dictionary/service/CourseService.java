@@ -11,6 +11,7 @@ public interface CourseService {
     CourseResponseDTO createCourse(CourseRequestDTO dto, UserDetails userDetails);
     CourseResponseDTO updateCourse(Long courseId, CourseRequestDTO dto, UserDetails userDetails);
     List<CourseResponseDTO> getAllCourses();
+    List<CourseResponseDTO> getCourses(String query);
     List<CourseResponseDTO> getUserCourses(UserDetails userDetails);
     void deleteCourse(Long courseId, UserDetails userDetails);
     void joinCourse(Long courseId, UserDetails userDetails);

@@ -4,6 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
+import org.ru.dictionary.document.CourseDocument;
 import org.ru.dictionary.dto.course.CourseRequestDTO;
 import org.ru.dictionary.dto.course.CourseResponseDTO;
 import org.ru.dictionary.dto.level.LevelResponseDTO;
@@ -61,4 +62,6 @@ public abstract class CourseMapper {
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "participants", ignore = true)
     public abstract void updateFromDto(CourseRequestDTO dto, @MappingTarget Course entity);
+
+    public abstract CourseResponseDTO toDto(CourseDocument course);
 }
