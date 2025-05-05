@@ -22,6 +22,9 @@ public class User {
 
     private String password;
 
+    @Column(nullable = false)
+    private Boolean isEnabled = false;
+
     private LocalDateTime createdAt;
 
     @ElementCollection(fetch = FetchType.EAGER)

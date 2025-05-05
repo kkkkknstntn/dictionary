@@ -26,7 +26,11 @@ public enum BusinessErrorCodes {
     NO_ACTIVE_WORD(4003, HttpStatus.BAD_REQUEST, "No active word"),
     INVALID_ROLE(4004, HttpStatus.BAD_REQUEST, "Invalid role name"),
     INVALID_OPERATION(4005, HttpStatus.BAD_REQUEST, "Invalid operation"),
-    INTERNAL_SERVER_ERROR(5000, HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+    INVALID_ACTIVATION_TOKEN(4006, HttpStatus.BAD_REQUEST,  "Invalid activation token"),
+    EXPIRED_ACTIVATION_TOKEN(4007, HttpStatus.BAD_REQUEST, "Activation token has expired"),
+    TOKEN_ALREADY_USED(4008, HttpStatus.BAD_REQUEST, "Token has already been used"),
+    INTERNAL_SERVER_ERROR(5000, HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error"),
+    SEARCH_FAILED(4009, HttpStatus.BAD_REQUEST , "Search failed" ),;
 
 
 

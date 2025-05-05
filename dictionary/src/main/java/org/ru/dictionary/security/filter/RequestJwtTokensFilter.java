@@ -1,15 +1,16 @@
 package org.ru.dictionary.security.filter;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.ru.dictionary.dto.LoginRequestDTO;
+import org.ru.dictionary.dto.TokenResponseDTO;
 import org.ru.dictionary.security.Token;
-import org.ru.dictionary.security.Tokens;
 import org.ru.dictionary.security.access.DefaultAccessTokenFactory;
 import org.ru.dictionary.security.refresh.DefaultRefreshTokenFactory;
 import org.springframework.http.HttpMethod;
@@ -52,37 +53,54 @@ public class RequestJwtTokensFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         if (requestMatcher.matches(request)) {
             try {
-                    JsonNode jsonNode = objectMapper.readTree(request.getInputStream());
-                    String username = jsonNode.get("username").asText();
-                    String password = jsonNode.get("password").asText();
+                LoginRequestDTO loginRequest = objectMapper.readValue(
+                        request.getInputStream(),
+                        LoginRequestDTO.class
+                );
 
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                    if (!passwordEncoder.matches(password, userDetails.getPassword())) {
+                if (StringUtils.isBlank(loginRequest.getUsername())
+                        || StringUtils.isBlank(loginRequest.getPassword())) {
+                    throw new BadCredentialsException("Empty credentials");
+                }
+
+
+                UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
+
+                if (!userDetails.isEnabled()) {
+                    throw new BadCredentialsException("User is not enabled");
+                }
+
+                if (!passwordEncoder.matches(loginRequest.getPassword(), userDetails.getPassword())) {
                         throw new BadCredentialsException("Invalid password");
-                    }
+                }
 
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
 
 
-                    var refreshToken = this.refreshTokenFactory.apply(authentication);
-                    var accessToken = this.accessTokenFactory.apply(refreshToken);
+                var refreshToken = this.refreshTokenFactory.apply(authentication);
+                var accessToken = this.accessTokenFactory.apply(refreshToken);
 
-                    response.setStatus(HttpServletResponse.SC_OK);
-                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                    objectMapper.writeValue(response.getWriter(), new Tokens(
-                            accessTokenStringSerializer.apply(accessToken),
-                            accessToken.expiresAt().toString(),
-                            refreshTokenStringSerializer.apply(refreshToken),
-                            refreshToken.expiresAt().toString()));
-                            return;
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                objectMapper.writeValue(
+                        response.getWriter(),
+                        new TokenResponseDTO(
+                                accessTokenStringSerializer.apply(accessToken),
+                                accessToken.expiresAt().toString(),
+                                refreshTokenStringSerializer.apply(refreshToken),
+                                refreshToken.expiresAt().toString()
+                        )
+                );
+                return;
 
             } catch (IOException e) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid request format");
             } catch (UsernameNotFoundException | BadCredentialsException e) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed");
             } catch (Exception e) {
+                log.error(e.getMessage(), e);
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
             }
             return;

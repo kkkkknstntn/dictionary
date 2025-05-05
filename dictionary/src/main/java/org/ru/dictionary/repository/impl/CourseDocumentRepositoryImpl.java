@@ -1,9 +1,9 @@
 package org.ru.dictionary.repository.impl;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ru.dictionary.document.CourseDocument;
@@ -30,14 +30,18 @@ public class CourseDocumentRepositoryImpl implements CourseDocumentRepository {
                                     .bool(b -> b
                                             .should(sh -> sh
                                                     .match(m -> m
-                                                            .field("title")
+                                                            .field("title.ngram") // частичное вхождение
                                                             .query(query)
+                                                            .fuzziness("AUTO")
+                                                            .boost(3.0f)
                                                     )
                                             )
                                             .should(sh -> sh
                                                     .match(m -> m
-                                                            .field("description")
+                                                            .field("description.ngram")
                                                             .query(query)
+                                                            .fuzziness("AUTO")
+                                                            .boost(2.5f)
                                                     )
                                             )
                                             .should(sh -> sh
@@ -45,8 +49,10 @@ public class CourseDocumentRepositoryImpl implements CourseDocumentRepository {
                                                             .path("levels")
                                                             .query(nq -> nq
                                                                     .match(m -> m
-                                                                            .field("levels.name")
+                                                                            .field("levels.name.ngram")
                                                                             .query(query)
+                                                                            .fuzziness("AUTO")
+                                                                            .boost(2.0f)
                                                                     )
                                                             )
                                                     )
@@ -61,14 +67,18 @@ public class CourseDocumentRepositoryImpl implements CourseDocumentRepository {
                                                                                     .bool(bq -> bq
                                                                                             .should(wordMatch -> wordMatch
                                                                                                     .match(m -> m
-                                                                                                            .field("levels.words.word")
+                                                                                                            .field("levels.words.word.ngram")
                                                                                                             .query(query)
+                                                                                                            .fuzziness("AUTO")
+                                                                                                            .boost(1.8f)
                                                                                                     )
                                                                                             )
                                                                                             .should(wordMatch -> wordMatch
                                                                                                     .match(m -> m
-                                                                                                            .field("levels.words.definition")
+                                                                                                            .field("levels.words.definition.ngram")
                                                                                                             .query(query)
+                                                                                                            .fuzziness("AUTO")
+                                                                                                            .boost(1.5f)
                                                                                                     )
                                                                                             )
                                                                                     )
@@ -90,5 +100,5 @@ public class CourseDocumentRepositoryImpl implements CourseDocumentRepository {
             throw new ApiException(BusinessErrorCodes.FILE_UPLOAD_FAILED, e.getMessage());
         }
     }
-}
 
+}

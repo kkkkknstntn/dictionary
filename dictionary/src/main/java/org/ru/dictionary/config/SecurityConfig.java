@@ -18,7 +18,6 @@ import org.ru.dictionary.security.jwt.refresh.RefreshTokenJweStringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -65,6 +64,7 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService(UserRepository userRepository) {
         return username -> userRepository.findByUsername(username)
                 .map(user -> User.builder()
+                        .disabled(!user.getIsEnabled())
                         .username(user.getUsername())
                         .password(user.getPassword())
                         .authorities(user.getRoles().stream()
@@ -99,7 +99,6 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    AuthenticationManager authenticationManager,
                                                    RequestJwtTokensFilter requestJwtTokensFilter,
@@ -130,7 +129,7 @@ public class SecurityConfig {
                 .addFilterAfter(refreshTokenFilter, ExceptionTranslationFilter.class)
                 .addFilterAfter(jwtLogoutFilter, ExceptionTranslationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/words").hasAuthority(Authorities.ROLE_USER.name())
+                        .requestMatchers("/api/auth/activate").permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/users", HttpMethod.POST.name())).permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())

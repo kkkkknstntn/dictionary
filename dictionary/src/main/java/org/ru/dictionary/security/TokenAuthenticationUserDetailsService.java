@@ -33,13 +33,9 @@ public class TokenAuthenticationUserDetailsService
     public UserDetails loadUserDetails(PreAuthenticatedAuthenticationToken authenticationToken)
             throws UsernameNotFoundException {
 
-        log.info("Authenticated user: {}", authenticationToken.getPrincipal());
-
         if (!(authenticationToken.getPrincipal() instanceof Token token)) {
             throw new UsernameNotFoundException("Principal must be of type Token");
         }
-
-        log.info("Authenticated user: {}", authenticationToken.getPrincipal());
 
         boolean isTokenActive = !isTokenDeactivated(token.id()) &&
                 token.expiresAt().isAfter(Instant.now());

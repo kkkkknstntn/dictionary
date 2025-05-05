@@ -9,6 +9,7 @@ import org.ru.dictionary.enums.BusinessErrorCodes;
 import org.ru.dictionary.exception.ApiException;
 import org.ru.dictionary.mapper.UserMapper;
 import org.ru.dictionary.repository.UserRepository;
+import org.ru.dictionary.service.ActivationService;
 import org.ru.dictionary.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final ActivationService activationService;
 
     public List<UserResponseDTO> getAllUsers() {
         return userRepository.findAll().stream()
@@ -47,7 +49,7 @@ public class UserServiceImpl implements UserService {
         user.setUsername(request.getUsername());
         user.getRoles().add(Authorities.ROLE_USER);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-
+        activationService.sendActivationEmail(user);
 
         return userMapper.toResponseDTO(userRepository.save(user));
     }
@@ -66,6 +68,7 @@ public class UserServiceImpl implements UserService {
 
         return userMapper.toResponseDTO(userRepository.save(user));
     }
+
 
     private Set<Authorities> getRolesFromNames(Set<String> roleNames) {
         return roleNames.stream()
