@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface LevelRepository extends JpaRepository<Level, Long> {
     List<Level> findByCourseIdOrderByOrderNumberAsc(Long courseId);
-    Optional<Level> findByCourseIdAndId(Long courseId, Long levelId);
+    List<Level> findByCourseId(Long courseId);
     Optional<Level> findMaxOrderNumberByCourseId(Long courseId);
     List<Level> findByCourseIdOrderByOrderNumberDesc(Long courseId);
 

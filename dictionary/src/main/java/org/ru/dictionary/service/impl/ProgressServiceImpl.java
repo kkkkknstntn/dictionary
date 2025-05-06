@@ -6,15 +6,16 @@ import org.ru.dictionary.entity.User;
 import org.ru.dictionary.entity.Word;
 import org.ru.dictionary.enums.BusinessErrorCodes;
 import org.ru.dictionary.exception.ApiException;
-import org.ru.dictionary.repository.ProgressRepository;
-import org.ru.dictionary.repository.UserRepository;
-import org.ru.dictionary.repository.WordRepository;
+import org.ru.dictionary.repository.*;
 import org.ru.dictionary.service.ProgressService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,8 @@ public class ProgressServiceImpl implements ProgressService {
 
     private final ProgressRepository progressRepository;
     private final WordRepository wordRepository;
+    private final LevelRepository levelRepository;
+    private final CourseRepository courseRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -62,5 +65,41 @@ public class ProgressServiceImpl implements ProgressService {
         return progressRepository.findByUserIdAndWordId(userId, wordId)
                 .map(Progress::getProgressValue)
                 .orElse(0);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Double getAverageProgressForLevel(UserDetails userDetails, Long levelId) {
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND, "User not found"));
+
+        levelRepository.findById(levelId)
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.LEVEL_NOT_FOUND, "Level ID: " + levelId));
+
+
+        return getAverageProgressForLevel(user.getId(), levelId);
+    }
+
+    private  Double getAverageProgressForLevel(Long userId, Long levelId) {
+        List<Word> words = wordRepository.findByLevelId(levelId);
+        if (words.isEmpty()) {
+            return 0.0;
+        }
+        List<Progress> progresses = progressRepository.findByUserIdAndLevelId(userId, levelId);
+        return (double) progresses.stream().mapToInt(Progress::getProgressValue).sum() / words.size();
+    }
+
+    @Override
+    public Double getAverageProgressForCourse(UserDetails userDetails, Long courseId) {
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND, "User not found"));
+
+        courseRepository.findById(courseId)
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND, "Course ID: " + courseId));
+
+        return levelRepository.findByCourseId(courseId).stream().mapToDouble(
+                level -> getAverageProgressForLevel(user.getId(), level.getId())
+        ).average().orElse(0);
+
     }
 }
