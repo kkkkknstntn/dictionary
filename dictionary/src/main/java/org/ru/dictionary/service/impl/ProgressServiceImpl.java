@@ -1,6 +1,7 @@
 package org.ru.dictionary.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.ru.dictionary.dto.ProgressAverageDTO;
 import org.ru.dictionary.entity.Progress;
 import org.ru.dictionary.entity.User;
 import org.ru.dictionary.entity.Word;
@@ -69,7 +70,7 @@ public class ProgressServiceImpl implements ProgressService {
 
     @Override
     @Transactional(readOnly = true)
-    public Double getAverageProgressForLevel(UserDetails userDetails, Long levelId) {
+    public ProgressAverageDTO getAverageProgressForLevel(UserDetails userDetails, Long levelId) {
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND, "User not found"));
 
@@ -77,29 +78,28 @@ public class ProgressServiceImpl implements ProgressService {
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.LEVEL_NOT_FOUND, "Level ID: " + levelId));
 
 
-        return getAverageProgressForLevel(user.getId(), levelId);
+        return new ProgressAverageDTO(getAverageProgressForLevel(user.getId(), levelId));
     }
 
     private  Double getAverageProgressForLevel(Long userId, Long levelId) {
-        List<Word> words = wordRepository.findByLevelId(levelId);
-        if (words.isEmpty()) {
-            return 0.0;
-        }
-        List<Progress> progresses = progressRepository.findByUserIdAndLevelId(userId, levelId);
-        return (double) progresses.stream().mapToInt(Progress::getProgressValue).sum() / words.size();
+        Integer totalWords = wordRepository.countByLevelId(levelId);
+
+        Integer totalProgressForLevel = progressRepository.getTotalProgressForLevel(userId, levelId);
+
+        return totalWords == 0 ? 0.0 : (double) totalProgressForLevel / totalWords;
     }
 
     @Override
-    public Double getAverageProgressForCourse(UserDetails userDetails, Long courseId) {
+    public ProgressAverageDTO getAverageProgressForCourse(UserDetails userDetails, Long courseId) {
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND, "User not found"));
 
         courseRepository.findById(courseId)
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND, "Course ID: " + courseId));
 
-        return levelRepository.findByCourseId(courseId).stream().mapToDouble(
+        Double averageProgress = levelRepository.findByCourseId(courseId).stream().mapToDouble(
                 level -> getAverageProgressForLevel(user.getId(), level.getId())
         ).average().orElse(0);
-
+        return new ProgressAverageDTO(averageProgress);
     }
 }

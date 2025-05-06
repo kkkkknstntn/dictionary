@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.ru.dictionary.dto.ProgressAverageDTO;
 import org.ru.dictionary.service.ProgressService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,7 +29,7 @@ public class ProgressController {
             @ApiResponse(responseCode = "404", description = "Уровень не найден")
     })
     @GetMapping("/level/{levelId}")
-    public Double getLevelProgress(
+    public ProgressAverageDTO getLevelProgress(
             @PathVariable Long levelId,
             @AuthenticationPrincipal UserDetails userDetails) {
         return progressService.getAverageProgressForLevel(userDetails, levelId);
@@ -41,7 +42,7 @@ public class ProgressController {
             @ApiResponse(responseCode = "404", description = "Курс не найден")
     })
     @GetMapping("/course/{courseId}")
-    public Double getCourseProgress(
+    public ProgressAverageDTO getCourseProgress(
             @PathVariable Long courseId,
             @AuthenticationPrincipal UserDetails userDetails) {
         return progressService.getAverageProgressForCourse(userDetails, courseId);

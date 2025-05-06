@@ -11,5 +11,6 @@ import java.util.Optional;
 public interface WordRepository extends JpaRepository<Word, Long> {
     List<Word> findByLevelIdAndActiveForTestingTrue(Long levelId);
     List<Word> findByLevelId(Long levelId);
+    Integer countByLevelId(Long levelId);
     Optional<Word> findTopByLevelIdOrderByOrderNumberDesc(Long levelId);
 }

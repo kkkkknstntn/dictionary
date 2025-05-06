@@ -16,4 +16,9 @@ public interface ProgressRepository extends JpaRepository<Progress, Long> {
             "AND p.word.level.id = :levelId")
     List<Progress> findByUserIdAndLevelId(@Param("userId") Long userId,
                                           @Param("levelId") Long levelId);
+
+    @Query("SELECT COALESCE(SUM(p.progressValue), 0) FROM Progress p " +
+            "WHERE p.user.id = :userId AND p.word.level.id = :levelId")
+    Integer getTotalProgressForLevel(@Param("userId") Long userId,
+                                     @Param("levelId") Long levelId);
 }
