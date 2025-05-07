@@ -47,4 +47,19 @@ public class ProgressController {
             @AuthenticationPrincipal UserDetails userDetails) {
         return progressService.getAverageProgressForCourse(userDetails, courseId);
     }
+
+    @Operation(summary = "Получить прогресс пользователя по слову")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Прогресс по слову"),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация"),
+            @ApiResponse(responseCode = "404", description = "Пользователь или слово не найдены")
+    })
+    @GetMapping("/word/{wordId}")
+    public Integer getWordProgress(
+            @PathVariable Long wordId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        return progressService.getProgress(userDetails, wordId);
+    }
+
 }

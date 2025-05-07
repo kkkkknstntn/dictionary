@@ -32,5 +32,5 @@ public class Progress {
     @Column(nullable = false)
     @Min(0)
     @Max(100)
-    private int progressValue;
+    private Integer progressValue;
 }

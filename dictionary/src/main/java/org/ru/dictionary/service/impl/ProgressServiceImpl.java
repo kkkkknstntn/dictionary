@@ -16,8 +16,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class ProgressServiceImpl implements ProgressService {
@@ -66,6 +64,20 @@ public class ProgressServiceImpl implements ProgressService {
         return progressRepository.findByUserIdAndWordId(userId, wordId)
                 .map(Progress::getProgressValue)
                 .orElse(0);
+    }
+
+    @Override
+    public ProgressAverageDTO getProgress(UserDetails userDetails, Long wordId) {
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND, "User not found"));
+        wordRepository.findById(wordId)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.WORD_NOT_FOUND,
+                        "Word ID: " + wordId
+                ));
+        Double progressValue = getProgress(user.getId(), wordId).doubleValue();
+
+        return new ProgressAverageDTO(progressValue);
     }
 
     @Override

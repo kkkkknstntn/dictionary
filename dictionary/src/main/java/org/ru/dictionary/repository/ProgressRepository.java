@@ -1,7 +1,6 @@
 package org.ru.dictionary.repository;
 
 import org.ru.dictionary.entity.Progress;
-import org.ru.dictionary.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
