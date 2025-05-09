@@ -55,7 +55,7 @@ public class ProgressController {
             @ApiResponse(responseCode = "404", description = "Пользователь или слово не найдены")
     })
     @GetMapping("/word/{wordId}")
-    public Integer getWordProgress(
+    public ProgressAverageDTO getWordProgress(
             @PathVariable Long wordId,
             @AuthenticationPrincipal UserDetails userDetails) {
 
