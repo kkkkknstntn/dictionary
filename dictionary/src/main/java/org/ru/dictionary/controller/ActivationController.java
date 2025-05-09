@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/activation")
 public class ActivationController {
 
     private final ActivationService activationService;
