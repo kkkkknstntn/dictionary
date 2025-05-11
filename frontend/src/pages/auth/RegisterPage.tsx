@@ -1,5 +1,6 @@
 import { useRegister } from '@/hooks/api/auth.hooks'
 import type { RegisterFormData } from '@/shared/types/auth'
+import { MailOutlined } from '@ant-design/icons'
 import { Button, Card, Form, Input, notification } from 'antd'
 import { Link } from 'react-router-dom'
 import './AuthPages.scss'
@@ -12,8 +13,22 @@ export const RegisterPage = () => {
 		mutate(values, {
 			onSuccess: () => {
 				notification.success({
-					message: 'Успешно',
-					description: 'Аккаунт создан. Проверьте почту для активации',
+					message: 'Проверьте вашу почту',
+					description: (
+						<div>
+							<p>
+								Мы отправили письмо с кодом активации на вашу электронную почту
+							</p>
+							<Button
+								icon={<MailOutlined />}
+								href='https://mail.google.com'
+								target='_blank'
+							>
+								Открыть Gmail
+							</Button>
+						</div>
+					),
+					duration: 8,
 				})
 				form.resetFields()
 			},

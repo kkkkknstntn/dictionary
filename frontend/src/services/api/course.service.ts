@@ -13,7 +13,12 @@ export const courseService = {
 		)
 		return response.data
 	},
-
+	getCourseById: async (id: number): Promise<CourseResponseDTO> => {
+		const response = await authAxios.get<CourseResponseDTO>(
+			`/api/courses/${id}`
+		)
+		return response.data
+	},
 	getAllCourses: async (): Promise<CourseResponseDTO[]> => {
 		const response = await authAxios.get<CourseResponseDTO[]>('/api/courses')
 		return response.data

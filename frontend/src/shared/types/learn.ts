@@ -15,6 +15,7 @@ export type LearningMaterialDTO = {
 	targetWord: WordResponseDTO
 	options: string[]
 	type: LearningType
+	levelId?: number
 }
 
 export type LearningType = 'WORD_TO_IMAGE' | 'IMAGE_TO_WORD' | 'AUDIO_TO_WORD'

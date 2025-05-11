@@ -1,0 +1,24 @@
+.course-page {
+	.course-header {
+		margin-bottom: 24px;
+
+		.course-meta {
+			margin-top: 16px;
+			display: flex;
+			gap: 8px;
+			align-items: center;
+		}
+	}
+
+	.course-tabs {
+		.ant-tabs-nav {
+			margin-bottom: 24px;
+		}
+	}
+
+	.level-title {
+		display: flex;
+		gap: 8px;
+		align-items: center;
+	}
+}

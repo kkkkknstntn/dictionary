@@ -1,15 +1,18 @@
 import { useLogin } from '@/hooks/api/auth.hooks'
 import type { LoginFormData } from '@/shared/types/auth'
 import { Button, Card, Form, Input, notification } from 'antd'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import './AuthPages.scss'
 
 export const LoginPage = () => {
 	const [form] = Form.useForm()
 	const { mutate, isPending } = useLogin()
-
+	const navigate = useNavigate()
 	const handleSubmit = (values: LoginFormData) => {
 		mutate(values, {
+			onSuccess: () => {
+				navigate('/courses')
+			},
 			onError: () => {
 				notification.error({
 					message: 'Ошибка',

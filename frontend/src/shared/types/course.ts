@@ -14,6 +14,7 @@ export type CourseResponseDTO = {
 	levels: LevelResponseDTO[]
 	participants: UserResponseDTO[]
 	createdAt: string
+	progress?: number
 }
 
 export type CourseJoinDTO = {
@@ -25,6 +26,6 @@ export type CourseSearchParams = {
 }
 
 export type CourseUserProgressDTO = {
-  user: UserResponseDTO;
-  averageProgress: number;
-};
+	user: UserResponseDTO
+	averageProgress: number
+}

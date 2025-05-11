@@ -1,0 +1,26 @@
+.progress-page {
+	padding: 24px;
+	max-width: 1200px;
+	margin: 0 auto;
+
+	.ant-tabs-nav {
+		margin-bottom: 32px;
+	}
+
+	.progress-bars {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 24px;
+	}
+}
+
+.radial-chart {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+	padding: 20px;
+	background: white;
+	border-radius: 12px;
+	//box-shadow: $box-shadow;
+}
