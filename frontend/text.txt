@@ -1,0 +1,1746 @@
+```
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Auth API",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Levels",
+      "description": "Управление уровнями курсов"
+    },
+    {
+      "name": "Learning",
+      "description": "API для процесса обучения и проверки знаний"
+    },
+    {
+      "name": "Progress",
+      "description": "API для работы с прогрессом пользователя"
+    },
+    {
+      "name": "Courses",
+      "description": "Управление курсами и их содержимым"
+    },
+    {
+      "name": "Users",
+      "description": "Управление пользователями системы"
+    },
+    {
+      "name": "Words",
+      "description": "Управление словами и их содержимым"
+    }
+  ],
+  "paths": {
+    "/api/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "User login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully log in"
+          },
+          "401": {
+            "description": "Invalid username or password"
+          }
+        }
+      }
+    },
+    "/api/logout": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "User logout",
+        "responses": {
+          "200": {
+            "description": "Successfully logged out"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/refresh": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Refresh access token",
+        "responses": {
+          "200": {
+            "description": "Success. Returns new access token"
+          },
+          "401": {
+            "description": "Invalid refresh token"
+          }
+        }
+      }
+    },
+    "/api/words/{id}": {
+      "get": {
+        "tags": [
+          "Words"
+        ],
+        "summary": "Получить слово по ID",
+        "description": "Публичный доступ к информации о слове",
+        "operationId": "getWordById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о слове",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordResponseDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Слово не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Words"
+        ],
+        "summary": "Обновить слово",
+        "description": "Доступно автору курса или администратору",
+        "operationId": "updateWord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "query",
+            "description": "Данные слова с файлами",
+            "content": {
+              "multipart/form-data": {
+
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WordRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Слово обновлено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordResponseDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Требуется аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordResponseDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет прав на редактирование",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные данные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordResponseDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Слово или уровень не найдены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Words"
+        ],
+        "summary": "Удалить слово",
+        "description": "Доступно автору курса или администратору",
+        "operationId": "deleteWord",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Слово удалено"
+          },
+          "403": {
+            "description": "Нет прав на удаление"
+          },
+          "401": {
+            "description": "Требуется аутентификация"
+          },
+          "404": {
+            "description": "Слово не найдено"
+          }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Обновить данные пользователя",
+        "description": "Обновление информации о пользователе (доступно администратору или самому пользователю)",
+        "operationId": "updateUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequestDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDTO"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Данные обновлены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные данные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет прав на обновление",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDTO"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/levels/{levelId}": {
+      "get": {
+        "tags": [
+          "Levels"
+        ],
+        "summary": "Получить уровень по ID",
+        "description": "Публичный доступ к информации об уровне",
+        "operationId": "getLevel",
+        "parameters": [
+          {
+            "name": "levelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Уровень не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelResponseDTO"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Информация об уровне",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Levels"
+        ],
+        "summary": "Обновить уровень",
+        "description": "Доступно автору курса или администратору",
+        "operationId": "updateLevel",
+        "parameters": [
+          {
+            "name": "levelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LevelRequestDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "Уровень не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelResponseDTO"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Уровень обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelResponseDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет прав на редактирование",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные данные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Levels"
+        ],
+        "summary": "Удалить уровень",
+        "description": "Доступно автору курса или администратору",
+        "operationId": "deleteLevel",
+        "parameters": [
+          {
+            "name": "levelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Уровень удален"
+          },
+          "403": {
+            "description": "Нет прав на удаление"
+          },
+          "404": {
+            "description": "Уровень не найден"
+          }
+        }
+      }
+    },
+    "/api/courses/{id}": {
+      "put": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Обновить курс",
+        "description": "Доступно только автору курса",
+        "operationId": "updateCourse",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseRequestDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "Курс не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseResponseDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет прав на редактирование",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseResponseDTO"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Курс обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Удалить курс",
+        "description": "Доступно только автору курса",
+        "operationId": "deleteCourse",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "Нет прав на удаление"
+          },
+          "404": {
+            "description": "Курс не найден"
+          },
+          "204": {
+            "description": "Курс удален"
+          }
+        }
+      }
+    },
+    "/api/words": {
+      "post": {
+        "tags": [
+          "Words"
+        ],
+        "summary": "Создать новое слово",
+        "description": "Добавление слова с медиа-файлами (аудио, видео, изображение)",
+        "operationId": "createWord",
+        "parameters": [
+          {
+            "in": "query",
+            "description": "Данные слова с файлами",
+            "content": {
+              "multipart/form-data": {
+
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WordRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "403": {
+            "description": "Нет прав на создание",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordResponseDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Уровень не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordResponseDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Требуется аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные данные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordResponseDTO"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Слово успешно создано",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WordResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Получить список всех пользователей",
+        "description": "Требуются права администратора",
+        "operationId": "getAllUsers",
+        "responses": {
+          "200": {
+            "description": "Список пользователей",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserResponseDTO"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Создать нового пользователя",
+        "description": "Регистрация нового пользователя в системе",
+        "operationId": "createUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequestDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Некорректные данные пользователя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Пользователь с таким именем уже существует",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDTO"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Пользователь успешно создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/levels": {
+      "get": {
+        "tags": [
+          "Levels"
+        ],
+        "summary": "Получить уровни курса",
+        "description": "Публичный доступ к списку уровней курса",
+        "operationId": "getAllLevels",
+        "parameters": [],
+        "responses": {
+          "404": {
+            "description": "Курс не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LevelResponseDTO"
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Список уровней",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LevelResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Levels"
+        ],
+        "summary": "Создать новый уровень",
+        "description": "Доступно автору курса или администратору",
+        "operationId": "createLevel",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LevelRequestDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Нет прав на создание",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelResponseDTO"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Уровень успешно создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelResponseDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Курс не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelResponseDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Требуется аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные данные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/learn/check-answer": {
+      "post": {
+        "tags": [
+          "Learning"
+        ],
+        "summary": "Проверить ответ",
+        "description": "Проверяет правильность ответа и обновляет прогресс",
+        "operationId": "checkAnswer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerSubmissionDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "404": {
+            "description": "Слово/пользователь не найдены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerResultDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные данные ответа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerResultDTO"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Результат проверки ответа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerResultDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Требуется аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerResultDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses": {
+      "get": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Получить все курсы",
+        "description": "Публичный доступ",
+        "operationId": "getAllCourses",
+        "responses": {
+          "200": {
+            "description": "Список всех курсов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourseResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Создать новый курс",
+        "description": "Доступно только авторизованным пользователям с ролью автора",
+        "operationId": "createCourse",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseRequestDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Требуется аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseResponseDTO"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Курс успешно создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные данные курса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/{id}/join": {
+      "post": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Вступить в курс",
+        "description": "Добавляет текущего пользователя в участники курса",
+        "operationId": "joinCourse",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Курс не найден"
+          },
+          "200": {
+            "description": "Успешное вступление в курс"
+          },
+          "401": {
+            "description": "Требуется аутентификация"
+          }
+        }
+      }
+    },
+    "/api/words/level/{levelId}": {
+      "get": {
+        "tags": [
+          "Words"
+        ],
+        "summary": "Получить слова по уровню",
+        "description": "Список всех слов, привязанных к уровню",
+        "operationId": "getWordsByLevel",
+        "parameters": [
+          {
+            "name": "levelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список слов уровня",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WordResponseDTO"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Уровень не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WordResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/progress/word/{wordId}": {
+      "get": {
+        "tags": [
+          "Progress"
+        ],
+        "summary": "Получить прогресс пользователя по слову",
+        "operationId": "getWordProgress",
+        "parameters": [
+          {
+            "name": "wordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Прогресс по слову",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressAverageDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь или слово не найдены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressAverageDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Требуется аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressAverageDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/progress/level/{levelId}": {
+      "get": {
+        "tags": [
+          "Progress"
+        ],
+        "summary": "Получить средний прогресс по уровню",
+        "operationId": "getLevelProgress",
+        "parameters": [
+          {
+            "name": "levelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Уровень не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressAverageDTO"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Средний прогресс",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressAverageDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Требуется аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressAverageDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/progress/course/{courseId}": {
+      "get": {
+        "tags": [
+          "Progress"
+        ],
+        "summary": "Получить средний прогресс по курсу",
+        "operationId": "getCourseProgress",
+        "parameters": [
+          {
+            "name": "courseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Курс не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressAverageDTO"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Средний прогресс",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressAverageDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Требуется аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgressAverageDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/learn/{levelId}": {
+      "get": {
+        "tags": [
+          "Learning"
+        ],
+        "summary": "Получить учебный материал",
+        "description": "Генерирует задание для обучения на основе прогресса пользователя",
+        "operationId": "getLearningMaterial",
+        "parameters": [
+          {
+            "name": "levelId",
+            "in": "path",
+            "description": "ID уровня",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 123
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Тип задания",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "WORD_TO_IMAGE",
+                "IMAGE_TO_WORD"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Уровень/пользователь/слова не найдены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningMaterialDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный тип задания",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningMaterialDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Требуется аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningMaterialDTO"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Учебный материал успешно сгенерирован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningMaterialDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/search": {
+      "get": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Получить курсы по строке",
+        "description": "Публичный доступ",
+        "operationId": "getCourses",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список курсов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourseResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courses/my-courses": {
+      "get": {
+        "tags": [
+          "Courses"
+        ],
+        "summary": "Получить курсы пользователя",
+        "description": "Возвращает курсы, в которых участвует текущий пользователь",
+        "operationId": "getUserCourses",
+        "responses": {
+          "200": {
+            "description": "Список курсов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourseResponseDTO"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Требуется аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourseResponseDTO"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/activation/activate": {
+      "get": {
+        "tags": [
+          "activation-controller"
+        ],
+        "operationId": "activateAccount",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "WordRequestDTO": {
+        "required": [
+          "definition",
+          "levelId",
+          "word"
+        ],
+        "type": "object",
+        "properties": {
+          "word": {
+            "type": "string"
+          },
+          "definition": {
+            "type": "string"
+          },
+          "levelId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "activeForTesting": {
+            "type": "boolean"
+          },
+          "audioFile": {
+            "type": "string",
+            "format": "binary"
+          },
+          "videoFile": {
+            "type": "string",
+            "format": "binary"
+          },
+          "imageFile": {
+            "type": "string",
+            "format": "binary"
+          }
+        }
+      },
+      "WordResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "word": {
+            "type": "string"
+          },
+          "definition": {
+            "type": "string"
+          },
+          "imagePath": {
+            "type": "string"
+          },
+          "audioPath": {
+            "type": "string"
+          },
+          "videoPath": {
+            "type": "string"
+          },
+          "activeForTesting": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UserRequestDTO": {
+        "required": [
+          "password",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "maxLength": 50,
+            "minLength": 3,
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 2147483647,
+            "minLength": 8,
+            "type": "string",
+            "writeOnly": true
+          }
+        }
+      },
+      "UserResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "username": {
+            "type": "string"
+          },
+          "roles": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "LevelRequestDTO": {
+        "required": [
+          "courseId",
+          "name",
+          "orderNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "orderNumber": {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "courseId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "LevelResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orderNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "courseId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "words": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WordResponseDTO"
+            }
+          }
+        }
+      },
+      "CourseRequestDTO": {
+        "required": [
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string"
+          }
+        }
+      },
+      "CourseResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "author": {
+            "$ref": "#/components/schemas/UserResponseDTO"
+          },
+          "levels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LevelResponseDTO"
+            }
+          },
+          "participants": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserResponseDTO"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AnswerSubmissionDTO": {
+        "type": "object",
+        "properties": {
+          "wordId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "WORD_TO_IMAGE",
+              "IMAGE_TO_WORD"
+            ]
+          }
+        }
+      },
+      "AnswerResultDTO": {
+        "type": "object",
+        "properties": {
+          "newProgress": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "correct": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ProgressAverageDTO": {
+        "type": "object",
+        "properties": {
+          "averageProgress": {
+            "type": "number",
+            "description": "Средний прогресс",
+            "format": "double",
+            "example": 65.5
+          }
+        },
+        "description": "Среднее значение прогресса"
+      },
+      "LearningMaterialDTO": {
+        "type": "object",
+        "properties": {
+          "targetWord": {
+            "$ref": "#/components/schemas/WordResponseDTO"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "WORD_TO_IMAGE",
+              "IMAGE_TO_WORD"
+            ]
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
+```
+
+Ты профессиональный frontend разработчик используешь React19, TypeScript, TanstackQueryV5, Axios, AntDesign, SCSS (SASS) для стилей
+У меня задача создать frontend для моего приложения с курсами и карточками тестами
+Я отправлю тебе OpenAPI конфингурацию и все остальное, твоя задача помочь реализовать мне frontend часть с использованием всех технологий которые я перечислил, а также учти что я использую TypeScript поэтому важно всегда все строго типизировать никогда не использовать Any, добавлять проверки на null значения где это важно чтобы не было ошибок
+
+Я буду перечислять задачу по модулям, твоя задача последовательно реализовывать перечисленные мной модули и приступать к следующему можно только после того как я проверю реализацию прошлого
+
+Разделяй код по доменам, все типы выноси в отдельные файлы, пропсы также выноси отдельно для удобства и следования чистому коду, важно что я собираюсь разделить проект на сервисный персистентный и презентационные слои, также реализовывай свои собственные хуки для удобной работы с запросами, не забывай использовать инструменты TanstackQuery для удобства работы 
+
+Начнем реализацию всего проекта с создания функций для запросов, хуков и прочего
+Модуль 1:
+Регистрация, авторизация, активация аккаунта, нужно реализовать функционал регистрации пользователя, затем функционал активации аккаунта, важно, что backend формирует ссылку которая должна переносить на frontend и из него он должен выделять токен активации и почту пользователя, затем активировать аккаунт, затем переносить на страницу авторизации
+Авторизация, после ввода логина пароля пользователю возвращают access токен, который должен добавляться в заголовке Authentication Bearer на все запросы кроме тех что связаны с refresh токена регистрацией активацией
+Учти, что при возникновении ошибки 403, нужно обновить access токен, а также то что токены сохранены в куках, но также их нужно хранить в local storage чтобы они были всегда доступны 
+
+Модуль2:
+Управление пользователем в системе, обновление личных данных пользователя, PUT методом
+
+
+Модуль3: 
+Работа с курсами, нужно реализовать методы и сервисы для работы с курсами, получение списка курсов, функционал создания новых курсов, обновление курсов, удаление курсов, вступление в курс по его id, получение всех курсов определенного пользователя, а также реализация поиска курсов (у меня это сделано через elastic search)
+Важно оптимизировать все, чтобы удобно работать с курсами, и важно использовать Tanstack Query V5 для отслеживания состояния и инвалидации запросов и прочего 
+
+Модуль4:
+Управление уровнями курсов, получить список уровней курса, создание новых уровней, получение информации об уровне по его id обновление и удаление, уровни курса это этапы на самом курсе, например уровень первый и в нем определенные слова и прочее и т.д.
+
+Модуль5:
+Все что связано с процессом обучения и проверкой знаний, настроить работу по получению учебного материала а также проверки ответа
+для проверки ответов есть 3 типа флагов, а именно "WORD_TO_IMAGE", "IMAGE_TO_WORD", "AUDIO_TO_WORD", то есть проверка картинки по выбранному введеному слову, проверка слова по выбранной картинке, а также проверка слова по звуку, нужно учесть разные варианты и сделать разные типы ответов и прочее
+
+Модуль6:
+Получение информации о прогрессе пользователя по курсу слову или уровню, то есть чтобы получать информацию о том на сколько % пользователь изучил курс уровень или конкретное слово
+
