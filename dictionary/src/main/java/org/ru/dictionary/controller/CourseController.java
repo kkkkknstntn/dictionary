@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.ru.dictionary.dto.ProgressAverageDTO;
 import org.ru.dictionary.dto.course.CourseRequestDTO;
 import org.ru.dictionary.dto.course.CourseResponseDTO;
 import org.ru.dictionary.service.CourseService;
@@ -118,5 +119,19 @@ public class CourseController {
     @GetMapping("/search")
     public List<CourseResponseDTO> getCourses(@RequestParam String query) {
         return courseService.getCourses(query);
+    }
+
+    @Operation(
+            summary = "Получить пользователей курса с их средним прогрессом",
+            description = "Возвращает список пользователей курса с их средним прогрессом"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Список пользователей и их прогресса по курсу"),
+            @ApiResponse(responseCode = "404", description = "Курс не найден")
+    })
+    @GetMapping("/{id}/progress")
+    public List<ProgressAverageDTO> getCourseUserProgress(
+            @PathVariable Long id) {
+        return courseService.getCourseUserProgress(id);
     }
 }
