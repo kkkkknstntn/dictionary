@@ -1,6 +1,15 @@
 import { authService } from '@/services/api/auth.service'
 import type { LoginFormData, RegisterFormData } from '@/shared/types/auth'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
+export const useActivateAccount = (token: string, email: string) => {
+	return useQuery({
+		queryKey: ['activate', token, email],
+		queryFn: () => authService.activateAccount(token, email),
+		retry: false,
+		enabled: !!token && !!email,
+	})
+}
 
 export const useLogin = () => {
 	const queryClient = useQueryClient()

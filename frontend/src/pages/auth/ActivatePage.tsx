@@ -1,32 +1,43 @@
-import { authService } from '@/services/api/auth.service'
+import { useActivateAccount } from '@/hooks/api/auth.hooks'
 import { Button, Result, Spin } from 'antd'
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import './AuthPages.scss'
 
 export const ActivatePage = () => {
 	const [searchParams] = useSearchParams()
-	const token = searchParams.get('token')
 	const email = searchParams.get('email')
+	const token = searchParams.get('token')
 
+	const { isPending, isError } = useActivateAccount(token || '', email || '')
 	useEffect(() => {
-		if (token && email) {
-			authService.activateAccount(token, email).catch(() => {})
-		}
-	}, [token, email])
+		console.log('email:', email)
+		console.log('token:', token)
+	}, [email, token])
 
-	if (!token || !email) {
+	if (isPending) {
 		return (
-			<Result
-				status='error'
-				title='Invalid activation link'
-				extra={<Button href='/login'>Go to Login</Button>}
-			/>
+			<div className='auth-page'>
+				<Spin size='large' tip='Активация аккаунта...' />
+			</div>
 		)
 	}
-
 	return (
-		<div className='flex-center h-screen'>
-			<Spin size='large' tip='Activating account...' />
+		<div className='auth-page'>
+			<Result
+				status={isError ? 'error' : 'success'}
+				title={isError ? 'Ошибка активации' : 'Аккаунт активирован'}
+				subTitle={
+					isError
+						? 'Неверная или устаревшая ссылка активации'
+						: 'Теперь вы можете войти в систему'
+				}
+				extra={[
+					<Button type='primary' key='login' href='/login'>
+						Перейти к авторизации
+					</Button>,
+				]}
+			/>
 		</div>
 	)
 }
