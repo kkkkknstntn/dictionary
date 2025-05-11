@@ -90,9 +90,9 @@ spring:
           writetimeout: 5000
 
 mailing:
-  activation-url: http://localhost:4200/activate-accout
-  email-address-sender: ""
-  activation-token-expiration: 3600
+  activation-url: https://frontend.localhost/activate-accout
+  email-address-sender: "doedating@yandex.ru"
+  activation-token-expiration: 7200
 
 elasticsearch:
   index:
