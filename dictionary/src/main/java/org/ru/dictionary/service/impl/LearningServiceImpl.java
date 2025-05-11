@@ -71,6 +71,7 @@ public class LearningServiceImpl implements LearningService {
         return switch (type) {
             case WORD_TO_IMAGE -> word.getImagePath().equals(answer);
             case IMAGE_TO_WORD -> word.getWord().equalsIgnoreCase(answer);
+            case AUDIO_TO_WORD -> word.getAudioPath().equals(answer);
         };
     }
 
@@ -92,8 +93,17 @@ public class LearningServiceImpl implements LearningService {
 
         return userRepository.findByUsername(userDetails.getUsername())
                 .map(user -> {
-                    Word targetWord = selectWordBasedOnProgress(words, user.getId());
-                    List<String> options = generateOptions(targetWord, words, type);
+                    List<Word> filteredWords = filterWordsByType(words, type);
+
+                    if (filteredWords.size() < 4) {
+                        throw new ApiException(
+                                BusinessErrorCodes.NOT_ENOUGH_WORDS,
+                                "Not enough words with the required attributes in level ID: " + levelId
+                        );
+                    }
+
+                    Word targetWord = selectWordBasedOnProgress(filteredWords, user.getId());
+                    List<String> options = generateOptions(targetWord, filteredWords, type);
                     return new LearningMaterialDTO(
                             wordMapper.toWordDto(targetWord),
                             options,
@@ -104,6 +114,17 @@ public class LearningServiceImpl implements LearningService {
                         BusinessErrorCodes.USER_NOT_FOUND,
                         "User: " + userDetails.getUsername()
                 ));
+    }
+
+    private List<Word> filterWordsByType(List<Word> words, LearningType type) {
+        return words.stream()
+                .filter(word -> switch (type) {
+                    case WORD_TO_IMAGE -> word.getImagePath() != null && !word.getImagePath().isEmpty();
+                    case IMAGE_TO_WORD -> word.getWord() != null && !word.getWord().isEmpty();
+                    case AUDIO_TO_WORD -> word.getAudioPath() != null && !word.getAudioPath().isEmpty();
+                    default -> false;
+                })
+                .collect(Collectors.toList());
     }
 
     private Word selectWordBasedOnProgress(List<Word> words, Long userId) {
@@ -125,18 +146,28 @@ public class LearningServiceImpl implements LearningService {
 
         Collections.shuffle(otherWords);
 
-        if (type == LearningType.WORD_TO_IMAGE) {
-            options.add(targetWord.getImagePath());
-            options.addAll(otherWords.stream()
-                    .limit(3)
-                    .map(Word::getImagePath)
-                    .toList());
-        } else {
-            options.add(targetWord.getWord());
-            options.addAll(otherWords.stream()
-                    .limit(3)
-                    .map(Word::getWord)
-                    .toList());
+        switch (type) {
+            case WORD_TO_IMAGE:
+                options.add(targetWord.getImagePath());
+                options.addAll(otherWords.stream()
+                        .limit(3)
+                        .map(Word::getImagePath)
+                        .toList());
+                break;
+            case IMAGE_TO_WORD:
+                options.add(targetWord.getWord());
+                options.addAll(otherWords.stream()
+                        .limit(3)
+                        .map(Word::getWord)
+                        .toList());
+                break;
+            case AUDIO_TO_WORD:
+                options.add(targetWord.getAudioPath());
+                options.addAll(otherWords.stream()
+                        .limit(3)
+                        .map(Word::getAudioPath)
+                        .toList());
+                break;
         }
 
         Collections.shuffle(options);

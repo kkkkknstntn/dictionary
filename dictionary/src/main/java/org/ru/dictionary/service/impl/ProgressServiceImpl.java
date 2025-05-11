@@ -2,11 +2,13 @@ package org.ru.dictionary.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.ru.dictionary.dto.ProgressAverageDTO;
+import org.ru.dictionary.dto.user.UserResponseDTO;
 import org.ru.dictionary.entity.Progress;
 import org.ru.dictionary.entity.User;
 import org.ru.dictionary.entity.Word;
 import org.ru.dictionary.enums.BusinessErrorCodes;
 import org.ru.dictionary.exception.ApiException;
+import org.ru.dictionary.mapper.UserMapper;
 import org.ru.dictionary.repository.*;
 import org.ru.dictionary.service.ProgressService;
 import org.springframework.cache.annotation.CacheEvict;
@@ -25,6 +27,7 @@ public class ProgressServiceImpl implements ProgressService {
     private final LevelRepository levelRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Transactional
     @CacheEvict(value = "userWordProgress", key = "{#user.id, #wordId}")
@@ -77,7 +80,9 @@ public class ProgressServiceImpl implements ProgressService {
                 ));
         Double progressValue = getProgress(user.getId(), wordId).doubleValue();
 
-        return new ProgressAverageDTO(progressValue);
+        UserResponseDTO userDTO = userMapper.toResponseDTO(user);
+
+        return new ProgressAverageDTO(userDTO, progressValue);
     }
 
     @Override
@@ -89,11 +94,12 @@ public class ProgressServiceImpl implements ProgressService {
         levelRepository.findById(levelId)
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.LEVEL_NOT_FOUND, "Level ID: " + levelId));
 
+        UserResponseDTO userDTO = userMapper.toResponseDTO(user);
 
-        return new ProgressAverageDTO(getAverageProgressForLevel(user.getId(), levelId));
+        return new ProgressAverageDTO(userDTO, getAverageProgressForLevel(user.getId(), levelId));
     }
 
-    private  Double getAverageProgressForLevel(Long userId, Long levelId) {
+    private Double getAverageProgressForLevel(Long userId, Long levelId) {
         Integer totalWords = wordRepository.countByLevelId(levelId);
 
         Integer totalProgressForLevel = progressRepository.getTotalProgressForLevel(userId, levelId);
@@ -109,9 +115,16 @@ public class ProgressServiceImpl implements ProgressService {
         courseRepository.findById(courseId)
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND, "Course ID: " + courseId));
 
+        UserResponseDTO userDTO = userMapper.toResponseDTO(user);
+
+        return getAverageProgressForCourse(userDTO, courseId);
+    }
+
+    @Override
+    public ProgressAverageDTO getAverageProgressForCourse(UserResponseDTO userDTO, Long courseId) {
         Double averageProgress = levelRepository.findByCourseId(courseId).stream().mapToDouble(
-                level -> getAverageProgressForLevel(user.getId(), level.getId())
+                level -> getAverageProgressForLevel(userDTO.getId(), level.getId())
         ).average().orElse(0);
-        return new ProgressAverageDTO(averageProgress);
+        return new ProgressAverageDTO(userDTO, averageProgress);
     }
 }

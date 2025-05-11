@@ -1,5 +1,6 @@
 package org.ru.dictionary.service;
 
+import org.ru.dictionary.dto.ProgressAverageDTO;
 import org.ru.dictionary.dto.course.CourseRequestDTO;
 import org.ru.dictionary.dto.course.CourseResponseDTO;
 import org.ru.dictionary.entity.Course;
@@ -16,4 +17,6 @@ public interface CourseService {
     void deleteCourse(Long courseId, UserDetails userDetails);
     void joinCourse(Long courseId, UserDetails userDetails);
     void checkAuthorOrAdmin(Course course, UserDetails userDetails);
+
+    List<ProgressAverageDTO> getCourseUserProgress(Long courseId);
 }

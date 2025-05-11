@@ -1,6 +1,7 @@
 package org.ru.dictionary.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.ru.dictionary.dto.ProgressAverageDTO;
 import org.ru.dictionary.dto.course.CourseRequestDTO;
 import org.ru.dictionary.dto.course.CourseResponseDTO;
 import org.ru.dictionary.entity.Course;
@@ -9,10 +10,12 @@ import org.ru.dictionary.enums.Authorities;
 import org.ru.dictionary.enums.BusinessErrorCodes;
 import org.ru.dictionary.exception.ApiException;
 import org.ru.dictionary.mapper.CourseMapper;
+import org.ru.dictionary.mapper.UserMapper;
 import org.ru.dictionary.repository.CourseDocumentRepository;
 import org.ru.dictionary.repository.CourseRepository;
 import org.ru.dictionary.repository.UserRepository;
 import org.ru.dictionary.service.CourseService;
+import org.ru.dictionary.service.ProgressService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,8 @@ public class CourseServiceImpl implements CourseService {
     private final UserRepository userRepository;
     private final CourseMapper courseMapper;
     private final CourseDocumentRepository courseDocumentRepository;
+    private final UserMapper userMapper;
+    private final ProgressService progressService;
 
     public void checkAuthorOrAdmin(Course course, UserDetails userDetails) {
         boolean isAuthor = course.getAuthor().getUsername().equals(userDetails.getUsername());
@@ -133,5 +138,18 @@ public class CourseServiceImpl implements CourseService {
             course.getParticipants().add(user);
             courseRepository.save(course);
         }
+    }
+
+    @Transactional
+    @Cacheable(value = "courseProgress", key = "#courseId")
+    public List<ProgressAverageDTO> getCourseUserProgress(Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND, "Course ID: " + courseId));
+
+        Set<User> participants = course.getParticipants();
+
+        return participants.stream()
+                .map(user -> progressService.getAverageProgressForCourse(userMapper.toResponseDTO(user), courseId))
+                .collect(Collectors.toList());
     }
 }

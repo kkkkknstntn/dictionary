@@ -30,7 +30,8 @@ public enum BusinessErrorCodes {
     EXPIRED_ACTIVATION_TOKEN(4007, HttpStatus.BAD_REQUEST, "Activation token has expired"),
     TOKEN_ALREADY_USED(4008, HttpStatus.BAD_REQUEST, "Token has already been used"),
     INTERNAL_SERVER_ERROR(5000, HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error"),
-    SEARCH_FAILED(4009, HttpStatus.BAD_REQUEST , "Search failed" ),;
+    SEARCH_FAILED(4009, HttpStatus.BAD_REQUEST , "Search failed" ),
+    NOT_ENOUGH_WORDS(4010, HttpStatus.BAD_REQUEST , "Not enough words"),;
 
 
 
