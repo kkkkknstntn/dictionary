@@ -2,10 +2,18 @@ import type {
 	CourseRequestDTO,
 	CourseResponseDTO,
 	CourseSearchParams,
+	CourseUserProgressDTO,
 } from '@/shared/types/course'
 import { authAxios } from './index'
 
 export const courseService = {
+	async getCourseUsersProgress(id: number): Promise<CourseUserProgressDTO[]> {
+		const response = await authAxios.get<CourseUserProgressDTO[]>(
+			`/api/courses/${id}/progress`
+		)
+		return response.data
+	},
+
 	getAllCourses: async (): Promise<CourseResponseDTO[]> => {
 		const response = await authAxios.get<CourseResponseDTO[]>('/api/courses')
 		return response.data

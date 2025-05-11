@@ -23,3 +23,8 @@ export type CourseJoinDTO = {
 export type CourseSearchParams = {
 	query: string
 }
+
+export type CourseUserProgressDTO = {
+  user: UserResponseDTO;
+  averageProgress: number;
+};

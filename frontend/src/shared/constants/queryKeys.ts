@@ -11,4 +11,5 @@ export const QUERY_KEYS = {
 	WORDS: ['words'],
 	WORD_DETAILS: (id: number) => ['word', id],
 	LEARNING_MATERIAL: (params: LearningParams) => ['learning', params],
+	COURSE_PROGRESS_USERS: (id: number) => ['course-progress-users', id],
 } as const
