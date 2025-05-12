@@ -44,7 +44,7 @@ public class LevelServiceImpl implements LevelService {
                         "Course ID: " + dto.getCourseId()
                 ));
 
-        courseService.checkAuthorOrAdmin(course, userDetails);
+        courseService.checkAuthorOrAdmin(course);
 
         Level level = levelMapper.toEntity(dto);
         level.setCourse(course);
@@ -83,7 +83,7 @@ public class LevelServiceImpl implements LevelService {
                         "Level ID: " + levelId
                 ));
 
-        courseService.checkAuthorOrAdmin(level.getCourse(), userDetails);
+        courseService.checkAuthorOrAdmin(level.getCourse());
 
         levelMapper.updateFromDto(dto, level);
         return levelMapper.toResponseDTO(levelRepository.save(level));
@@ -103,7 +103,7 @@ public class LevelServiceImpl implements LevelService {
                         "Level ID: " + levelId
                 ));
 
-        courseService.checkAuthorOrAdmin(level.getCourse(), userDetails);
+        courseService.checkAuthorOrAdmin(level.getCourse());
 
         levelRepository.delete(level);
         reorderLevelsAfterDeletion(level.getCourse());

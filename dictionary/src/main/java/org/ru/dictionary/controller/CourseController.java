@@ -11,6 +11,7 @@ import org.ru.dictionary.dto.course.CourseResponseDTO;
 import org.ru.dictionary.service.CourseService;
 import org.ru.dictionary.validation.ValidationGroups;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
@@ -29,19 +30,17 @@ public class CourseController {
 
     @Operation(
             summary = "Создать новый курс",
-            description = "Доступно только авторизованным пользователям с ролью автора"
+            description = "Доступно только авторизованным пользователям"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Курс успешно создан"),
             @ApiResponse(responseCode = "400", description = "Некорректные данные курса"),
             @ApiResponse(responseCode = "401", description = "Требуется аутентификация")
     })
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    public CourseResponseDTO createCourse(
-            @Validated(ValidationGroups.Create.class) @RequestBody CourseRequestDTO dto,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        return courseService.createCourse(dto, userDetails);
+    public CourseResponseDTO createCourse(@Validated(ValidationGroups.Create.class) @ModelAttribute CourseRequestDTO dto) {
+        return courseService.createCourse(dto);
     }
 
     @Operation(summary = "Обновить курс", description = "Доступно только автору курса")
@@ -50,12 +49,12 @@ public class CourseController {
             @ApiResponse(responseCode = "403", description = "Нет прав на редактирование"),
             @ApiResponse(responseCode = "404", description = "Курс не найден")
     })
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public CourseResponseDTO updateCourse(
             @PathVariable Long id,
-            @Validated(ValidationGroups.Update.class) @RequestBody CourseRequestDTO dto,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        return courseService.updateCourse(id, dto, userDetails);
+            @Validated(ValidationGroups.Update.class) @ModelAttribute CourseRequestDTO dto
+    ) {
+        return courseService.updateCourse(id, dto);
     }
 
     @Operation(summary = "Получить все курсы", description = "Публичный доступ")
@@ -74,9 +73,8 @@ public class CourseController {
             @ApiResponse(responseCode = "401", description = "Требуется аутентификация")
     })
     @GetMapping("/my-courses")
-    public List<CourseResponseDTO> getUserCourses(
-            @AuthenticationPrincipal UserDetails userDetails){
-        return courseService.getUserCourses(userDetails);
+    public List<CourseResponseDTO> getUserCourses(){
+        return courseService.getUserCourses();
     }
 
     @Operation(
@@ -90,10 +88,8 @@ public class CourseController {
     })
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCourse(
-            @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        courseService.deleteCourse(id, userDetails);
+    public void deleteCourse(@PathVariable Long id) {
+        courseService.deleteCourse(id);
     }
 
 

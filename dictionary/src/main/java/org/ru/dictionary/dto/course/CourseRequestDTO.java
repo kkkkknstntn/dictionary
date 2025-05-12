@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.ru.dictionary.validation.ValidationGroups;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class CourseRequestDTO {
@@ -12,4 +13,6 @@ public class CourseRequestDTO {
 
     @Size(max = 1000, groups = {ValidationGroups.Create.class})
     private String description;
+
+    private MultipartFile imageFile;
 }

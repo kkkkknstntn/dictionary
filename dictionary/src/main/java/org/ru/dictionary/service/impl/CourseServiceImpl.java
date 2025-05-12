@@ -1,6 +1,8 @@
 package org.ru.dictionary.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.ru.dictionary.document.CourseDocument;
 import org.ru.dictionary.dto.ProgressAverageDTO;
 import org.ru.dictionary.dto.course.CourseRequestDTO;
 import org.ru.dictionary.dto.course.CourseResponseDTO;
@@ -16,6 +18,8 @@ import org.ru.dictionary.repository.CourseRepository;
 import org.ru.dictionary.repository.UserRepository;
 import org.ru.dictionary.service.CourseService;
 import org.ru.dictionary.service.ProgressService;
+import org.ru.dictionary.service.S3Service;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,12 +27,14 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CourseServiceImpl implements CourseService {
 
     private final CourseRepository courseRepository;
@@ -36,11 +42,12 @@ public class CourseServiceImpl implements CourseService {
     private final CourseMapper courseMapper;
     private final CourseDocumentRepository courseDocumentRepository;
     private final UserMapper userMapper;
+    private final S3Service s3Service;
     private final ProgressService progressService;
 
-    public void checkAuthorOrAdmin(Course course, UserDetails userDetails) {
-        boolean isAuthor = course.getAuthor().getUsername().equals(userDetails.getUsername());
-        boolean isAdmin = userDetails.getAuthorities().stream()
+    public void checkAuthorOrAdmin(Course course) {
+        boolean isAuthor = course.getAuthor().getUsername().equals( SecurityContextHolder.getContext().getAuthentication().getName());
+        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals(Authorities.ROLE_ADMIN.name()));
 
         if (!isAuthor && !isAdmin) {
@@ -58,42 +65,62 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Cacheable(value = "courses", key = "#query")
     public List<CourseResponseDTO> getCourses(String query) {
-        return courseDocumentRepository.searchCourses(query)
+        List<Long> courseIds = courseDocumentRepository.searchCourses(query)
                 .stream()
-                .map(courseMapper::toDto)
+                .map(CourseDocument::getId)
+                .collect(Collectors.toList());
+
+        if (courseIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return courseRepository.findAllById(courseIds).stream()
+                .map(courseMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
-
     @Transactional
-    @Cacheable(value = "userCourses", key = "#userDetails.username")
-    public CourseResponseDTO createCourse(CourseRequestDTO dto, UserDetails userDetails) {
-        User author = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND,
-                        "User not found: " + userDetails.getUsername()));
+    @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
+    public CourseResponseDTO createCourse(CourseRequestDTO dto) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User author = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND));
+
+        String imageUrl = s3Service.uploadFile(dto.getImageFile());
 
         Course course = courseMapper.toEntity(dto);
+        Set<User> participants = new HashSet<>();
+        participants.add(author);
+
+        course.setParticipants(participants);
         course.setAuthor(author);
+        course.setImagePath(imageUrl);
 
         return courseMapper.toResponseDTO(courseRepository.save(course));
     }
+
 
     @Transactional
     @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
-    public CourseResponseDTO updateCourse(Long courseId, CourseRequestDTO dto, UserDetails userDetails) {
+    public CourseResponseDTO updateCourse(Long courseId, CourseRequestDTO dto) {
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,
-                        "Course ID: " + courseId));
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND));
 
-        checkAuthorOrAdmin(course, userDetails);
+        checkAuthorOrAdmin(course);
+
+        if(dto.getImageFile() != null && !dto.getImageFile().isEmpty()) {
+            String newImageUrl = s3Service.uploadFile(dto.getImageFile());
+            course.setImagePath(newImageUrl);
+        }
 
         courseMapper.updateFromDto(dto, course);
-
         return courseMapper.toResponseDTO(courseRepository.save(course));
     }
 
+
     @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
-    public List<CourseResponseDTO> getUserCourses(UserDetails userDetails) {
-        return userRepository.findByUsername(userDetails.getUsername())
+    public List<CourseResponseDTO> getUserCourses() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByUsername(username)
                 .map(user -> courseRepository.findByParticipantsContaining(user)
                         .stream()
                         .map(courseMapper::toResponseDTO)
@@ -104,12 +131,12 @@ public class CourseServiceImpl implements CourseService {
 
     @Transactional
     @CacheEvict(value = {"allCourses", "courses", "userCourses"}, allEntries = true)
-    public void deleteCourse(Long courseId, UserDetails userDetails) {
+    public void deleteCourse(Long courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,
                         "Course ID: " + courseId));
 
-        checkAuthorOrAdmin(course, userDetails);
+        checkAuthorOrAdmin(course);
         courseRepository.delete(course);
     }
 
@@ -130,9 +157,11 @@ public class CourseServiceImpl implements CourseService {
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,
                         "Course ID: " + courseId));
 
-        User user = userRepository.findByUsername(userDetails.getUsername())
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND,
-                        "User: " + userDetails.getUsername()));
+                        "User: " + username));
 
         if (!course.getParticipants().contains(user)) {
             course.getParticipants().add(user);

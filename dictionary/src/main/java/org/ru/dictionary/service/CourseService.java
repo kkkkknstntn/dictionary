@@ -10,14 +10,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.List;
 
 public interface CourseService {
-    CourseResponseDTO createCourse(CourseRequestDTO dto, UserDetails userDetails);
-    CourseResponseDTO updateCourse(Long courseId, CourseRequestDTO dto, UserDetails userDetails);
+    CourseResponseDTO createCourse(CourseRequestDTO dto);
+    CourseResponseDTO updateCourse(Long courseId, CourseRequestDTO dto);
     List<CourseResponseDTO> getAllCourses();
     List<CourseResponseDTO> getCourses(String query);
-    List<CourseResponseDTO> getUserCourses(UserDetails userDetails);
-    void deleteCourse(Long courseId, UserDetails userDetails);
+    List<CourseResponseDTO> getUserCourses();
+    void deleteCourse(Long courseId);
     void joinCourse(Long courseId, UserDetails userDetails);
-    void checkAuthorOrAdmin(Course course, UserDetails userDetails);
+    void checkAuthorOrAdmin(Course course);
 
     List<ProgressAverageDTO> getCourseUserProgress(Long courseId);
 

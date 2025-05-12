@@ -30,19 +30,20 @@ public class S3ServiceImpl implements S3Service {
 
     public String uploadFile(MultipartFile file) {
         try {
-            String key = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            log.info("Uploading file {} to bucket {}", file.getOriginalFilename(), bucketName);
+            if (file != null && !file.isEmpty()) {
+                String key = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                log.info("Uploading file {} to bucket {}", file.getOriginalFilename(), bucketName);
 
-            PutObjectRequest putRequest = PutObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(key)
-                    .contentType(file.getContentType())
-                    .build();
+                PutObjectRequest putRequest = PutObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .contentType(file.getContentType())
+                        .build();
 
-            s3Client.putObject(putRequest, RequestBody.fromBytes(file.getBytes()));
-            log.info("Successfully uploaded file: {}", file.getOriginalFilename());
-            return minioUrl + "/" + bucketName + "/" + key;
-
+                s3Client.putObject(putRequest, RequestBody.fromBytes(file.getBytes()));
+                log.info("Successfully uploaded file: {}", file.getOriginalFilename());
+                return minioUrl + "/" + bucketName + "/" + key;
+            } return null;
         } catch (IOException e) {
             log.error("File upload failed: {}", file.getOriginalFilename(), e);
             throw new ApiException(

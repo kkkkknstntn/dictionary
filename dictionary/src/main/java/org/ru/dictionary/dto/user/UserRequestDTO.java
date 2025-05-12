@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.hibernate.sql.Update;
 import org.ru.dictionary.validation.ValidationGroups;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @Data
@@ -20,4 +21,6 @@ public class UserRequestDTO {
     @Size(min = 8, groups = ValidationGroups.Create.class)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+
+    private MultipartFile imageFile;
 }

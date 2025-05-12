@@ -25,6 +25,7 @@ public abstract class CourseMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "participants", ignore = true)
+    @Mapping(target = "imagePath", ignore = true)
     public abstract Course toEntity(CourseRequestDTO dto);
 
     @Mapping(target = "author", source = "author", qualifiedByName = "toUserDto")
@@ -62,6 +63,4 @@ public abstract class CourseMapper {
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "participants", ignore = true)
     public abstract void updateFromDto(CourseRequestDTO dto, @MappingTarget Course entity);
-
-    public abstract CourseResponseDTO toDto(CourseDocument course);
 }

@@ -19,7 +19,6 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,11 +47,11 @@ public class WordServiceImpl implements WordService {
                         "Level ID: " + dto.getLevelId()
                 ));
 
-        courseService.checkAuthorOrAdmin(level.getCourse(), userDetails);
+        courseService.checkAuthorOrAdmin(level.getCourse());
 
-        String audioUrl = processFileUpload(dto.getAudioFile());
-        String videoUrl = processFileUpload(dto.getVideoFile());
-        String imageUrl = processFileUpload(dto.getImageFile());
+        String audioUrl = s3Service.uploadFile(dto.getAudioFile());
+        String videoUrl = s3Service.uploadFile(dto.getVideoFile());
+        String imageUrl = s3Service.uploadFile(dto.getImageFile());
 
         int lastOrderNumber = wordRepository.findTopByLevelIdOrderByOrderNumberDesc(dto.getLevelId())
                 .map(Word::getOrderNumber)
@@ -99,7 +98,7 @@ public class WordServiceImpl implements WordService {
                         "Word ID: " + id
                 ));
 
-        courseService.checkAuthorOrAdmin(word.getLevel().getCourse(), userDetails);
+        courseService.checkAuthorOrAdmin(word.getLevel().getCourse());
 
         Level newLevel = levelRepository.findById(dto.getLevelId())
                 .orElseThrow(() -> new ApiException(
@@ -132,15 +131,8 @@ public class WordServiceImpl implements WordService {
                         "Word ID: " + id
                 ));
 
-        courseService.checkAuthorOrAdmin(word.getLevel().getCourse(), userDetails);
+        courseService.checkAuthorOrAdmin(word.getLevel().getCourse());
         wordRepository.delete(word);
-    }
-
-    private String processFileUpload(MultipartFile file) {
-        if (file != null && !file.isEmpty()) {
-            return s3Service.uploadFile(file);
-        }
-        return null;
     }
 
     private void updateMediaFiles(WordRequestDTO dto, Word word) {
