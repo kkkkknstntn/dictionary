@@ -92,7 +92,7 @@ spring:
           writetimeout: 5000
 
 mailing:
-  activation-url: https://frontend.localhost/activate-account
+  activation-url: http://localhost:5173/activate-account
   email-address-sender: "doedating@yandex.ru"
   activation-token-expiration: 7200
 

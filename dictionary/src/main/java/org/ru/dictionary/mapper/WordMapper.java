@@ -16,9 +16,9 @@ public abstract class WordMapper {
     @Mapping(target = "videoPath", source = "videoPath")
     public abstract WordResponseDTO toWordDto(Word word);
 
-
+    @Mapping(target = "id", ignore = true)
     public abstract void updateFromDto(WordRequestDTO dto, @MappingTarget Word entity);
-
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "imagePath", source = "imagePath")
     @Mapping(target = "audioPath", source = "audioPath")
     @Mapping(target = "videoPath", source = "videoPath")
