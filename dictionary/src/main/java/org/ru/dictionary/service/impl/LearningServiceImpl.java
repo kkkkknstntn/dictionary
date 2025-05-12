@@ -71,7 +71,7 @@ public class LearningServiceImpl implements LearningService {
         return switch (type) {
             case WORD_TO_IMAGE -> word.getImagePath().equals(answer);
             case IMAGE_TO_WORD -> word.getWord().equalsIgnoreCase(answer);
-            case AUDIO_TO_WORD -> word.getAudioPath().equals(answer);
+            case AUDIO_TO_WORD -> word.getWord().equals(answer);
         };
     }
 
@@ -120,8 +120,7 @@ public class LearningServiceImpl implements LearningService {
         return words.stream()
                 .filter(word -> switch (type) {
                     case WORD_TO_IMAGE -> word.getImagePath() != null && !word.getImagePath().isEmpty();
-                    case IMAGE_TO_WORD -> word.getWord() != null && !word.getWord().isEmpty();
-                    case AUDIO_TO_WORD -> word.getAudioPath() != null && !word.getAudioPath().isEmpty();
+                    case IMAGE_TO_WORD, AUDIO_TO_WORD -> word.getWord() != null && !word.getWord().isEmpty();
                     default -> false;
                 })
                 .collect(Collectors.toList());
@@ -154,18 +153,11 @@ public class LearningServiceImpl implements LearningService {
                         .map(Word::getImagePath)
                         .toList());
                 break;
-            case IMAGE_TO_WORD:
+            case IMAGE_TO_WORD, AUDIO_TO_WORD:
                 options.add(targetWord.getWord());
                 options.addAll(otherWords.stream()
                         .limit(3)
                         .map(Word::getWord)
-                        .toList());
-                break;
-            case AUDIO_TO_WORD:
-                options.add(targetWord.getAudioPath());
-                options.addAll(otherWords.stream()
-                        .limit(3)
-                        .map(Word::getAudioPath)
                         .toList());
                 break;
         }
