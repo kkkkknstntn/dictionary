@@ -45,7 +45,7 @@ public class WordController {
     @ResponseStatus(HttpStatus.CREATED)
     public WordResponseDTO createWord(
             @ModelAttribute @Valid WordRequestDTO request,
-            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+            @AuthenticationPrincipal UserDetails userDetails) {
         return wordService.createWord(request, userDetails);
     }
 

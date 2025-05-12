@@ -4,6 +4,7 @@ import org.ru.dictionary.dto.ProgressAverageDTO;
 import org.ru.dictionary.dto.course.CourseRequestDTO;
 import org.ru.dictionary.dto.course.CourseResponseDTO;
 import org.ru.dictionary.entity.Course;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
@@ -19,4 +20,7 @@ public interface CourseService {
     void checkAuthorOrAdmin(Course course, UserDetails userDetails);
 
     List<ProgressAverageDTO> getCourseUserProgress(Long courseId);
+
+    @Cacheable(value = "courses", key = "#id")
+    CourseResponseDTO getCourseById(Long id);
 }
