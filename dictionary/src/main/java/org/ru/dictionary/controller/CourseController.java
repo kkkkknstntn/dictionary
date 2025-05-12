@@ -134,4 +134,14 @@ public class CourseController {
             @PathVariable Long id) {
         return courseService.getCourseUserProgress(id);
     }
+
+    @Operation(summary = "Получить курс по ID", description = "Публичный доступ")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Курс найден"),
+            @ApiResponse(responseCode = "404", description = "Курс не найден")
+    })
+    @GetMapping("/{id}")
+    public CourseResponseDTO getCourseById(@PathVariable Long id) {
+        return courseService.getCourseById(id);
+    }
 }

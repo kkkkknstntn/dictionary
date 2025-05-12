@@ -152,4 +152,13 @@ public class CourseServiceImpl implements CourseService {
                 .map(user -> progressService.getAverageProgressForCourse(userMapper.toResponseDTO(user), courseId))
                 .collect(Collectors.toList());
     }
+
+    @Cacheable(value = "courses", key = "#id")
+    @Override
+    public CourseResponseDTO getCourseById(Long id) {
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,
+                        "Course ID: " + id));
+        return courseMapper.toResponseDTO(course);
+    }
 }
