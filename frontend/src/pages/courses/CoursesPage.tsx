@@ -1,5 +1,6 @@
 import { useCourses } from '@/hooks/api/course.hooks'
 import { useCurrentUser } from '@/hooks/api/user.hooks'
+import { PlusOutlined } from '@ant-design/icons'
 import { Button, Col, Empty, Row, Skeleton, Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import { AddCourseModal } from './components/AddCourseModal'
@@ -43,7 +44,7 @@ export const CoursesPage = () => {
 			{currentUser && (
 				<Button
 					type='primary'
-					//icon={<PlusOutlined />}
+					icon={<PlusOutlined />}
 					onClick={() => setModalOpen(true)}
 					style={{ marginBottom: 24 }}
 				>

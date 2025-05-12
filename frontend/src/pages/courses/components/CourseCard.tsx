@@ -13,10 +13,7 @@ export const CourseCard = ({ course }: Props) => (
 	<Card
 		className='course-card'
 		hoverable
-		cover={
-			/* Можно будет прикрутить картинку курса – сейчас только placeholder-цвет */
-			<div className='cover' />
-		}
+		cover={<img alt={course.title} src={course.imagePath} className='cover' />}
 		actions={[
 			<Link key='open' to={`/course/${course.id}`}>
 				Перейти
