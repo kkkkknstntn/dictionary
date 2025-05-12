@@ -16,6 +16,7 @@ export type CourseResponseDTO = {
 	participants: UserResponseDTO[]
 	createdAt: string
 	progress?: number
+	imagePath: string
 }
 
 export type CourseJoinDTO = {
