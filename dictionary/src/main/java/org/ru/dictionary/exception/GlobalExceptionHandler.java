@@ -41,12 +41,6 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(code, ex.getMessage());
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class})
-    public ResponseEntity<ExceptionResponse> handleMethodArgumentNotValidException(BadCredentialsException ex) {
-        BusinessErrorCodes code = BusinessErrorCodes.VALIDATION_ERROR;
-        return buildErrorResponse(code, ex.getMessage());
-    }
-
 
 
     @ExceptionHandler(Exception.class)
@@ -55,6 +49,16 @@ public class GlobalExceptionHandler {
                 BusinessErrorCodes.INTERNAL_SERVER_ERROR,
                 "Internal server error: " + ex.getMessage()
         );
+    }
+
+    @ExceptionHandler({MethodArgumentNotValidException.class})
+    public ResponseEntity<ExceptionResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+        BusinessErrorCodes code = BusinessErrorCodes.VALIDATION_ERROR;
+        StringBuilder message = new StringBuilder("Validation failed for argument: ");
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            message.append(error.getDefaultMessage()).append("; ");
+        });
+        return buildErrorResponse(code, message.toString());
     }
 
     private ResponseEntity<ExceptionResponse> buildErrorResponse(BusinessErrorCodes code, String message) {
