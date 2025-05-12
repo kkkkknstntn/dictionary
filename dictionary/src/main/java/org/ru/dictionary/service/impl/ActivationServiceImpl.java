@@ -66,7 +66,7 @@ public class ActivationServiceImpl implements ActivationService {
                 user.getUsername(),
                 user.getUsername(),
                 EmailTemplateName.ACTIVATE_ACCOUNT,
-                emailConfig.getActivationUrl() + "?email=" + user.getUsername() + "?token=" + token,
+                emailConfig.getActivationUrl() + "?email=" + user.getUsername() + "&token=" + token,
                 token,
                 "Account Activation"
         );

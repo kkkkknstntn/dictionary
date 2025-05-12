@@ -1,6 +1,6 @@
 import { useLogin } from '@/hooks/api/auth.hooks'
 import type { LoginFormData } from '@/shared/types/auth'
-import { Button, Card, Form, Input, notification } from 'antd'
+import { Button, Card, Form, Input, Modal } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
 import './AuthPages.scss'
 
@@ -8,20 +8,20 @@ export const LoginPage = () => {
 	const [form] = Form.useForm()
 	const { mutate, isPending } = useLogin()
 	const navigate = useNavigate()
+
 	const handleSubmit = (values: LoginFormData) => {
 		mutate(values, {
 			onSuccess: () => {
 				navigate('/courses')
 			},
 			onError: () => {
-				notification.error({
-					message: 'Ошибка',
-					description: 'Неверные учетные данные',
+				Modal.error({
+					title: 'Ошибка входа',
+					content: 'Неверные учетные данные или аккаунт не активирован',
 				})
 			},
 		})
 	}
-
 	return (
 		<div className='auth-page'>
 			<Card title='Вход в систему' className='auth-card'>

@@ -6,6 +6,7 @@ export type UserUpdateData = {
 }
 
 export type UserResponseDTO = {
+	isEnabled: any
 	id: number
 	username: string
 	roles: string[]

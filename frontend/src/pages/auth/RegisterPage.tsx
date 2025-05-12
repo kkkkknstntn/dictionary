@@ -1,41 +1,28 @@
+import { EmailServiceModal } from '@/components/modals/EmailServiceModal'
 import { useRegister } from '@/hooks/api/auth.hooks'
 import type { RegisterFormData } from '@/shared/types/auth'
-import { MailOutlined } from '@ant-design/icons'
-import { Button, Card, Form, Input, notification } from 'antd'
+import { Button, Card, Form, Input, Modal } from 'antd'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import './AuthPages.scss'
 
 export const RegisterPage = () => {
 	const [form] = Form.useForm()
 	const { mutate, isPending } = useRegister()
+	const [successModalOpen, setSuccessModalOpen] = useState(false)
+	const [registeredEmail, setRegisteredEmail] = useState('')
 
 	const handleSubmit = (values: RegisterFormData) => {
 		mutate(values, {
 			onSuccess: () => {
-				notification.success({
-					message: 'Проверьте вашу почту',
-					description: (
-						<div>
-							<p>
-								Мы отправили письмо с кодом активации на вашу электронную почту
-							</p>
-							<Button
-								icon={<MailOutlined />}
-								href='https://mail.google.com'
-								target='_blank'
-							>
-								Открыть Gmail
-							</Button>
-						</div>
-					),
-					duration: 8,
-				})
+				setRegisteredEmail(values.username)
+				setSuccessModalOpen(true)
 				form.resetFields()
 			},
 			onError: error => {
-				notification.error({
-					message: 'Ошибка',
-					description: error.message || 'Ошибка регистрации',
+				Modal.error({
+					title: 'Ошибка регистрации',
+					content: error.message || 'Произошла ошибка при регистрации',
 				})
 			},
 		})
@@ -74,6 +61,12 @@ export const RegisterPage = () => {
 					</div>
 				</Form>
 			</Card>
+
+			<EmailServiceModal
+				email={registeredEmail}
+				open={successModalOpen}
+				onClose={() => setSuccessModalOpen(false)}
+			/>
 		</div>
 	)
 }

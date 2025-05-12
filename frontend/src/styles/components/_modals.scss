@@ -1,0 +1,14 @@
+.activation-modal {
+	.ant-modal-body {
+		text-align: center;
+		padding: 40px;
+
+		.mail-button {
+			margin-top: 20px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+		}
+	}
+}
