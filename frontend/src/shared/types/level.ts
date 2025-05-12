@@ -3,7 +3,7 @@ import type { WordResponseDTO } from './word'
 
 export type LevelRequestDTO = {
 	name: string
-	orderNumber: number
+	orderNumber?: number
 	courseId: number
 }
 

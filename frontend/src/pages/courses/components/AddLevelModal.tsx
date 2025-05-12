@@ -20,6 +20,7 @@ export const AddLevelModal = ({ open, courseId, onClose }: Props) => {
 					onSuccess: () => {
 						notification.success({ message: 'Уровень создан' })
 						onClose()
+						form.resetFields()
 					},
 				}
 			)

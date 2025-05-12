@@ -4,6 +4,7 @@ import type { UserResponseDTO } from './user'
 export type CourseRequestDTO = {
 	title: string
 	description?: string
+	imageFile?: File
 }
 
 export type CourseResponseDTO = {

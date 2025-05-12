@@ -12,8 +12,20 @@ export const authService = {
 		return response.data
 	},
 
+	// async register(data: RegisterFormData) {
+	// 	const response = await authAxios.post<UserResponseDTO>('/api/users', data)
+	// 	return response.data
+	// },
 	async register(data: RegisterFormData) {
-		const response = await authAxios.post<UserResponseDTO>('/api/users', data)
+		const formData = new FormData()
+		formData.append('username', data.username)
+		formData.append('password', data.password)
+
+		const response = await authAxios.post<UserResponseDTO>(
+			'/api/users',
+			formData
+		)
+
 		return response.data
 	},
 

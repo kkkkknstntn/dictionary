@@ -24,14 +24,27 @@ export const courseService = {
 		return response.data
 	},
 
+	// createCourse: async (data: CourseRequestDTO): Promise<CourseResponseDTO> => {
+	// 	const response = await authAxios.post<CourseResponseDTO>(
+	// 		'/api/courses',
+	// 		data
+	// 	)
+	// 	return response.data
+	// },
 	createCourse: async (data: CourseRequestDTO): Promise<CourseResponseDTO> => {
+		const formData = new FormData()
+		formData.append('title', data.title)
+		if (data.description) formData.append('description', data.description)
+		if (data.imageFile) formData.append('imageFile', data.imageFile)
+
 		const response = await authAxios.post<CourseResponseDTO>(
 			'/api/courses',
-			data
+			formData,
+			{ headers: { 'Content-Type': 'multipart/form-data' } }
 		)
+
 		return response.data
 	},
-
 	updateCourse: async (
 		id: number,
 		data: CourseRequestDTO
