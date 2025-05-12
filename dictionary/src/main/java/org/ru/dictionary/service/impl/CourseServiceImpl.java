@@ -16,6 +16,7 @@ import org.ru.dictionary.repository.CourseRepository;
 import org.ru.dictionary.repository.UserRepository;
 import org.ru.dictionary.service.CourseService;
 import org.ru.dictionary.service.ProgressService;
+import org.ru.dictionary.service.S3Service;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,7 @@ public class CourseServiceImpl implements CourseService {
     private final CourseMapper courseMapper;
     private final CourseDocumentRepository courseDocumentRepository;
     private final UserMapper userMapper;
+    private final S3Service s3Service;
     private final ProgressService progressService;
 
     public void checkAuthorOrAdmin(Course course, UserDetails userDetails) {
@@ -65,31 +67,38 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Transactional
-    @Cacheable(value = "userCourses", key = "#userDetails.username")
+    @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
     public CourseResponseDTO createCourse(CourseRequestDTO dto, UserDetails userDetails) {
         User author = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND,
-                        "User not found: " + userDetails.getUsername()));
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND));
+
+        String imageUrl = s3Service.uploadFile(dto.getImageFile());
 
         Course course = courseMapper.toEntity(dto);
         course.setAuthor(author);
+        course.setImagePath(imageUrl);
 
         return courseMapper.toResponseDTO(courseRepository.save(course));
     }
+
 
     @Transactional
     @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
     public CourseResponseDTO updateCourse(Long courseId, CourseRequestDTO dto, UserDetails userDetails) {
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,
-                        "Course ID: " + courseId));
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND));
 
         checkAuthorOrAdmin(course, userDetails);
 
-        courseMapper.updateFromDto(dto, course);
+        if(dto.getImageFile() != null && !dto.getImageFile().isEmpty()) {
+            String newImageUrl = s3Service.uploadFile(dto.getImageFile());
+            course.setImagePath(newImageUrl);
+        }
 
+        courseMapper.updateFromDto(dto, course);
         return courseMapper.toResponseDTO(courseRepository.save(course));
     }
+
 
     @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
     public List<CourseResponseDTO> getUserCourses(UserDetails userDetails) {

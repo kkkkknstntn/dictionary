@@ -34,6 +34,9 @@ public class Course {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "imagePath")
+    private String imagePath;
+
     @ManyToMany
     @JoinTable(
             name = "course_participants",
