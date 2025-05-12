@@ -1,6 +1,8 @@
 import { useCourses } from '@/hooks/api/course.hooks'
-import { Col, Empty, Row, Skeleton, Typography } from 'antd'
-import { useEffect } from 'react'
+import { useCurrentUser } from '@/hooks/api/user.hooks'
+import { Button, Col, Empty, Row, Skeleton, Typography } from 'antd'
+import { useEffect, useState } from 'react'
+import { AddCourseModal } from './components/AddCourseModal'
 import { CourseCard } from './components/CourseCard'
 import './CoursesPage.scss'
 
@@ -15,6 +17,9 @@ export const CoursesPage = () => {
 		refetch,
 	} = useCourses()
 
+	const { data: currentUser } = useCurrentUser()
+	const [modalOpen, setModalOpen] = useState(false)
+
 	useEffect(() => {
 		// При фокусе возвращаем свежие данные
 		const handler = () => refetch()
@@ -27,13 +32,24 @@ export const CoursesPage = () => {
 	}
 
 	if (isError) {
-		return <Empty description={error instanceof Error ? error.message : 'Ошибка'} />
+		return (
+			<Empty description={error instanceof Error ? error.message : 'Ошибка'} />
+		)
 	}
 
 	return (
 		<div className='courses-page'>
 			<Title level={2}>Все курсы</Title>
-
+			{currentUser && (
+				<Button
+					type='primary'
+					//icon={<PlusOutlined />}
+					onClick={() => setModalOpen(true)}
+					style={{ marginBottom: 24 }}
+				>
+					Создать курс
+				</Button>
+			)}
 			{courses.length === 0 ? (
 				<Empty description='Курсы не найдены' />
 			) : (
@@ -45,6 +61,7 @@ export const CoursesPage = () => {
 					))}
 				</Row>
 			)}
+			<AddCourseModal open={modalOpen} onClose={() => setModalOpen(false)} />
 		</div>
 	)
 }

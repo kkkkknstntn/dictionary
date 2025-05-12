@@ -1,13 +1,25 @@
 import { learnService } from '@/services/api/learn.service'
 import { QUERY_KEYS } from '@/shared/constants/queryKeys'
-import type { AnswerSubmissionDTO, LearningParams } from '@/shared/types/learn'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import type {
+	AnswerSubmissionDTO,
+	LearningMaterialDTO,
+	LearningParams,
+} from '@/shared/types/learn'
+import {
+	useMutation,
+	useQuery,
+	type UseQueryOptions,
+} from '@tanstack/react-query'
 
-export const useLearningMaterial = (params: LearningParams) => {
+export const useLearningMaterial = (
+	params: LearningParams,
+	options?: Omit<UseQueryOptions<LearningMaterialDTO>, 'queryKey' | 'queryFn'>
+) => {
 	return useQuery({
 		queryKey: QUERY_KEYS.LEARNING_MATERIAL(params),
 		queryFn: () => learnService.getLearningMaterial(params),
-		enabled: !!params.levelId && !!params.type,
+		enabled: false, // выключаем автозапуск
+		...options,
 	})
 }
 

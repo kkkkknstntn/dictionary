@@ -1,5 +1,6 @@
 import { courseService } from '@/services/api/course.service'
 import { QUERY_KEYS } from '@/shared/constants/queryKeys'
+import type { CourseRequestDTO } from '@/shared/types/course'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export const useUserCourses = () => {
@@ -8,7 +9,18 @@ export const useUserCourses = () => {
 		queryFn: () => courseService.getUserCourses(),
 	})
 }
+export const useCreateCourse = () => {
+	const queryClient = useQueryClient()
 
+	return useMutation({
+		mutationFn: (data: CourseRequestDTO) => courseService.createCourse(data),
+		onSuccess: newCourse => {
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COURSES })
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER_COURSES })
+			queryClient.setQueryData(['course-details', newCourse.id], newCourse)
+		},
+	})
+}
 export const useCourseProgressUsers = (courseId: number | undefined) => {
 	return useQuery({
 		queryKey: courseId ? QUERY_KEYS.COURSE_PROGRESS_USERS(courseId) : [],

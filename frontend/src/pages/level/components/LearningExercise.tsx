@@ -26,13 +26,13 @@ export const LearningExercise = ({ material, onNext }: Props) => {
 			},
 			{
 				onSuccess: result => {
-					notification[result.correct ? 'success' : 'error']({
-						message: result.correct ? 'Правильно!' : 'Ошибка',
-						description: result.correct
+					notification[result.isCorrect ? 'success' : 'error']({
+						message: result.isCorrect ? 'Правильно!' : 'Ошибка',
+						description: result.isCorrect
 							? `Прогресс: +${result.newProgress}%`
 							: `Правильный ответ: ${material.targetWord.word}`,
 					})
-					if (result.correct) onNext()
+					if (result.isCorrect) onNext()
 				},
 			}
 		)
