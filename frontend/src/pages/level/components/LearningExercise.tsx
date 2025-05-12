@@ -1,12 +1,14 @@
 import { useCheckAnswer } from '@/hooks/api/learn.hooks'
 import type { LearningMaterialDTO } from '@/shared/types/learn'
-import { Button, Grid, notification } from 'antd'
+import { Button, Grid } from 'antd'
+import { useState } from 'react'
 import { AudioPlayer } from './AudioPlayer'
 import './LearningExercise.scss'
 
 const { useBreakpoint } = Grid
+const FEEDBACK_DELAY = 900 // - время, пока подсветка видна (мс)
 
-type Props = {
+interface Props {
 	material?: LearningMaterialDTO
 	onNext: () => void
 }
@@ -15,25 +17,32 @@ export const LearningExercise = ({ material, onNext }: Props) => {
 	const screens = useBreakpoint()
 	const { mutate: checkAnswer } = useCheckAnswer()
 
-	// удобные флаги — читаемее, чем сравнивать строку в JSX
+	/** выбранный пользователем вариант */
+	const [selected, setSelected] = useState<string | null>(null)
+	/** правильность последнего ответа */
+	const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
+
 	const isAudioToWord = material?.type === 'AUDIO_TO_WORD'
 	const isWordToImage = material?.type === 'WORD_TO_IMAGE'
 	const isImageToWord = material?.type === 'IMAGE_TO_WORD'
 
 	const handleAnswer = (answer: string) => {
-		if (!material) return
+		if (!material || selected) return // уже ответили
+
+		setSelected(answer)
 
 		checkAnswer(
 			{ wordId: material.targetWord.id, answer, type: material.type },
 			{
-				onSuccess: result => {
-					notification[result.isCorrect ? 'success' : 'error']({
-						message: result.isCorrect ? 'Правильно!' : 'Ошибка',
-						description: result.isCorrect
-							? `Прогресс: +${result.newProgress}%`
-							: `Правильный ответ: ${material.targetWord.word}`,
-					})
-					if (result.isCorrect) onNext()
+				onSuccess: res => {
+					setIsCorrect(res.correct)
+
+					// ждём, чтобы пользователь увидел цвет/подсказку, и берём след. вопрос
+					setTimeout(() => {
+						setSelected(null)
+						setIsCorrect(null)
+						onNext()
+					}, FEEDBACK_DELAY)
 				},
 			}
 		)
@@ -41,10 +50,10 @@ export const LearningExercise = ({ material, onNext }: Props) => {
 
 	return (
 		<div className='exercise-container'>
-			{/* 1. Аудио — только для AUDIO_TO_WORD */}
-			{isAudioToWord && <AudioPlayer src={material!.targetWord.audioPath} />}
+			{/* 1. Аудио-подсказка (AUDIO_TO_WORD) */}
+			{isAudioToWord && <AudioPlayer src={material?.targetWord.audioPath} />}
 
-			{/* 2. Изображение цели — только для IMAGE_TO_WORD */}
+			{/* 2. Целевая картинка (IMAGE_TO_WORD) */}
 			{isImageToWord && (
 				<div className='target-wrapper'>
 					<img
@@ -55,22 +64,32 @@ export const LearningExercise = ({ material, onNext }: Props) => {
 				</div>
 			)}
 
-			{/* 3. Сетка вариантов */}
+			{/* 3. Варианты ответа */}
 			<div className={`options-grid ${screens.md ? 'desktop' : 'mobile'}`}>
-				{material?.options.map(option => (
-					<Button
-						key={option}
-						size='large'
-						className='option-button'
-						onClick={() => handleAnswer(option)}
-					>
-						{isWordToImage ? (
-							<img src={option} alt='Вариант' className='image-option' />
-						) : (
-							option
-						)}
-					</Button>
-				))}
+				{material?.options.map(option => {
+					/** подсвечиваем только выбранную кнопку */
+					let state: 'correct' | 'wrong' | undefined
+					if (selected && option === selected) {
+						state = isCorrect ? 'correct' : 'wrong'
+					}
+
+					return (
+						<Button
+							key={option}
+							size='large'
+							className='option-button'
+							data-state={state}
+							disabled={!!selected} // блокируем клики, пока показываем фидбек
+							onClick={() => handleAnswer(option)}
+						>
+							{isWordToImage ? (
+								<img src={option} alt='Вариант' className='image-option' />
+							) : (
+								option
+							)}
+						</Button>
+					)
+				})}
 			</div>
 		</div>
 	)

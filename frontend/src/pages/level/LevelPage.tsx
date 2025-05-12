@@ -2,10 +2,11 @@ import { queryClient } from '@/app/QueryProvider'
 import { useLearningMaterial } from '@/hooks/api/learn.hooks'
 import { useIsCourseAuthor } from '@/hooks/api/level-extra.hooks'
 import { useCurrentUser } from '@/hooks/api/user.hooks'
+import { useWordsByLevel } from '@/hooks/api/word.hooks'
 import { QUERY_KEYS } from '@/shared/constants/queryKeys'
 import type { LearningType } from '@/shared/types/learn'
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
-import { Button, Card, Select, Skeleton, Typography } from 'antd'
+import { Button, Card, List, Select, Skeleton, Typography } from 'antd'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { LearningExercise } from './components/LearningExercise'
@@ -19,7 +20,7 @@ export const LevelPage = () => {
 	const { data: isAuthor } = useIsCourseAuthor(levelId, currentUser?.username)
 	const [started, setStarted] = useState(false)
 	const [type, setType] = useState<LearningType>('WORD_TO_IMAGE')
-
+	const { data: words, isLoading: wordsLoading } = useWordsByLevel(levelId)
 	const {
 		data: material,
 		isLoading,
@@ -87,7 +88,24 @@ export const LevelPage = () => {
 					)
 				)}
 			</Card>
-
+			{!started && (
+				<Card
+					title='Слова в уровне'
+					loading={wordsLoading}
+					style={{ marginTop: 24 }}
+					bodyStyle={{ padding: 20 }}
+				>
+					<List
+						dataSource={words}
+						renderItem={w => (
+							<List.Item>
+								<strong>{w.word}</strong>&nbsp;—&nbsp;{w.definition}
+							</List.Item>
+						)}
+						style={{ maxHeight: 400, overflowY: 'auto' }}
+					/>
+				</Card>
+			)}
 			{/* Кнопка «добавить слово» доступна автору курса */}
 			{isAuthor && (
 				<Button

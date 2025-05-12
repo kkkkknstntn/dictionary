@@ -1,29 +1,83 @@
 .exercise-container {
-  .options-grid {
-    display: grid;
-    gap: 16px;
-    margin-top: 32px;
+	/* сетка */
+	.options-grid {
+		display: grid;
+		gap: 16px;
+		margin-top: 32px;
 
-    &.desktop {
-      grid-template-columns: repeat(2, 1fr);
-    }
+		&.desktop {
+			grid-template-columns: repeat(2, 1fr);
+		}
 
-    .option-button {
-      width: 100%;
-      height: 100px;
-      padding: 8px;
+		/* кнопка-вариант */
+		.option-button {
+			position: relative;
+			width: 100%;
+			height: 100px;
+			padding: 8px;
+			transition: background 0.2s ease;
 
-      .image-option {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-      }
-    }
-  }
+			&[disabled] {
+				cursor: default;
+			}
 
-  .audio-player {
-    display: flex;
-    justify-content: center;
-    margin: 24px 0;
-  }
+			/* картинка внутри кнопки */
+			.image-option {
+				width: 100%;
+				height: 100%;
+				object-fit: contain;
+			}
+
+			/* ── подсветка ─────────────────────────────────────────── */
+			&[data-state='correct'] {
+				background: #10b981;
+				color: #fff;
+			}
+			&[data-state='wrong'] {
+				background: #ef4444;
+				color: #fff;
+			}
+
+			/* ── всплывающая подпись ───────────────────────────────── */
+			&[data-state='correct']::after,
+			&[data-state='wrong']::after {
+				position: absolute;
+				top: -26px;
+				left: 50%;
+				transform: translateX(-50%);
+				padding: 2px 6px;
+				border-radius: 4px;
+				font-size: 12px;
+				color: #fff;
+				background: rgba(0, 0, 0, 0.85);
+				pointer-events: none;
+				animation: fadeOut 0.9s forwards;
+			}
+
+			&[data-state='correct']::after {
+				content: 'Правильно!';
+			}
+			&[data-state='wrong']::after {
+				content: 'Неверно';
+			}
+		}
+	}
+
+	/* плеер аудио */
+	.audio-player {
+		display: flex;
+		justify-content: center;
+		margin: 24px 0;
+	}
+}
+
+/* анимация исчезновения подписи */
+@keyframes fadeOut {
+	0%,
+	60% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
 }

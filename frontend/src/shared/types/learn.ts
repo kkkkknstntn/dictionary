@@ -9,7 +9,6 @@ export type AnswerSubmissionDTO = {
 export type AnswerResultDTO = {
 	newProgress: number
 	correct: boolean
-	isCorrect: boolean
 }
 
 export type LearningMaterialDTO = {
