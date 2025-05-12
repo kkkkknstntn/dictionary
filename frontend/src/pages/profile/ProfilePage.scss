@@ -1,0 +1,30 @@
+.profile-page {
+  .profile-header {
+    margin-bottom: 24px;
+    
+    .ant-skeleton {
+      padding: 12px;
+    }
+  }
+
+  .profile-tabs {
+    .ant-tabs-nav {
+      margin-bottom: 24px;
+    }
+  }
+
+  .course-progress {
+    margin-top: 12px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .profile-form {
+    max-width: 600px;
+    
+    .ant-form-item-label {
+      font-weight: 500;
+    }
+  }
+}

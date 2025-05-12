@@ -1,0 +1,5579 @@
+Ты профессиональный frontend разработчик используешь React19, TypeScript, TanstackQueryV5, Axios, AntDesign, SCSS (SASS) для стилей
+У меня задача создать frontend для моего приложения с курсами и карточками тестами основная задача проекта изучать слова по карточкам или различные определения и прочее 
+Я отправлю тебе свою кодовую базу Backend и кодовую базу frontend, я немного начал его делать, но он очень сырой и неготовый 
+Твоя задача помочь мне с завершением разработки Frontend части, я разделю задачи на модули, и ты будешь реализовывать все по модулям
+
+Модуль 1:
+Страница всех курсов, при переходе на страницу пользователь должен видеть список всех курсов которые есть в системе, в виде плиточек, курсы должны запрашиваться из бекенда и отрисовываться 
+
+Модуль2: Создание курсов
+Нужно добавить пользователю возможность создавать свои собственные курсы, каждый курс разделяется на уровни, на каждом уровне свои слова должна быть возможность начать проходить уровень и тогда слова должны по очереди отображаться и пользователь должен проходить тест и видеть правильно он ответил или нет, затем после окончания прохождения уровня должна быть возможность повторно запустить уровень (нужно отправить еще один запрос на получение списка слов и запустить все заново)
+таким образом при создании курса на каждый уровень нужно добавлять слова и должен быть разный тип вопросов, также есть вопросы которые не участвуют в тестировании, то есть будут как обычная информационная статья
+
+Модуль3: Страница конкретного курса и его прохождение, при переходе на страницу курса должна быть возможность записаться на него, после записи должен открыться доступ к прохождению уровней, уровни курса также должны быть расположены плиточкой на странице и быть кликабельными и переносить на страницу для тестирования где можно начать проходить уровень курса 
+Также на странице курса должен быть топ пользователей, а также информация о прогрессе самого пользователя по данному курсу
+Чтобы начать выполнять задания нужно использовать LearningController он будет выдавать задания приоритетно расставляя те в которых пользователь чаще ошибался
+Учти этот момент и изучи вопрос 
+
+Также мне кажется у меня немного некорректная файловая и архитектурная организация на frontend проекте, особенно со страницами и компонентами наверное нужно как-то лучше огранизовать стили и прочее в директориях и сделать отдельные файлы стилей для некоторых компонентов 
+Проанализируй мою кодовую базу, чтобы понимать как работают все запросы  
+Проверь все хуки и работу с tanstack queryV5 возможно там есть много проблем в текущей реализации
+Также когда будешь отправлять код и прочее, обязательно указывай в какой директории должен находится тот или иной файл, если делаешь компонент со стилями то указывай файл стиля и его содержимое, все файлы стилей должны лежать в одной директории с файлом к которому они относятся
+Важно, что к следующему модулю мы переходим только после полной реализации предыдущего и устранения всех ошибок если они возникают
+
+Отправляю кодовую базу проекта:
+// main/java/org/ru/dictionary/DictionaryApplication.java
+```java
+package org.ru.dictionary;
+
+
+@SpringBootApplication
+public class DictionaryApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DictionaryApplication.class, args);
+    }
+
+}
+```
+// main/java/org/ru/dictionary/mapper/LevelMapper.java
+```java
+package org.ru.dictionary.mapper;
+
+
+@Mapper(componentModel = "spring")
+public abstract class LevelMapper {
+    @Mapping(target = "course", source = "courseId", qualifiedByName = "mapCourseIdToCourse")
+    public abstract Level toEntity(LevelRequestDTO dto);
+
+    @Mapping(target = "courseId", source = "course.id")
+    public abstract LevelResponseDTO toResponseDTO(Level level);
+
+    @Named("mapCourseIdToCourse")
+    protected Course mapCourseIdToCourse(Long courseId) {
+        return Course.builder().id(courseId).build();
+    }
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "course", ignore = true)
+    public abstract void updateFromDto(LevelRequestDTO dto, @MappingTarget Level entity);
+}
+```
+// main/java/org/ru/dictionary/mapper/UserMapper.java
+```java
+package org.ru.dictionary.mapper;
+
+
+
+@Mapper(componentModel = "spring")
+public abstract class UserMapper {
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    public abstract User toEntity(UserRequestDTO dto);
+
+    @Mapping(target = "roles", source = "roles", qualifiedByName = "authoritiesToRoles")
+    public abstract UserResponseDTO toResponseDTO(User user);
+
+    @Named("rolesToAuthorities")
+    public Set<Authorities> rolesToAuthorities(Set<String> roles) {
+        return roles.stream()
+                .map(role -> {
+                    try {
+                        return Authorities.valueOf(role.toUpperCase());
+                    } catch (IllegalArgumentException ex) {
+                        throw new IllegalArgumentException("Invalid role: " + role);
+                    }
+                })
+                .collect(Collectors.toSet());
+    }
+
+    @Named("authoritiesToRoles")
+    public Set<String> authoritiesToRoles(Set<Authorities> authorities) {
+        return authorities.stream()
+                .map(Enum::name)
+                .collect(Collectors.toSet());
+    }
+}
+```
+// main/java/org/ru/dictionary/mapper/WordMapper.java
+```java
+package org.ru.dictionary.mapper;
+
+
+@Mapper(componentModel = "spring")
+public abstract class WordMapper {
+
+    @Mapping(target = "imagePath", source = "imagePath")
+    @Mapping(target = "audioPath", source = "audioPath")
+    @Mapping(target = "videoPath", source = "videoPath")
+    public abstract WordResponseDTO toWordDto(Word word);
+
+
+    public abstract void updateFromDto(WordRequestDTO dto, @MappingTarget Word entity);
+
+    @Mapping(target = "imagePath", source = "imagePath")
+    @Mapping(target = "audioPath", source = "audioPath")
+    @Mapping(target = "videoPath", source = "videoPath")
+    @Mapping(target = "orderNumber", source = "orderNumber")
+    @Mapping(target = "level", source = "level")
+    public abstract Word toEntity(WordRequestDTO dto, String imagePath, String audioPath, String videoPath, Integer orderNumber, Level level);
+}
+
+```
+// main/java/org/ru/dictionary/mapper/CourseMapper.java
+```java
+package org.ru.dictionary.mapper;
+
+
+
+@Mapper(componentModel = "spring")
+public abstract class CourseMapper {
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "author", ignore = true)
+    @Mapping(target = "participants", ignore = true)
+    public abstract Course toEntity(CourseRequestDTO dto);
+
+    @Mapping(target = "author", source = "author", qualifiedByName = "toUserDto")
+    @Mapping(target = "levels", source = "levels", qualifiedByName = "toLevelDtos")
+    @Mapping(target = "participants", source = "participants", qualifiedByName = "toUserDtos")
+    public abstract CourseResponseDTO toResponseDTO(Course course);
+
+    @Named("toLevelDtos")
+    protected List<LevelResponseDTO> toLevelDtos(List<Level> levels) {
+        return Optional.ofNullable(levels)
+                .map(levelsList -> levelsList
+                        .stream()
+                        .map(this::toLevelDto)
+                        .toList())
+                .orElseGet(Collections::emptyList);
+    }
+
+    @Named("toLevelDto")
+    public abstract LevelResponseDTO toLevelDto(Level level);
+
+    @Named("toUserDtos")
+    protected Set<UserResponseDTO> toUserDtos(Set<User> users) {
+        return Optional.ofNullable(users)
+                        .map(usersList -> usersList
+                                .stream()
+                .map(this::toUserDto)
+                                .collect(Collectors.toSet()))
+                .orElseGet(Collections::emptySet);
+    }
+
+    @Named("toUserDto")
+    public abstract UserResponseDTO toUserDto(User user);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "author", ignore = true)
+    @Mapping(target = "participants", ignore = true)
+    public abstract void updateFromDto(CourseRequestDTO dto, @MappingTarget Course entity);
+
+    public abstract CourseResponseDTO toDto(CourseDocument course);
+}
+```
+// main/java/org/ru/dictionary/controller/UserController.java
+```java
+package org.ru.dictionary.controller;
+
+
+
+@RestController
+@RequestMapping("/api/users")
+@Validated
+@RequiredArgsConstructor
+@Tag(name = "Users", description = "Управление пользователями системы")
+public class UserController {
+    private final UserService userService;
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(
+            summary = "Создать нового пользователя",
+            description = "Регистрация нового пользователя в системе"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Пользователь успешно создан"),
+            @ApiResponse(responseCode = "400", description = "Некорректные данные пользователя"),
+            @ApiResponse(responseCode = "409", description = "Пользователь с таким именем уже существует")
+    })
+    public UserResponseDTO createUser(
+            @Validated(ValidationGroups.Create.class) @RequestBody UserRequestDTO dto) {
+        return userService.createUser(dto);
+    }
+
+    @Operation(
+            summary = "Получить список всех пользователей",
+            description = "Требуются права администратора"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Список пользователей"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping
+    public List<UserResponseDTO> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
+    @Operation(
+            summary = "Обновить данные пользователя",
+            description = "Обновление информации о пользователе (доступно администратору или самому пользователю)"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Данные обновлены"),
+            @ApiResponse(responseCode = "400", description = "Некорректные данные"),
+            @ApiResponse(responseCode = "403", description = "Нет прав на обновление"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @PutMapping("/{id}")
+    public UserResponseDTO updateUser(
+            @PathVariable Long id,
+            @Validated(ValidationGroups.Update.class) @RequestBody UserRequestDTO dto) {
+        return userService.updateUser(id, dto);
+    }
+}
+```
+// main/java/org/ru/dictionary/controller/CourseController.java
+```java
+package org.ru.dictionary.controller;
+
+
+
+@Tag(name = "Courses", description = "Управление курсами и их содержимым")
+@RestController
+@RequestMapping("/api/courses")
+@Validated
+@RequiredArgsConstructor
+public class CourseController {
+
+    private final CourseService courseService;
+
+    @Operation(
+            summary = "Создать новый курс",
+            description = "Доступно только авторизованным пользователям с ролью автора"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Курс успешно создан"),
+            @ApiResponse(responseCode = "400", description = "Некорректные данные курса"),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация")
+    })
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public CourseResponseDTO createCourse(
+            @Validated(ValidationGroups.Create.class) @RequestBody CourseRequestDTO dto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return courseService.createCourse(dto, userDetails);
+    }
+
+    @Operation(summary = "Обновить курс", description = "Доступно только автору курса")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Курс обновлен"),
+            @ApiResponse(responseCode = "403", description = "Нет прав на редактирование"),
+            @ApiResponse(responseCode = "404", description = "Курс не найден")
+    })
+    @PutMapping("/{id}")
+    public CourseResponseDTO updateCourse(
+            @PathVariable Long id,
+            @Validated(ValidationGroups.Update.class) @RequestBody CourseRequestDTO dto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return courseService.updateCourse(id, dto, userDetails);
+    }
+
+    @Operation(summary = "Получить все курсы", description = "Публичный доступ")
+    @ApiResponse(responseCode = "200", description = "Список всех курсов")
+    @GetMapping
+    public List<CourseResponseDTO> getAllCourses() {
+        return courseService.getAllCourses();
+    }
+
+    @Operation(
+            summary = "Получить курсы пользователя",
+            description = "Возвращает курсы, в которых участвует текущий пользователь"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Список курсов"),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация")
+    })
+    @GetMapping("/my-courses")
+    public List<CourseResponseDTO> getUserCourses(
+            @AuthenticationPrincipal UserDetails userDetails){
+        return courseService.getUserCourses(userDetails);
+    }
+
+    @Operation(
+            summary = "Удалить курс",
+            description = "Доступно только автору курса"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Курс удален"),
+            @ApiResponse(responseCode = "403", description = "Нет прав на удаление"),
+            @ApiResponse(responseCode = "404", description = "Курс не найден")
+    })
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCourse(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        courseService.deleteCourse(id, userDetails);
+    }
+
+
+    @Operation(
+            summary = "Вступить в курс",
+            description = "Добавляет текущего пользователя в участники курса"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Успешное вступление в курс"),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация"),
+            @ApiResponse(responseCode = "404", description = "Курс не найден")
+    })
+    @PostMapping("/{id}/join")
+    @ResponseStatus(HttpStatus.OK)
+    public void joinCourse(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        courseService.joinCourse(id, userDetails);
+    }
+
+    @Operation(summary = "Получить курсы по строке", description = "Публичный доступ")
+    @ApiResponse(responseCode = "200", description = "Список курсов")
+    @GetMapping("/search")
+    public List<CourseResponseDTO> getCourses(@RequestParam String query) {
+        return courseService.getCourses(query);
+    }
+
+    @Operation(
+            summary = "Получить пользователей курса с их средним прогрессом",
+            description = "Возвращает список пользователей курса с их средним прогрессом"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Список пользователей и их прогресса по курсу"),
+            @ApiResponse(responseCode = "404", description = "Курс не найден")
+    })
+    @GetMapping("/{id}/progress")
+    public List<ProgressAverageDTO> getCourseUserProgress(
+            @PathVariable Long id) {
+        return courseService.getCourseUserProgress(id);
+    }
+}
+```
+// main/java/org/ru/dictionary/controller/WordController.java
+```java
+package org.ru.dictionary.controller;
+
+
+
+@RestController
+@RequestMapping("/api/words")
+@RequiredArgsConstructor
+@Tag(name = "Words", description = "Управление словами и их содержимым")
+public class WordController {
+
+    private final WordService wordService;
+
+
+    @Operation(
+            summary = "Создать новое слово",
+            description = "Добавление слова с медиа-файлами (аудио, видео, изображение)"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Слово успешно создано"),
+            @ApiResponse(responseCode = "400", description = "Некорректные данные"),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация"),
+            @ApiResponse(responseCode = "403", description = "Нет прав на создание"),
+            @ApiResponse(responseCode = "404", description = "Уровень не найден")
+    })
+    @Parameter(description = "Данные слова с файлами", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public WordResponseDTO createWord(
+            @ModelAttribute @Valid WordRequestDTO request,
+            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+        return wordService.createWord(request, userDetails);
+    }
+
+    @Operation(
+            summary = "Получить слово по ID",
+            description = "Публичный доступ к информации о слове"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Информация о слове"),
+            @ApiResponse(responseCode = "404", description = "Слово не найдено")
+    })
+    @GetMapping("/{id}")
+    public WordResponseDTO getWordById(@PathVariable Long id) {
+        return wordService.getWordById(id);
+    }
+
+    @Operation(
+            summary = "Получить слова по уровню",
+            description = "Список всех слов, привязанных к уровню"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Список слов уровня"),
+            @ApiResponse(responseCode = "404", description = "Уровень не найден")
+    })
+    @GetMapping("/level/{levelId}")
+    public List<WordResponseDTO> getWordsByLevel(@PathVariable Long levelId) {
+        return wordService.getWordsByLevel(levelId);
+    }
+
+    @Operation(
+            summary = "Обновить слово",
+            description = "Доступно автору курса или администратору"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Слово обновлено"),
+            @ApiResponse(responseCode = "400", description = "Некорректные данные"),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация"),
+            @ApiResponse(responseCode = "403", description = "Нет прав на редактирование"),
+            @ApiResponse(responseCode = "404", description = "Слово или уровень не найдены")
+    })
+    @Parameter(description = "Данные слова с файлами",
+            content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
+    @PutMapping("/{id}")
+    public WordResponseDTO updateWord(
+            @PathVariable Long id,
+            @Valid @ModelAttribute WordRequestDTO dto,
+            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+        return wordService.updateWord(id, dto, userDetails);
+    }
+
+    @Operation(
+            summary = "Удалить слово",
+            description = "Доступно автору курса или администратору"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Слово удалено"),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация"),
+            @ApiResponse(responseCode = "403", description = "Нет прав на удаление"),
+            @ApiResponse(responseCode = "404", description = "Слово не найдено")
+    })
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteWord(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        wordService.deleteWord(id, userDetails);
+    }
+}
+```
+// main/java/org/ru/dictionary/controller/LevelController.java
+```java
+package org.ru.dictionary.controller;
+
+
+
+
+
+@RestController
+@RequestMapping("/api/levels")
+@Validated
+@RequiredArgsConstructor
+@Tag(name = "Levels", description = "Управление уровнями курсов")
+public class LevelController {
+
+    private final LevelService levelService;
+
+    @Operation(
+            summary = "Создать новый уровень",
+            description = "Доступно автору курса или администратору"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Уровень успешно создан"),
+            @ApiResponse(responseCode = "400", description = "Некорректные данные"),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация"),
+            @ApiResponse(responseCode = "403", description = "Нет прав на создание"),
+            @ApiResponse(responseCode = "404", description = "Курс не найден")
+    })
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public LevelResponseDTO createLevel(
+            @Valid @RequestBody LevelRequestDTO dto,
+            @AuthenticationPrincipal UserDetails currentUser) {
+        return levelService.createLevel(dto, currentUser);
+    }
+
+    @Operation(
+            summary = "Получить уровни курса",
+            description = "Публичный доступ к списку уровней курса"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Список уровней"),
+            @ApiResponse(responseCode = "404", description = "Курс не найден")
+    })
+    @GetMapping
+    public List<LevelResponseDTO> getAllLevels(@PathVariable Long courseId) {
+        return levelService.getAllLevelsByCourse(courseId);
+    }
+
+    @Operation(
+            summary = "Получить уровень по ID",
+            description = "Публичный доступ к информации об уровне"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Информация об уровне"),
+            @ApiResponse(responseCode = "404", description = "Уровень не найден")
+    })
+    @GetMapping("/{levelId}")
+    public LevelResponseDTO getLevel(
+            @PathVariable Long levelId) {
+        return levelService.getLevelById(levelId);
+    }
+
+    @Operation(
+            summary = "Обновить уровень",
+            description = "Доступно автору курса или администратору"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Уровень обновлен"),
+            @ApiResponse(responseCode = "400", description = "Некорректные данные"),
+            @ApiResponse(responseCode = "403", description = "Нет прав на редактирование"),
+            @ApiResponse(responseCode = "404", description = "Уровень не найден")
+    })
+    @PutMapping("/{levelId}")
+    public LevelResponseDTO updateLevel(
+            @PathVariable Long levelId,
+            @Valid @RequestBody LevelRequestDTO dto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return levelService.updateLevel(levelId, dto, userDetails);
+    }
+
+    @Operation(
+            summary = "Удалить уровень",
+            description = "Доступно автору курса или администратору"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Уровень удален"),
+            @ApiResponse(responseCode = "403", description = "Нет прав на удаление"),
+            @ApiResponse(responseCode = "404", description = "Уровень не найден")
+    })
+    @DeleteMapping("/{levelId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteLevel(
+            @PathVariable Long levelId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        levelService.deleteLevel(levelId, userDetails);
+    }
+}
+```
+// main/java/org/ru/dictionary/controller/ActivationController.java
+```java
+package org.ru.dictionary.controller;
+
+
+@RestController
+@RequestMapping("/api/activation")
+public class ActivationController {
+
+    private final ActivationService activationService;
+
+    public ActivationController(ActivationService activationService) {
+        this.activationService = activationService;
+    }
+
+    @GetMapping("/activate")
+    @ResponseStatus(HttpStatus.OK)
+    public void activateAccount(
+            @RequestParam String token,
+            @RequestParam String email
+    ) {
+        activationService.activateAccount(token, email);
+    }
+}
+```
+// main/java/org/ru/dictionary/controller/ProgressController.java
+```java
+package org.ru.dictionary.controller;
+
+
+@RestController
+@RequestMapping("/api/progress")
+@RequiredArgsConstructor
+@Tag(name = "Progress", description = "API для работы с прогрессом пользователя")
+public class ProgressController {
+
+    private final ProgressService progressService;
+
+    @Operation(summary = "Получить средний прогресс по уровню")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Средний прогресс"),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация"),
+            @ApiResponse(responseCode = "404", description = "Уровень не найден")
+    })
+    @GetMapping("/level/{levelId}")
+    public ProgressAverageDTO getLevelProgress(
+            @PathVariable Long levelId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return progressService.getAverageProgressForLevel(userDetails, levelId);
+    }
+
+    @Operation(summary = "Получить средний прогресс по курсу")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Средний прогресс"),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация"),
+            @ApiResponse(responseCode = "404", description = "Курс не найден")
+    })
+    @GetMapping("/course/{courseId}")
+    public ProgressAverageDTO getCourseProgress(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return progressService.getAverageProgressForCourse(userDetails, courseId);
+    }
+
+    @Operation(summary = "Получить прогресс пользователя по слову")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Прогресс по слову"),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация"),
+            @ApiResponse(responseCode = "404", description = "Пользователь или слово не найдены")
+    })
+    @GetMapping("/word/{wordId}")
+    public ProgressAverageDTO getWordProgress(
+            @PathVariable Long wordId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        return progressService.getProgress(userDetails, wordId);
+    }
+
+}
+```
+// main/java/org/ru/dictionary/controller/LearningController.java
+```java
+package org.ru.dictionary.controller;
+
+
+@RestController
+@RequestMapping("/api/learn")
+@RequiredArgsConstructor
+@Tag(name = "Learning", description = "API для процесса обучения и проверки знаний")
+public class LearningController {
+
+    private final LearningService learningService;
+
+    @Operation(
+            summary = "Получить учебный материал",
+            description = "Генерирует задание для обучения на основе прогресса пользователя"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Учебный материал успешно сгенерирован"),
+            @ApiResponse(responseCode = "400", description = "Некорректный тип задания"),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация"),
+            @ApiResponse(responseCode = "404", description = "Уровень/пользователь/слова не найдены")
+    })
+    @GetMapping("/{levelId}")
+    public LearningMaterialDTO getLearningMaterial(
+            @Parameter(description = "ID уровня", example = "123")
+            @PathVariable Long levelId,
+            @Parameter(description = "Тип задания",
+                    required = true,
+                    schema = @Schema(implementation = LearningType.class))
+            @RequestParam LearningType type,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return learningService.generateLearningMaterial(levelId, userDetails, type
+        );
+    }
+
+    @Operation(
+            summary = "Проверить ответ",
+            description = "Проверяет правильность ответа и обновляет прогресс"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Результат проверки ответа"),
+            @ApiResponse(responseCode = "400", description = "Некорректные данные ответа"),
+            @ApiResponse(responseCode = "401", description = "Требуется аутентификация"),
+            @ApiResponse(responseCode = "404", description = "Слово/пользователь не найдены")
+    })
+    @PostMapping("/check-answer")
+    public AnswerResultDTO checkAnswer(
+            @RequestBody AnswerSubmissionDTO submission,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return learningService.processAnswer(submission, userDetails);
+    }
+}
+```
+// main/java/org/ru/dictionary/enums/Authorities.java
+```java
+package org.ru.dictionary.enums;
+
+public enum Authorities {
+    ROLE_USER,
+    ROLE_ADMIN,
+    JWT_LOGOUT,
+    JWT_REFRESH
+}
+```
+// main/java/org/ru/dictionary/enums/LearningType.java
+```java
+package org.ru.dictionary.enums;
+
+public enum LearningType {
+    WORD_TO_IMAGE,
+    IMAGE_TO_WORD,
+    AUDIO_TO_WORD
+}
+```
+// main/java/org/ru/dictionary/enums/BusinessErrorCodes.java
+```java
+package org.ru.dictionary.enums;
+
+
+
+@Getter
+public enum BusinessErrorCodes {
+    NO_CODE(0, HttpStatus.NOT_IMPLEMENTED, "No code"),
+    INCORRECT_CURRENT_PASSWORD(300, HttpStatus.BAD_REQUEST, "Incorrect password"),
+    ACCOUNT_LOCKED(302, HttpStatus.FORBIDDEN, "User account is locked"),
+    ACCOUNT_DISABLED(303, HttpStatus.FORBIDDEN, "User account is disabled"),
+    BAD_CREDENTIALS(304, HttpStatus.UNAUTHORIZED, "Login and/or password is incorrect"),
+    NEW_PASSWORD_DOES_NOT_MATCH(301, HttpStatus.BAD_REQUEST, "The new password does not match"),
+    USER_ALREADY_EXISTS(305, HttpStatus.BAD_REQUEST, "User already exists"),
+    INVALID_TOKEN(306, HttpStatus.UNAUTHORIZED, "Invalid token"),
+    TOKEN_EXPIRED(307, HttpStatus.UNAUTHORIZED, "Token has expired"),
+    USER_NOT_FOUND(308, HttpStatus.NOT_FOUND, "User not found"),
+    COURSE_NOT_FOUND(1001, HttpStatus.NOT_FOUND, "Course not found"),
+    LEVEL_NOT_FOUND(1002, HttpStatus.NOT_FOUND,"Level not found"),
+    WORD_NOT_FOUND(1003, HttpStatus.NOT_FOUND,"Word not found"),
+    USER_EXISTS(2001, HttpStatus.CONFLICT, "User already exists"),
+    FILE_UPLOAD_FAILED(3001, HttpStatus.PAYLOAD_TOO_LARGE, "File upload failed"),
+    COURSE_ACCESS_DENIED(4001, HttpStatus.FORBIDDEN, "Course access denied"),
+    VALIDATION_ERROR(4002, HttpStatus.BAD_REQUEST, "Validation error"),
+    NO_ACTIVE_WORD(4003, HttpStatus.BAD_REQUEST, "No active word"),
+    INVALID_ROLE(4004, HttpStatus.BAD_REQUEST, "Invalid role name"),
+    INVALID_OPERATION(4005, HttpStatus.BAD_REQUEST, "Invalid operation"),
+    INVALID_ACTIVATION_TOKEN(4006, HttpStatus.BAD_REQUEST,  "Invalid activation token"),
+    EXPIRED_ACTIVATION_TOKEN(4007, HttpStatus.BAD_REQUEST, "Activation token has expired"),
+    TOKEN_ALREADY_USED(4008, HttpStatus.BAD_REQUEST, "Token has already been used"),
+    INTERNAL_SERVER_ERROR(5000, HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error"),
+    SEARCH_FAILED(4009, HttpStatus.BAD_REQUEST , "Search failed" ),
+    NOT_ENOUGH_WORDS(4010, HttpStatus.BAD_REQUEST , "Not enough words"),;
+
+
+
+    private final int code;
+    private final HttpStatus httpStatus;
+    private final String description;
+
+    BusinessErrorCodes(int code, HttpStatus httpStatus, String description) {
+        this.code = code;
+        this.httpStatus = httpStatus;
+        this.description = description;
+    }
+}
+```
+// main/java/org/ru/dictionary/enums/EmailTemplateName.java
+```java
+package org.ru.dictionary.enums;
+
+
+@RequiredArgsConstructor
+@Getter
+public enum EmailTemplateName {
+    ACTIVATE_ACCOUNT("activate_account"),
+    RECOVERY_PASSWORD("recovery_password");
+
+    private final String templateName;
+}
+```
+// main/java/org/ru/dictionary/enums/MailTokenType.java
+```java
+package org.ru.dictionary.enums;
+
+public enum  MailTokenType {
+    CONFIRM,
+    RECOVERY
+}
+```
+// main/java/org/ru/dictionary/service/UserService.java
+```java
+package org.ru.dictionary.service;
+
+
+
+public interface UserService {
+    List<UserResponseDTO> getAllUsers();
+    UserResponseDTO createUser(UserRequestDTO request);
+    UserResponseDTO updateUser(Long id, UserRequestDTO dto);
+}
+```
+// main/java/org/ru/dictionary/service/LevelService.java
+```java
+package org.ru.dictionary.service;
+
+
+
+public interface LevelService {
+    LevelResponseDTO createLevel(LevelRequestDTO dto, UserDetails userDetails);
+    LevelResponseDTO getLevelById(Long levelId);
+    List<LevelResponseDTO> getAllLevelsByCourse(Long courseId);
+    LevelResponseDTO updateLevel(Long levelId, LevelRequestDTO dto, UserDetails userDetails);
+    void deleteLevel(Long levelId, UserDetails userDetails);
+}
+```
+// main/java/org/ru/dictionary/service/LearningService.java
+```java
+package org.ru.dictionary.service;
+
+
+public interface LearningService {
+    AnswerResultDTO processAnswer(AnswerSubmissionDTO submission, UserDetails userDetails);
+    LearningMaterialDTO generateLearningMaterial(Long levelId, UserDetails userDetails, LearningType type);
+}
+```
+// main/java/org/ru/dictionary/service/S3Service.java
+```java
+package org.ru.dictionary.service;
+
+
+public interface S3Service {
+    String uploadFile(MultipartFile file);
+}
+```
+// main/java/org/ru/dictionary/service/ProgressService.java
+```java
+package org.ru.dictionary.service;
+
+
+public interface ProgressService {
+    void updateProgress(User user, Long wordId, int delta);
+    Integer getProgress(Long userId, Long wordId);
+    ProgressAverageDTO getProgress(UserDetails userDetails, Long wordId);
+    ProgressAverageDTO getAverageProgressForLevel(UserDetails userDetails, Long levelId);
+    ProgressAverageDTO getAverageProgressForCourse(UserDetails userDetails, Long courseId);
+
+    ProgressAverageDTO getAverageProgressForCourse(UserResponseDTO userDTO, Long courseId);
+}
+```
+// main/java/org/ru/dictionary/service/CourseService.java
+```java
+package org.ru.dictionary.service;
+
+
+
+public interface CourseService {
+    CourseResponseDTO createCourse(CourseRequestDTO dto, UserDetails userDetails);
+    CourseResponseDTO updateCourse(Long courseId, CourseRequestDTO dto, UserDetails userDetails);
+    List<CourseResponseDTO> getAllCourses();
+    List<CourseResponseDTO> getCourses(String query);
+    List<CourseResponseDTO> getUserCourses(UserDetails userDetails);
+    void deleteCourse(Long courseId, UserDetails userDetails);
+    void joinCourse(Long courseId, UserDetails userDetails);
+    void checkAuthorOrAdmin(Course course, UserDetails userDetails);
+
+    List<ProgressAverageDTO> getCourseUserProgress(Long courseId);
+}
+```
+// main/java/org/ru/dictionary/service/EmailService.java
+```java
+package org.ru.dictionary.service;
+
+
+public interface EmailService {
+    void sendEmail(String to,
+                   String username,
+                   EmailTemplateName emailTemplate,
+                   String confirmationUrl,
+                   String activationCode,
+                   String subject);
+}
+```
+// main/java/org/ru/dictionary/service/WordService.java
+```java
+package org.ru.dictionary.service;
+
+
+public interface WordService {
+    WordResponseDTO createWord(WordRequestDTO dto, UserDetails userDetails);
+    WordResponseDTO getWordById(Long id);
+    List<WordResponseDTO> getWordsByLevel(Long levelId);
+    WordResponseDTO updateWord(Long id, WordRequestDTO dto, UserDetails userDetails);
+    void deleteWord(Long id, UserDetails userDetails);
+}
+```
+// main/java/org/ru/dictionary/service/ActivationService.java
+```java
+package org.ru.dictionary.service;
+
+
+public interface ActivationService {
+
+    String generateAndSaveActivationToken(String email);
+
+    void activateAccount(String token, String email);
+
+    void sendActivationEmail(User user);
+}
+```
+// main/java/org/ru/dictionary/service/impl/LevelServiceImpl.java
+```java
+package org.ru.dictionary.service.impl;
+
+
+
+@Service
+@RequiredArgsConstructor
+public class LevelServiceImpl implements LevelService {
+
+    private final LevelRepository levelRepository;
+    private final CourseRepository courseRepository;
+    private final CourseService courseService;
+    private final LevelMapper levelMapper;
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "levels", key = "#dto.courseId"),
+            @CacheEvict(value = "courseLevels", key = "#dto.courseId"),
+            @CacheEvict(value = "words", allEntries = true)
+    })
+    public LevelResponseDTO createLevel(LevelRequestDTO dto, UserDetails userDetails) {
+        Course course = courseRepository.findById(dto.getCourseId())
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.COURSE_NOT_FOUND,
+                        "Course ID: " + dto.getCourseId()
+                ));
+
+        courseService.checkAuthorOrAdmin(course, userDetails);
+
+        Level level = levelMapper.toEntity(dto);
+        level.setCourse(course);
+        level.setOrderNumber(calculateNextOrderNumber(course));
+
+        return levelMapper.toResponseDTO(levelRepository.save(level));
+    }
+
+    @Cacheable(value = "levelDetails", key = "#levelId")
+    public LevelResponseDTO getLevelById(Long levelId) {
+        Level level = levelRepository.findById(levelId)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.LEVEL_NOT_FOUND,
+                        "Level ID: " + levelId
+                ));
+        return levelMapper.toResponseDTO(level);
+    }
+
+    @Cacheable(value = "courseLevels", key = "#courseId")
+    public List<LevelResponseDTO> getAllLevelsByCourse(Long courseId) {
+        return levelRepository.findByCourseIdOrderByOrderNumberAsc(courseId).stream()
+                .map(levelMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "levelDetails", key = "#levelId"),
+            @CacheEvict(value = "courseLevels", key = "#level.course.id"),
+            @CacheEvict(value = "words", allEntries = true)
+    })
+    public LevelResponseDTO updateLevel(Long levelId, LevelRequestDTO dto, UserDetails userDetails) {
+        Level level = levelRepository.findById(levelId)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.LEVEL_NOT_FOUND,
+                        "Level ID: " + levelId
+                ));
+
+        courseService.checkAuthorOrAdmin(level.getCourse(), userDetails);
+
+        levelMapper.updateFromDto(dto, level);
+        return levelMapper.toResponseDTO(levelRepository.save(level));
+    }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "levelDetails", key = "#levelId"),
+            @CacheEvict(value = "courseLevels", key = "#level.course.id"),
+            @CacheEvict(value = "words", allEntries = true),
+            @CacheEvict(value = "userLearningMaterials", allEntries = true)
+    })
+    public void deleteLevel(Long levelId, UserDetails userDetails) {
+        Level level = levelRepository.findById(levelId)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.LEVEL_NOT_FOUND,
+                        "Level ID: " + levelId
+                ));
+
+        courseService.checkAuthorOrAdmin(level.getCourse(), userDetails);
+
+        levelRepository.delete(level);
+        reorderLevelsAfterDeletion(level.getCourse());
+    }
+
+    private int calculateNextOrderNumber(Course course) {
+        return levelRepository.findByCourseIdOrderByOrderNumberDesc(course.getId())
+                .stream()
+                .findFirst()
+                .map(lastLevel -> lastLevel.getOrderNumber() + 1)
+                .orElse(1);
+    }
+
+    private void reorderLevelsAfterDeletion(Course course) {
+        List<Level> levels = levelRepository.findByCourseIdOrderByOrderNumberAsc(course.getId());
+        for (int i = 0; i < levels.size(); i++) {
+            levels.get(i).setOrderNumber(i + 1);
+        }
+        levelRepository.saveAll(levels);
+    }
+}
+```
+// main/java/org/ru/dictionary/service/impl/WordServiceImpl.java
+```java
+package org.ru.dictionary.service.impl;
+
+
+
+@Service
+@RequiredArgsConstructor
+public class WordServiceImpl implements WordService {
+
+    private final WordRepository wordRepository;
+    private final LevelRepository levelRepository;
+    private final WordMapper wordMapper;
+    private final CourseService courseService;
+    private final S3Service s3Service;
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "wordDetails", key = "#result.id"),
+            @CacheEvict(value = "levelWords", key = "#dto.levelId"),
+            @CacheEvict(value = "userLearningMaterials", allEntries = true)
+    })
+    public WordResponseDTO createWord(WordRequestDTO dto, UserDetails userDetails) {
+        Level level = levelRepository.findById(dto.getLevelId())
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.LEVEL_NOT_FOUND,
+                        "Level ID: " + dto.getLevelId()
+                ));
+
+        courseService.checkAuthorOrAdmin(level.getCourse(), userDetails);
+
+        String audioUrl = processFileUpload(dto.getAudioFile());
+        String videoUrl = processFileUpload(dto.getVideoFile());
+        String imageUrl = processFileUpload(dto.getImageFile());
+
+        int lastOrderNumber = wordRepository.findTopByLevelIdOrderByOrderNumberDesc(dto.getLevelId())
+                .map(Word::getOrderNumber)
+                .orElse(0);
+
+        Word newWord = wordMapper.toEntity(dto, imageUrl, audioUrl, videoUrl, lastOrderNumber + 1, level);
+        return wordMapper.toWordDto(wordRepository.save(newWord));
+    }
+
+    @Cacheable(value = "wordDetails", key = "#id")
+    public WordResponseDTO getWordById(Long id) {
+        return wordRepository.findById(id)
+                .map(wordMapper::toWordDto)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.WORD_NOT_FOUND,
+                        "Word ID: " + id
+                ));
+    }
+
+    @Cacheable(value = "levelWords", key = "#levelId")
+    public List<WordResponseDTO> getWordsByLevel(Long levelId) {
+        if (!levelRepository.existsById(levelId)) {
+            throw new ApiException(
+                    BusinessErrorCodes.LEVEL_NOT_FOUND,
+                    "Level ID: " + levelId
+            );
+        }
+
+        return wordRepository.findByLevelId(levelId).stream()
+                .map(wordMapper::toWordDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "wordDetails", key = "#id"),
+            @CacheEvict(value = "levelWords", key = "#word.level.id"),
+            @CacheEvict(value = "userWordProgress", key = "{#userDetails.username, #id}")
+    })
+    public WordResponseDTO updateWord(Long id, WordRequestDTO dto, UserDetails userDetails) {
+        Word word = wordRepository.findById(id)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.WORD_NOT_FOUND,
+                        "Word ID: " + id
+                ));
+
+        courseService.checkAuthorOrAdmin(word.getLevel().getCourse(), userDetails);
+
+        Level newLevel = levelRepository.findById(dto.getLevelId())
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.LEVEL_NOT_FOUND,
+                        "Level ID: " + dto.getLevelId()
+                ));
+
+        if (!newLevel.getCourse().getId().equals(word.getLevel().getCourse().getId())) {
+            throw new ApiException(
+                    BusinessErrorCodes.INVALID_OPERATION,
+                    "Cannot move word to another course"
+            );
+        }
+
+        wordMapper.updateFromDto(dto, word);
+        updateMediaFiles(dto, word);
+        return wordMapper.toWordDto(wordRepository.save(word));
+    }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "wordDetails", key = "#id"),
+            @CacheEvict(value = "levelWords", key = "#word.level.id"),
+            @CacheEvict(value = "userWordProgress", key = "{#userDetails.username, #id}")
+    })
+    public void deleteWord(Long id, UserDetails userDetails) {
+        Word word = wordRepository.findById(id)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.WORD_NOT_FOUND,
+                        "Word ID: " + id
+                ));
+
+        courseService.checkAuthorOrAdmin(word.getLevel().getCourse(), userDetails);
+        wordRepository.delete(word);
+    }
+
+    private String processFileUpload(MultipartFile file) {
+        if (file != null && !file.isEmpty()) {
+            return s3Service.uploadFile(file);
+        }
+        return null;
+    }
+
+    private void updateMediaFiles(WordRequestDTO dto, Word word) {
+        Optional.ofNullable(dto.getAudioFile())
+                .filter(file -> !file.isEmpty())
+                .ifPresent(file -> word.setAudioPath(s3Service.uploadFile(file)));
+
+        Optional.ofNullable(dto.getVideoFile())
+                .filter(file -> !file.isEmpty())
+                .ifPresent(file -> word.setVideoPath(s3Service.uploadFile(file)));
+
+        Optional.ofNullable(dto.getImageFile())
+                .filter(file -> !file.isEmpty())
+                .ifPresent(file -> word.setImagePath(s3Service.uploadFile(file)));
+    }
+}
+```
+// main/java/org/ru/dictionary/service/impl/ProgressServiceImpl.java
+```java
+package org.ru.dictionary.service.impl;
+
+
+@Service
+@RequiredArgsConstructor
+public class ProgressServiceImpl implements ProgressService {
+
+    private final ProgressRepository progressRepository;
+    private final WordRepository wordRepository;
+    private final LevelRepository levelRepository;
+    private final CourseRepository courseRepository;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+
+    @Transactional
+    @CacheEvict(value = "userWordProgress", key = "{#user.id, #wordId}")
+    @Caching(evict = {
+            @CacheEvict(value = "words", key = "#wordId"),
+            @CacheEvict(value = "userWordProgress", key = "{#user.id, #wordId}")
+    })
+    public void updateProgress(User user, Long wordId, int delta) {
+        Word word = wordRepository.findById(wordId)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.WORD_NOT_FOUND,
+                        "Word ID: " + wordId
+                ));
+
+        Progress progress = progressRepository.findByUserIdAndWordId(user.getId(), word.getId())
+                .orElseGet(() -> Progress.builder()
+                        .user(user)
+                        .word(word)
+                        .progressValue(0)
+                        .build());
+
+        int newValue = progress.getProgressValue() + delta;
+        progress.setProgressValue(Math.min(100, Math.max(0, newValue)));
+
+        progressRepository.save(progress);
+    }
+
+    @Cacheable(value = "userWordProgress", key = "{#userId, #wordId}")
+    public Integer getProgress(Long userId, Long wordId) {
+        if (!userRepository.existsById(userId)) {
+            throw new ApiException(
+                    BusinessErrorCodes.USER_NOT_FOUND,
+                    "User ID: " + userId
+            );
+        }
+
+        return progressRepository.findByUserIdAndWordId(userId, wordId)
+                .map(Progress::getProgressValue)
+                .orElse(0);
+    }
+
+    @Override
+    public ProgressAverageDTO getProgress(UserDetails userDetails, Long wordId) {
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND, "User not found"));
+        wordRepository.findById(wordId)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.WORD_NOT_FOUND,
+                        "Word ID: " + wordId
+                ));
+        Double progressValue = getProgress(user.getId(), wordId).doubleValue();
+
+        UserResponseDTO userDTO = userMapper.toResponseDTO(user);
+
+        return new ProgressAverageDTO(userDTO, progressValue);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProgressAverageDTO getAverageProgressForLevel(UserDetails userDetails, Long levelId) {
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND, "User not found"));
+
+        levelRepository.findById(levelId)
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.LEVEL_NOT_FOUND, "Level ID: " + levelId));
+
+        UserResponseDTO userDTO = userMapper.toResponseDTO(user);
+
+        return new ProgressAverageDTO(userDTO, getAverageProgressForLevel(user.getId(), levelId));
+    }
+
+    private Double getAverageProgressForLevel(Long userId, Long levelId) {
+        Integer totalWords = wordRepository.countByLevelId(levelId);
+
+        Integer totalProgressForLevel = progressRepository.getTotalProgressForLevel(userId, levelId);
+
+        return totalWords == 0 ? 0.0 : (double) totalProgressForLevel / totalWords;
+    }
+
+    @Override
+    public ProgressAverageDTO getAverageProgressForCourse(UserDetails userDetails, Long courseId) {
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND, "User not found"));
+
+        courseRepository.findById(courseId)
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND, "Course ID: " + courseId));
+
+        UserResponseDTO userDTO = userMapper.toResponseDTO(user);
+
+        return getAverageProgressForCourse(userDTO, courseId);
+    }
+
+    @Override
+    public ProgressAverageDTO getAverageProgressForCourse(UserResponseDTO userDTO, Long courseId) {
+        Double averageProgress = levelRepository.findByCourseId(courseId).stream().mapToDouble(
+                level -> getAverageProgressForLevel(userDTO.getId(), level.getId())
+        ).average().orElse(0);
+        return new ProgressAverageDTO(userDTO, averageProgress);
+    }
+}
+```
+// main/java/org/ru/dictionary/service/impl/UserServiceImpl.java
+```java
+package org.ru.dictionary.service.impl;
+
+
+
+@Service
+@RequiredArgsConstructor
+public class UserServiceImpl implements UserService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
+    private final ActivationService activationService;
+
+    public List<UserResponseDTO> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(userMapper::toResponseDTO)
+                .toList();
+    }
+
+    @Transactional
+    public UserResponseDTO createUser(UserRequestDTO request) {
+        userRepository.findByUsername(request.getUsername())
+                .ifPresent(user -> {
+                    throw new ApiException(
+                            BusinessErrorCodes.USER_EXISTS,
+                            "Username '" + request.getUsername() + "' already exists"
+                    );
+                });
+
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.getRoles().add(Authorities.ROLE_USER);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        activationService.sendActivationEmail(user);
+
+        return userMapper.toResponseDTO(userRepository.save(user));
+    }
+
+    @Transactional
+    public UserResponseDTO updateUser(Long id, UserRequestDTO dto) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.USER_NOT_FOUND,
+                        "User ID: " + id
+                ));
+
+        Optional.ofNullable(dto.getUsername()).ifPresent(user::setUsername);
+        Optional.ofNullable(dto.getPassword())
+                .ifPresent(pass -> user.setPassword(passwordEncoder.encode(pass)));
+
+        return userMapper.toResponseDTO(userRepository.save(user));
+    }
+
+
+    private Set<Authorities> getRolesFromNames(Set<String> roleNames) {
+        return roleNames.stream()
+                .map(name -> {
+                    try {
+                        return Authorities.valueOf(name);
+                    } catch (IllegalArgumentException ex) {
+                        throw new ApiException(
+                                BusinessErrorCodes.INVALID_ROLE,
+                                "Invalid role name: " + name
+                        );
+                    }
+                })
+                .collect(Collectors.toSet());
+    }
+}
+```
+// main/java/org/ru/dictionary/service/impl/EmailServiceImpl.java
+```java
+package org.ru.dictionary.service.impl;
+
+
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class EmailServiceImpl  implements EmailService {
+    private final JavaMailSender mailSender;
+    private final SpringTemplateEngine templateEngine;
+    private final EmailConfig emailConfig;
+
+
+    @Async
+    public void sendEmail(String to,
+                          String username,
+                          EmailTemplateName emailTemplate,
+                          String confirmationUrl,
+                          String activationCode,
+                          String subject) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    mimeMessage,
+                    MimeMessageHelper.MULTIPART_MODE_MIXED
+            );
+
+            Map<String, Object> properties = Map.of(
+                    "username", username,
+                    "confirmationUrl", confirmationUrl,
+                    "activation_code", activationCode
+            );
+
+            Context context = new Context();
+            context.setVariables(properties);
+
+            helper.setFrom(emailConfig.getEmailAddressSender());
+            helper.setTo(to);
+            helper.setSubject(subject);
+
+            String template = templateEngine.process(emailTemplate.getTemplateName(), context);
+            helper.setText(template, true);
+
+            mailSender.send(mimeMessage);
+        } catch (Exception e) {
+            log.info(e.getMessage(), e);
+            throw new RuntimeException("Failed to send email", e);
+        }
+    }
+}
+```
+// main/java/org/ru/dictionary/service/impl/S3ServiceImpl.java
+```java
+package org.ru.dictionary.service.impl;
+
+
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class S3ServiceImpl implements S3Service {
+
+    private final S3Client s3Client;
+
+    @Value("${s3.bucket}")
+    private String bucketName;
+
+    @Value("${s3.url}")
+    private String minioUrl;
+
+    public String uploadFile(MultipartFile file) {
+        try {
+            String key = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            log.info("Uploading file {} to bucket {}", file.getOriginalFilename(), bucketName);
+
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .contentType(file.getContentType())
+                    .build();
+
+            s3Client.putObject(putRequest, RequestBody.fromBytes(file.getBytes()));
+            log.info("Successfully uploaded file: {}", file.getOriginalFilename());
+            return minioUrl + "/" + bucketName + "/" + key;
+
+        } catch (IOException e) {
+            log.error("File upload failed: {}", file.getOriginalFilename(), e);
+            throw new ApiException(
+                    BusinessErrorCodes.FILE_UPLOAD_FAILED,
+                    "Failed to upload file: " + file.getOriginalFilename()
+            );
+        }
+    }
+}
+```
+// main/java/org/ru/dictionary/service/impl/ActivationServiceImpl.java
+```java
+package org.ru.dictionary.service.impl;
+
+
+
+@Service
+@RequiredArgsConstructor
+public class ActivationServiceImpl implements ActivationService {
+    private final MailTokenRepository mailTokenRepository;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
+    private final EmailConfig emailConfig;
+
+    @Override
+    public String generateAndSaveActivationToken(String email) {
+        deactivateExistingTokens(email, MailTokenType.CONFIRM);
+
+        String generatedToken = generateActivationCode(6);
+        MailToken mailToken = new MailToken();
+        mailToken.setToken(generatedToken);
+        mailToken.setExpiresAt(LocalDateTime.now().plusSeconds(
+                emailConfig.getActivationTokenExpiration()
+        ));
+        mailToken.setEmail(email);
+        mailToken.setTokenType(MailTokenType.CONFIRM);
+        mailTokenRepository.save(mailToken);
+        return generatedToken;
+    }
+
+    @Override
+    public void activateAccount(String token, String email) {
+        MailToken savedMailToken = mailTokenRepository.findByEmailAndEnabledAndToken(email, true, token)
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.INVALID_ACTIVATION_TOKEN));
+
+        if (LocalDateTime.now().isAfter(savedMailToken.getExpiresAt())) {
+            throw new ApiException(BusinessErrorCodes.EXPIRED_ACTIVATION_TOKEN);
+        }
+        userRepository.findByUsername(savedMailToken.getEmail()).ifPresent(this::enableUser);
+        mailTokenRepository.save(savedMailToken);
+    }
+
+    private void enableUser(User user) {
+        user.setIsEnabled(true);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void sendActivationEmail(User user) {
+        String token = generateAndSaveActivationToken(user.getUsername());
+        emailService.sendEmail(
+                user.getUsername(),
+                user.getUsername(),
+                EmailTemplateName.ACTIVATE_ACCOUNT,
+                emailConfig.getActivationUrl() + "?email=" + user.getUsername() + "&token=" + token,
+                token,
+                "Account Activation"
+        );
+    }
+
+    private void deactivateExistingTokens(String email, MailTokenType tokenType) {
+        List<MailToken> activeTokens = mailTokenRepository.findByEmailAndEnabledAndTokenType(
+                email,
+                true,
+                tokenType
+        );
+        activeTokens.forEach(token -> token.setEnabled(false));
+        mailTokenRepository.saveAll(activeTokens);
+    }
+
+    private String generateActivationCode(int length) {
+        SecureRandom secureRandom = new SecureRandom();
+        StringBuilder code = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            code.append(secureRandom.nextInt(10));
+        }
+        return code.toString();
+    }
+}
+```
+// main/java/org/ru/dictionary/service/impl/LearningServiceImpl.java
+```java
+package org.ru.dictionary.service.impl;
+
+
+
+@Service
+@RequiredArgsConstructor
+public class LearningServiceImpl implements LearningService {
+
+    private final ProgressService progressService;
+    private final LevelRepository levelRepository;
+    private final WordRepository wordRepository;
+    private final WordMapper wordMapper;
+    private final ProgressRepository progressRepository;
+    private final UserRepository userRepository;
+    private final Random random = new Random();
+
+    @Transactional
+    public AnswerResultDTO processAnswer(AnswerSubmissionDTO submission, UserDetails userDetails) {
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.USER_NOT_FOUND,
+                        "User not found: " + userDetails.getUsername()
+                ));
+
+        boolean isCorrect = validateAnswer(
+                submission.getWordId(),
+                submission.getAnswer(),
+                submission.getType()
+        );
+
+        progressService.updateProgress(
+                user,
+                submission.getWordId(),
+                isCorrect ? 10 : -5
+        );
+
+        int newProgress = progressService.getProgress(user.getId(), submission.getWordId());
+
+        return new AnswerResultDTO(isCorrect, newProgress);
+    }
+
+    private boolean validateAnswer(Long wordId, String answer, LearningType type) {
+        Word word = wordRepository.findById(wordId)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.WORD_NOT_FOUND,
+                        "Word ID: " + wordId
+                ));
+
+        return switch (type) {
+            case WORD_TO_IMAGE -> word.getImagePath().equals(answer);
+            case IMAGE_TO_WORD -> word.getWord().equalsIgnoreCase(answer);
+            case AUDIO_TO_WORD -> word.getAudioPath().equals(answer);
+        };
+    }
+
+    public LearningMaterialDTO generateLearningMaterial(Long levelId, UserDetails userDetails, LearningType type) {
+        List<Word> words = wordRepository.findByLevelIdAndActiveForTestingTrue(levelId);
+
+        if (words.isEmpty()) {
+            throw new ApiException(
+                    BusinessErrorCodes.NO_ACTIVE_WORD,
+                    "No active words in level ID: " + levelId
+            );
+        }
+
+        levelRepository.findById(levelId)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.LEVEL_NOT_FOUND,
+                        "Level ID: " + levelId
+                ));
+
+        return userRepository.findByUsername(userDetails.getUsername())
+                .map(user -> {
+                    List<Word> filteredWords = filterWordsByType(words, type);
+
+                    if (filteredWords.size() < 4) {
+                        throw new ApiException(
+                                BusinessErrorCodes.NOT_ENOUGH_WORDS,
+                                "Not enough words with the required attributes in level ID: " + levelId
+                        );
+                    }
+
+                    Word targetWord = selectWordBasedOnProgress(filteredWords, user.getId());
+                    List<String> options = generateOptions(targetWord, filteredWords, type);
+                    return new LearningMaterialDTO(
+                            wordMapper.toWordDto(targetWord),
+                            options,
+                            type
+                    );
+                })
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.USER_NOT_FOUND,
+                        "User: " + userDetails.getUsername()
+                ));
+    }
+
+    private List<Word> filterWordsByType(List<Word> words, LearningType type) {
+        return words.stream()
+                .filter(word -> switch (type) {
+                    case WORD_TO_IMAGE -> word.getImagePath() != null && !word.getImagePath().isEmpty();
+                    case IMAGE_TO_WORD -> word.getWord() != null && !word.getWord().isEmpty();
+                    case AUDIO_TO_WORD -> word.getAudioPath() != null && !word.getAudioPath().isEmpty();
+                    default -> false;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private Word selectWordBasedOnProgress(List<Word> words, Long userId) {
+        Map<Word, Integer> weights = new HashMap<>();
+        for (Word word : words) {
+            int progress = progressRepository.findByUserIdAndWordId(userId, word.getId())
+                    .map(Progress::getProgressValue)
+                    .orElse(0);
+            weights.put(word, 100 - progress);
+        }
+        return WeightedRandomSelector.select(words, weights);
+    }
+
+    private List<String> generateOptions(Word targetWord, List<Word> allWords, LearningType type) {
+        List<String> options = new ArrayList<>();
+        List<Word> otherWords = allWords.stream()
+                .filter(w -> !w.equals(targetWord))
+                .collect(Collectors.toList());
+
+        Collections.shuffle(otherWords);
+
+        switch (type) {
+            case WORD_TO_IMAGE:
+                options.add(targetWord.getImagePath());
+                options.addAll(otherWords.stream()
+                        .limit(3)
+                        .map(Word::getImagePath)
+                        .toList());
+                break;
+            case IMAGE_TO_WORD:
+                options.add(targetWord.getWord());
+                options.addAll(otherWords.stream()
+                        .limit(3)
+                        .map(Word::getWord)
+                        .toList());
+                break;
+            case AUDIO_TO_WORD:
+                options.add(targetWord.getAudioPath());
+                options.addAll(otherWords.stream()
+                        .limit(3)
+                        .map(Word::getAudioPath)
+                        .toList());
+                break;
+        }
+
+        Collections.shuffle(options);
+        return options;
+    }
+
+    private static class WeightedRandomSelector {
+        public static <T> T select(List<T> items, Map<T, Integer> weights) {
+            int totalWeight = weights.values().stream().mapToInt(Integer::intValue).sum();
+            int randomValue = new Random().nextInt(totalWeight);
+
+            int cumulative = 0;
+            for (T item : items) {
+                cumulative += weights.get(item);
+                if (randomValue < cumulative) {
+                    return item;
+                }
+            }
+            return items.get(items.size() - 1);
+        }
+    }
+}
+```
+// main/java/org/ru/dictionary/service/impl/CourseServiceImpl.java
+```java
+package org.ru.dictionary.service.impl;
+
+
+
+@Service
+@RequiredArgsConstructor
+public class CourseServiceImpl implements CourseService {
+
+    private final CourseRepository courseRepository;
+    private final UserRepository userRepository;
+    private final CourseMapper courseMapper;
+    private final CourseDocumentRepository courseDocumentRepository;
+    private final UserMapper userMapper;
+    private final ProgressService progressService;
+
+    public void checkAuthorOrAdmin(Course course, UserDetails userDetails) {
+        boolean isAuthor = course.getAuthor().getUsername().equals(userDetails.getUsername());
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals(Authorities.ROLE_ADMIN.name()));
+
+        if (!isAuthor && !isAdmin) {
+            throw new ApiException(BusinessErrorCodes.COURSE_ACCESS_DENIED);
+        }
+    }
+
+    @Cacheable("allCourses")
+    public List<CourseResponseDTO> getAllCourses() {
+        return courseRepository.findAll().stream()
+                .map(courseMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Cacheable(value = "courses", key = "#query")
+    public List<CourseResponseDTO> getCourses(String query) {
+        return courseDocumentRepository.searchCourses(query)
+                .stream()
+                .map(courseMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    @Cacheable(value = "userCourses", key = "#userDetails.username")
+    public CourseResponseDTO createCourse(CourseRequestDTO dto, UserDetails userDetails) {
+        User author = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND,
+                        "User not found: " + userDetails.getUsername()));
+
+        Course course = courseMapper.toEntity(dto);
+        course.setAuthor(author);
+
+        return courseMapper.toResponseDTO(courseRepository.save(course));
+    }
+
+    @Transactional
+    @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
+    public CourseResponseDTO updateCourse(Long courseId, CourseRequestDTO dto, UserDetails userDetails) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,
+                        "Course ID: " + courseId));
+
+        checkAuthorOrAdmin(course, userDetails);
+
+        courseMapper.updateFromDto(dto, course);
+
+        return courseMapper.toResponseDTO(courseRepository.save(course));
+    }
+
+    @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
+    public List<CourseResponseDTO> getUserCourses(UserDetails userDetails) {
+        return userRepository.findByUsername(userDetails.getUsername())
+                .map(user -> courseRepository.findByParticipantsContaining(user)
+                        .stream()
+                        .map(courseMapper::toResponseDTO)
+                        .toList())
+                .orElse(Collections.emptyList());
+    }
+
+
+    @Transactional
+    @CacheEvict(value = {"allCourses", "courses", "userCourses"}, allEntries = true)
+    public void deleteCourse(Long courseId, UserDetails userDetails) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,
+                        "Course ID: " + courseId));
+
+        checkAuthorOrAdmin(course, userDetails);
+        courseRepository.delete(course);
+    }
+
+    private Set<User> resolveParticipants(Set<Long> participantIds) {
+        if (participantIds == null) return Collections.emptySet();
+
+        return participantIds.stream()
+                .map(id -> userRepository.findById(id)
+                        .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND,
+                                "User ID: " + id)))
+                .collect(Collectors.toSet());
+    }
+
+    @Transactional
+    @CacheEvict(value = "userCourses", key = "#userDetails.username")
+    public void joinCourse(Long courseId, UserDetails userDetails) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,
+                        "Course ID: " + courseId));
+
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.USER_NOT_FOUND,
+                        "User: " + userDetails.getUsername()));
+
+        if (!course.getParticipants().contains(user)) {
+            course.getParticipants().add(user);
+            courseRepository.save(course);
+        }
+    }
+
+    @Transactional
+    @Cacheable(value = "courseProgress", key = "#courseId")
+    public List<ProgressAverageDTO> getCourseUserProgress(Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND, "Course ID: " + courseId));
+
+        Set<User> participants = course.getParticipants();
+
+        return participants.stream()
+                .map(user -> progressService.getAverageProgressForCourse(userMapper.toResponseDTO(user), courseId))
+                .collect(Collectors.toList());
+    }
+}
+```
+// main/java/org/ru/dictionary/validation/ValidationGroups.java
+```java
+package org.ru.dictionary.validation;
+
+public interface ValidationGroups {
+    interface Create {}
+    interface Update {}
+}
+```
+// main/java/org/ru/dictionary/exception/ApiException.java
+```java
+package org.ru.dictionary.exception;
+
+
+@Getter
+public class ApiException extends RuntimeException {
+    private final BusinessErrorCodes errorCode;
+
+    public ApiException(BusinessErrorCodes errorCode) {
+        super(errorCode.getDescription());
+        this.errorCode = errorCode;
+    }
+
+    public ApiException(BusinessErrorCodes errorCode, String additionalMessage) {
+        super(errorCode.getDescription() + ": " + additionalMessage);
+        this.errorCode = errorCode;
+    }
+}
+```
+// main/java/org/ru/dictionary/exception/ExceptionResponse.java
+```java
+package org.ru.dictionary.exception;
+
+
+
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
+@AllArgsConstructor
+public class ExceptionResponse {
+    private String errorType;
+    private String description;
+    private String message;
+    private Integer code;
+
+    public ExceptionResponse(String message, int status) {
+        this.message = message;
+        this.code = status;
+    }
+}
+```
+// main/java/org/ru/dictionary/exception/GlobalExceptionHandler.java
+```java
+package org.ru.dictionary.exception;
+
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ExceptionResponse> handleApiException(ApiException ex) {
+        BusinessErrorCodes errorCode = ex.getErrorCode();
+        return ResponseEntity.status(errorCode.getHttpStatus())
+                .body(new ExceptionResponse(
+                        errorCode.name(),
+                        errorCode.getDescription(),
+                        ex.getMessage(),
+                        errorCode.getCode()
+                ));
+    }
+
+    @ExceptionHandler({LockedException.class})
+    public ResponseEntity<ExceptionResponse> handleLockedException(LockedException ex) {
+        BusinessErrorCodes code = BusinessErrorCodes.ACCOUNT_LOCKED;
+        return buildErrorResponse(code, ex.getMessage());
+    }
+    @ExceptionHandler({DisabledException.class})
+    public ResponseEntity<ExceptionResponse> handleDisabledException(DisabledException ex) {
+        BusinessErrorCodes code = BusinessErrorCodes.ACCOUNT_DISABLED;
+        return buildErrorResponse(code, ex.getMessage());
+    }
+
+    @ExceptionHandler({BadCredentialsException.class})
+    public ResponseEntity<ExceptionResponse> handleBadCredentialsException(BadCredentialsException ex) {
+        BusinessErrorCodes code = BusinessErrorCodes.BAD_CREDENTIALS;
+        return buildErrorResponse(code, ex.getMessage());
+    }
+
+    @ExceptionHandler({MethodArgumentNotValidException.class})
+    public ResponseEntity<ExceptionResponse> handleMethodArgumentNotValidException(BadCredentialsException ex) {
+        BusinessErrorCodes code = BusinessErrorCodes.VALIDATION_ERROR;
+        return buildErrorResponse(code, ex.getMessage());
+    }
+
+
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ExceptionResponse> handleGenericException(Exception ex) {
+        return buildErrorResponse(
+                BusinessErrorCodes.INTERNAL_SERVER_ERROR,
+                "Internal server error: " + ex.getMessage()
+        );
+    }
+
+    private ResponseEntity<ExceptionResponse> buildErrorResponse(BusinessErrorCodes code, String message) {
+        return ResponseEntity.status(code.getHttpStatus())
+                .body(new ExceptionResponse(
+                        code.name(),
+                        code.getDescription(),
+                        message,
+                        code.getCode()
+                ));
+    }
+
+}
+```
+// main/java/org/ru/dictionary/entity/Level.java
+```java
+package org.ru.dictionary.entity;
+
+
+
+@Entity
+@Table
+@Data
+public class Level {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id", nullable = false)
+    private Course course;
+
+    @Column(nullable = false)
+    private String name;
+
+    private int orderNumber;
+
+    @OneToMany(mappedBy = "level", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orderNumber ASC")
+    private Set<Word> words = new HashSet<>();
+}
+```
+// main/java/org/ru/dictionary/entity/MailToken.java
+```java
+package org.ru.dictionary.entity;
+
+
+
+@Data
+@Entity
+@Table(name = "mail_token")
+public class MailToken {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String token;
+
+    @Enumerated(EnumType.STRING)
+    private MailTokenType tokenType;
+
+    private LocalDateTime expiresAt;
+    private boolean enabled = true;
+
+    private String email;
+}
+```
+// main/java/org/ru/dictionary/entity/Word.java
+```java
+package org.ru.dictionary.entity;
+
+
+@Data
+@RequiredArgsConstructor
+@Entity
+@Table
+@Builder
+@AllArgsConstructor
+public class Word {
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
+
+    @Column(name = "word")
+    private String word;
+
+    @Column(name = "definition")
+    private String definition;
+
+    @Column(name = "audioPath")
+    private String audioPath;
+
+    @Column(name = "videoPath")
+    private String videoPath;
+
+    @Column(name = "imagePath")
+    private String imagePath;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "level_id", nullable = false)
+    private Level level;
+
+    @Column(name = "active_for_testing", columnDefinition = "boolean default true")
+    private boolean activeForTesting = true;
+
+    private Integer orderNumber;
+}
+```
+// main/java/org/ru/dictionary/entity/Progress.java
+```java
+package org.ru.dictionary.entity;
+
+
+@Entity
+@Table(name = "progress",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "word_id"}))
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Progress {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "word_id")
+    private Word word;
+
+    @Column(nullable = false)
+    @Min(0)
+    @Max(100)
+    private Integer progressValue;
+}
+```
+// main/java/org/ru/dictionary/entity/DeactivatedToken.java
+```java
+package org.ru.dictionary.entity;
+
+
+
+@Entity
+@Data
+@Table
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class DeactivatedToken {
+    @Id
+    @Column(columnDefinition = "uuid")
+    private UUID id;
+
+    @Column(name = "c_keep_until", nullable = false)
+    private Instant keepUntil;
+}
+```
+// main/java/org/ru/dictionary/entity/Course.java
+```java
+package org.ru.dictionary.entity;
+
+
+
+@Entity
+@Table(indexes = @Index(columnList = "author_id"))
+@Data
+@NoArgsConstructor
+@Builder
+@AllArgsConstructor
+public class Course {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id", nullable = false)
+    private User author;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @ManyToMany
+    @JoinTable(
+            name = "course_participants",
+            joinColumns = @JoinColumn(name = "course_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> participants = new HashSet<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orderNumber ASC")
+    private List<Level> levels = new ArrayList<>();
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+}
+```
+// main/java/org/ru/dictionary/entity/User.java
+```java
+package org.ru.dictionary.entity;
+
+
+
+@Entity
+@Table(name = "\"users\"")
+@Data
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
+    private String username;
+
+    private String password;
+
+    @Column(nullable = false)
+    private Boolean isEnabled = false;
+
+    private LocalDateTime createdAt;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id")
+    )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private Set<Authorities> roles = new HashSet<>();
+}
+```
+// main/java/org/ru/dictionary/document/LevelDocument.java
+```java
+package org.ru.dictionary.document;
+
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class LevelDocument {
+    @Field(type = FieldType.Text)
+    private String name;
+
+    @Field(type = FieldType.Nested)
+    private List<WordDocument> words;
+}
+```
+// main/java/org/ru/dictionary/document/CourseDocument.java
+```java
+package org.ru.dictionary.document;
+
+
+
+@Document(indexName = "courses")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class CourseDocument {
+    @Id
+    @Field(type = FieldType.Long)
+    private Long id;
+
+    @Field(type = FieldType.Text)
+    private String title;
+
+    @Field(type = FieldType.Text)
+    private String description;
+
+    @Field(type = FieldType.Nested)
+    private List<LevelDocument> levels;
+}
+```
+// main/java/org/ru/dictionary/document/WordDocument.java
+```java
+package org.ru.dictionary.document;
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public  class WordDocument {
+    @Field(type = FieldType.Text)
+    private String word;
+
+    @Field(type = FieldType.Text)
+    private String definition;
+}
+```
+// main/java/org/ru/dictionary/dto/AnswerSubmissionDTO.java
+```java
+package org.ru.dictionary.dto;
+
+
+@Data
+public class AnswerSubmissionDTO {
+    private Long wordId;
+    private String answer;
+    private LearningType type;
+}
+```
+// main/java/org/ru/dictionary/dto/TokenResponseDTO.java
+```java
+package org.ru.dictionary.dto;
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class TokenResponseDTO {
+    String accessToken;
+    String accessExpiresAt;
+    String refreshToken;
+    String refreshExpiresAt;
+}
+```
+// main/java/org/ru/dictionary/dto/AnswerResultDTO.java
+```java
+package org.ru.dictionary.dto;
+
+
+@Data
+@AllArgsConstructor
+public class AnswerResultDTO {
+    private boolean isCorrect;
+    private int newProgress;
+}
+```
+// main/java/org/ru/dictionary/dto/ProgressAverageDTO.java
+```java
+package org.ru.dictionary.dto;
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Schema(description = "Среднее значение прогресса")
+public class ProgressAverageDTO {
+    private UserResponseDTO user;
+    @Schema(description = "Средний прогресс", example = "65.5")
+    private Double averageProgress;
+}
+```
+// main/java/org/ru/dictionary/dto/LearningMaterialDTO.java
+```java
+package org.ru.dictionary.dto;
+
+
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class LearningMaterialDTO {
+    private WordResponseDTO targetWord;
+    private List<String> options;
+    private LearningType type;
+}
+```
+// main/java/org/ru/dictionary/dto/LoginRequestDTO.java
+```java
+package org.ru.dictionary.dto;
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class LoginRequestDTO {
+    @NotBlank
+    String username;
+    @NotBlank
+    String password;
+}
+```
+// main/java/org/ru/dictionary/dto/level/LevelRequestDTO.java
+```java
+package org.ru.dictionary.dto.level;
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class LevelRequestDTO {
+    @NotBlank(message = "Level name is required", groups = {ValidationGroups.Create.class})
+    private String name;
+
+    @NotNull(message = "Order number is required", groups = {ValidationGroups.Update.class})
+    @Null(groups = {ValidationGroups.Create.class})
+    @Min(value = 1, message = "Order number must be at least 1")
+    private Integer orderNumber;
+
+    @NotBlank(groups = {ValidationGroups.Create.class})
+    @Null(groups = {ValidationGroups.Update.class})
+    private Long courseId;
+}
+```
+// main/java/org/ru/dictionary/dto/level/LevelResponseDTO.java
+```java
+package org.ru.dictionary.dto.level;
+
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class LevelResponseDTO implements Serializable {
+    private Long id;
+    private String name;
+    private Integer orderNumber;
+    private Long courseId;
+    private List<WordResponseDTO> words;
+}
+```
+// main/java/org/ru/dictionary/dto/user/UserResponseDTO.java
+```java
+package org.ru.dictionary.dto.user;
+
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserResponseDTO implements Serializable {
+    Long id;
+    String username;
+    Set<String> roles;
+    LocalDateTime createdAt;
+}
+
+```
+// main/java/org/ru/dictionary/dto/user/UserRequestDTO.java
+```java
+package org.ru.dictionary.dto.user;
+
+
+
+@Data
+public class UserRequestDTO {
+    @NotBlank(message = "Username is required", groups = {ValidationGroups.Create.class})
+    @Size(min = 3, max = 50, groups = {ValidationGroups.Create.class, Update.class})
+    @Email(message = "Invalid email format", groups = {ValidationGroups.Create.class})
+    private String username;
+
+    @NotBlank(message = "Password is required", groups = ValidationGroups.Create.class)
+    @Size(min = 8, groups = ValidationGroups.Create.class)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String password;
+}
+```
+// main/java/org/ru/dictionary/dto/course/CourseResponseDTO.java
+```java
+package org.ru.dictionary.dto.course;
+
+
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CourseResponseDTO implements Serializable {
+    private Long id;
+    private String title;
+    private String description;
+    private UserResponseDTO author;
+    private List<LevelResponseDTO> levels;
+    private Set<UserResponseDTO> participants;
+    private LocalDateTime createdAt;
+}
+```
+// main/java/org/ru/dictionary/dto/course/CourseRequestDTO.java
+```java
+package org.ru.dictionary.dto.course;
+
+
+@Data
+public class CourseRequestDTO {
+    @NotBlank(groups = {ValidationGroups.Create.class})
+    private String title;
+
+    @Size(max = 1000, groups = {ValidationGroups.Create.class})
+    private String description;
+}
+```
+// main/java/org/ru/dictionary/dto/word/WordResponseDTO.java
+```java
+package org.ru.dictionary.dto.word;
+
+
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class WordResponseDTO implements Serializable {
+    private Long id;
+    private String word;
+    private String definition;
+    private String imagePath;
+    private String audioPath;
+    private String videoPath;
+    private boolean activeForTesting;
+}
+```
+// main/java/org/ru/dictionary/dto/word/WordRequestDTO.java
+```java
+package org.ru.dictionary.dto.word;
+
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class WordRequestDTO {
+    @NotBlank(message = "word is required", groups = {ValidationGroups.Create.class})
+    private String word;
+
+    @NotBlank(message = "Word definition is required",groups = {ValidationGroups.Create.class})
+    private String definition;
+
+    @NotBlank(message = "LevelId is required", groups = {ValidationGroups.Create.class})
+    private Long levelId;
+
+    private boolean activeForTesting = true;
+
+    private MultipartFile audioFile;
+    private MultipartFile videoFile;
+    private MultipartFile imageFile;
+}
+```
+// main/java/org/ru/dictionary/security/TokenUser.java
+```java
+package org.ru.dictionary.security;
+
+
+
+@Getter
+public class TokenUser extends User {
+
+    private final Token token;
+
+    public TokenUser(String username, String password, boolean enabled, boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked, Collection<? extends GrantedAuthority> authorities, Token token) {
+        super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
+        this.token = token;
+    }
+
+}
+```
+// main/java/org/ru/dictionary/security/Token.java
+```java
+package org.ru.dictionary.security;
+
+
+
+public record Token(UUID id, String subject, List<String> authorities, Instant createdAt,
+                    Instant expiresAt) {
+}
+```
+// main/java/org/ru/dictionary/security/TokenAuthenticationUserDetailsService.java
+```java
+package org.ru.dictionary.security;
+
+
+
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class TokenAuthenticationUserDetailsService
+        implements AuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken> {
+
+    private final DeactivatedTokenRepository deactivatedTokenRepository;
+
+
+
+    @Transactional(readOnly = true)
+    public UserDetails loadUserDetails(PreAuthenticatedAuthenticationToken authenticationToken)
+            throws UsernameNotFoundException {
+
+        if (!(authenticationToken.getPrincipal() instanceof Token token)) {
+            throw new UsernameNotFoundException("Principal must be of type Token");
+        }
+
+        boolean isTokenActive = !isTokenDeactivated(token.id()) &&
+                token.expiresAt().isAfter(Instant.now());
+
+        return new TokenUser(
+                token.subject(),
+                "nopassword",
+                true,
+                true,
+                isTokenActive,
+                true,
+                mapAuthorities(token.authorities()),
+                token
+        );
+    }
+
+    private boolean isTokenDeactivated(UUID tokenId) {
+        return deactivatedTokenRepository.existsActiveDeactivatedToken(tokenId);
+    }
+
+    private List<GrantedAuthority> mapAuthorities(Collection<String> authorities) {
+        return authorities.stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+    }
+
+}
+```
+// main/java/org/ru/dictionary/security/Tokens.java
+```java
+package org.ru.dictionary.security;
+
+public record Tokens(String accessToken, String accessTokenExpiry,
+                     String refreshToken, String refreshTokenExpiry) {
+}
+```
+// main/java/org/ru/dictionary/security/refresh/DefaultRefreshTokenFactory.java
+```java
+package org.ru.dictionary.security.refresh;
+
+
+
+
+public class DefaultRefreshTokenFactory implements Function<Authentication, Token> {
+
+    private Duration tokenTtl = Duration.ofDays(1);
+
+    @Override
+    public Token apply(Authentication authentication) {
+        var authorities = new LinkedList<String>();
+        authorities.add(Authorities.JWT_REFRESH.name());
+        authorities.add(Authorities.JWT_LOGOUT.name());
+        authentication.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(authority -> "GRANT_" + authority)
+                .forEach(authorities::add);
+
+        var now = Instant.now();
+        return new Token(UUID.randomUUID(), authentication.getName(), authorities, now, now.plus(this.tokenTtl));
+    }
+
+    public void setTokenTtl(Duration tokenTtl) {
+        this.tokenTtl = tokenTtl;
+    }
+}
+```
+// main/java/org/ru/dictionary/security/jwt/refresh/RefreshTokenJweStringDeserializer.java
+```java
+package org.ru.dictionary.security.jwt.refresh;
+
+
+
+@Slf4j
+public class RefreshTokenJweStringDeserializer implements Function<String, Token> {
+
+    private final JWEDecrypter jweDecrypter;
+
+    public RefreshTokenJweStringDeserializer(JWEDecrypter jweDecrypter) {
+        this.jweDecrypter = jweDecrypter;
+    }
+
+    @Override
+    public Token apply(String string) {
+        try {
+            var encryptedJWT = EncryptedJWT.parse(string);
+            encryptedJWT.decrypt(this.jweDecrypter);
+            var claimsSet = encryptedJWT.getJWTClaimsSet();
+            return new Token(UUID.fromString(claimsSet.getJWTID()), claimsSet.getSubject(),
+                    claimsSet.getStringListClaim("authorities"),
+                    claimsSet.getIssueTime().toInstant(),
+                    claimsSet.getExpirationTime().toInstant());
+        } catch (ParseException | JOSEException exception) {
+            log.error(exception.getMessage(), exception);
+        }
+
+        return null;
+    }
+}
+```
+// main/java/org/ru/dictionary/security/jwt/refresh/RefreshTokenJweStringSerializer.java
+```java
+package org.ru.dictionary.security.jwt.refresh;
+
+
+@Slf4j
+public class RefreshTokenJweStringSerializer implements Function<Token, String> {
+
+    private final JWEEncrypter jweEncrypter;
+
+    private JWEAlgorithm jweAlgorithm = JWEAlgorithm.DIR;
+
+    private EncryptionMethod encryptionMethod = EncryptionMethod.A128GCM;
+
+    public RefreshTokenJweStringSerializer(JWEEncrypter jweEncrypter) {
+        this.jweEncrypter = jweEncrypter;
+    }
+
+    public RefreshTokenJweStringSerializer(JWEEncrypter jweEncrypter, JWEAlgorithm jweAlgorithm, EncryptionMethod encryptionMethod) {
+        this.jweEncrypter = jweEncrypter;
+        this.jweAlgorithm = jweAlgorithm;
+        this.encryptionMethod = encryptionMethod;
+    }
+
+    @Override
+    public String apply(Token token) {
+        var jwsHeader = new JWEHeader.Builder(this.jweAlgorithm, this.encryptionMethod)
+                .keyID(token.id().toString())
+                .build();
+        var claimsSet = new JWTClaimsSet.Builder()
+                .jwtID(token.id().toString())
+                .subject(token.subject())
+                .issueTime(Date.from(token.createdAt()))
+                .expirationTime(Date.from(token.expiresAt()))
+                .claim("authorities", token.authorities())
+                .build();
+        var encryptedJWT = new EncryptedJWT(jwsHeader, claimsSet);
+        try {
+            encryptedJWT.encrypt(this.jweEncrypter);
+
+            return encryptedJWT.serialize();
+        } catch (JOSEException exception) {
+            log.error(exception.getMessage(), exception);
+        }
+
+        return null;
+    }
+
+    public void setJweAlgorithm(JWEAlgorithm jweAlgorithm) {
+        this.jweAlgorithm = jweAlgorithm;
+    }
+
+    public void setEncryptionMethod(EncryptionMethod encryptionMethod) {
+        this.encryptionMethod = encryptionMethod;
+    }
+}
+```
+// main/java/org/ru/dictionary/security/jwt/access/AccessTokenJwsStringDeserializer.java
+```java
+package org.ru.dictionary.security.jwt.access;
+
+
+
+@Slf4j
+public class AccessTokenJwsStringDeserializer implements Function<String, Token> {
+
+
+    private final JWSVerifier jwsVerifier;
+
+    public AccessTokenJwsStringDeserializer(JWSVerifier jwsVerifier) {
+        this.jwsVerifier = jwsVerifier;
+    }
+
+    @Override
+    public Token apply(String string) {
+        log.debug("Deserializing access token: {}", string);
+        try {
+            var signedJWT = SignedJWT.parse(string);
+            if (signedJWT.verify(this.jwsVerifier)) {
+                var claimsSet = signedJWT.getJWTClaimsSet();
+                return new Token(UUID.fromString(claimsSet.getJWTID()), claimsSet.getSubject(),
+                        claimsSet.getStringListClaim("authorities"),
+                        claimsSet.getIssueTime().toInstant(),
+                        claimsSet.getExpirationTime().toInstant());
+            }
+        } catch (ParseException | JOSEException exception) {
+            log.error(exception.getMessage(), exception);
+        }
+        return null;
+    }
+}
+```
+// main/java/org/ru/dictionary/security/jwt/access/AccessTokenJwsStringSerializer.java
+```java
+package org.ru.dictionary.security.jwt.access;
+
+
+
+@Slf4j
+public class AccessTokenJwsStringSerializer implements Function<Token, String> {
+
+    private final JWSSigner jwsSigner;
+
+    @Setter
+    private JWSAlgorithm jwsAlgorithm = JWSAlgorithm.HS256;
+
+    public AccessTokenJwsStringSerializer(JWSSigner jwsSigner) {
+        this.jwsSigner = jwsSigner;
+    }
+
+    public AccessTokenJwsStringSerializer(JWSSigner jwsSigner, JWSAlgorithm jwsAlgorithm) {
+        this.jwsSigner = jwsSigner;
+        this.jwsAlgorithm = jwsAlgorithm;
+    }
+
+    @Override
+    public String apply(Token token) {
+        var jwsHeader = new JWSHeader.Builder(this.jwsAlgorithm)
+                .keyID(token.id().toString())
+                .build();
+        var claimsSet = new JWTClaimsSet.Builder()
+                .jwtID(token.id().toString())
+                .subject(token.subject())
+                .issueTime(Date.from(token.createdAt()))
+                .expirationTime(Date.from(token.expiresAt()))
+                .claim("authorities", token.authorities())
+                .build();
+        var signedJWT = new SignedJWT(jwsHeader, claimsSet);
+        try {
+            signedJWT.sign(this.jwsSigner);
+
+            return signedJWT.serialize();
+        } catch (JOSEException exception) {
+            log.error(exception.getMessage(), exception);
+        }
+
+        return null;
+    }
+}
+```
+// main/java/org/ru/dictionary/security/filter/RefreshTokenFilter.java
+```java
+package org.ru.dictionary.security.filter;
+
+
+
+@Setter
+@Slf4j
+public class RefreshTokenFilter extends OncePerRequestFilter {
+
+    private RequestMatcher requestMatcher = new AntPathRequestMatcher("/api/refresh", HttpMethod.POST.name());
+
+    private Function<Token, Token> accessTokenFactory = new DefaultAccessTokenFactory();
+
+    private Function<Token, String> accessTokenStringSerializer = Object::toString;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        if (this.requestMatcher.matches(request)) {
+            var context = SecurityContextHolder.getContext();
+            if (context != null && context.getAuthentication() != null) {
+                if ( context.getAuthentication() instanceof PreAuthenticatedAuthenticationToken &&
+                        context.getAuthentication().getPrincipal() instanceof TokenUser user &&
+                        context.getAuthentication().getAuthorities()
+                                .contains(new SimpleGrantedAuthority(Authorities.JWT_REFRESH.name()))) {
+                    var accessToken = this.accessTokenFactory.apply(user.getToken());
+
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    this.objectMapper.writeValue(response.getWriter(),
+                            new Tokens(this.accessTokenStringSerializer.apply(accessToken),
+                                    accessToken.expiresAt().toString(), null, null));
+                    return;
+                }
+            }
+
+            throw new AccessDeniedException("User must be authenticated with JWT");
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+}
+```
+// main/java/org/ru/dictionary/security/filter/JwtAuthenticationFilter.java
+```java
+package org.ru.dictionary.security.filter;
+
+
+
+@Slf4j
+@RequiredArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final Function<String, Token> accessTokenStringDeserializer;
+    private final Function<String, Token> refreshTokenStringDeserializer;
+    private final AuthenticationManager authenticationManager;
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
+
+        try {
+            extractTokenFromRequest(request)
+                    .flatMap(this::parseToken)
+                    .ifPresent(this::authenticateAndSetSecurityContext);
+        } catch (Exception ex) {
+            log.error("JWT authentication error", ex);
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private Optional<String> extractTokenFromRequest(HttpServletRequest request) {
+        return Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION))
+                .filter(header -> header.startsWith("Bearer "))
+                .map(header -> header.replace("Bearer ", ""));
+    }
+
+    private Optional<PreAuthenticatedAuthenticationToken> parseToken(String tokenString) {
+        return Optional.ofNullable(accessTokenStringDeserializer.apply(tokenString))
+                .or(() -> Optional.ofNullable(refreshTokenStringDeserializer.apply(tokenString)))
+                .filter(token -> {
+                    boolean valid = token.expiresAt().isAfter(java.time.Instant.now());
+                    if (!valid) {
+                        log.warn("Token is expired: {}", token.id());
+                    }
+                    return valid;
+                })
+                .map(token -> {
+                    Collection<SimpleGrantedAuthority> authorities = token.authorities()
+                            .stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
+
+                    return new PreAuthenticatedAuthenticationToken(
+                            token,
+                            tokenString,
+                            authorities
+                    );
+                });
+    }
+
+    private void authenticateAndSetSecurityContext(PreAuthenticatedAuthenticationToken authenticationToken) {
+        try {
+            Authentication authenticated = authenticationManager.authenticate(authenticationToken);
+            if (authenticated.isAuthenticated()) {
+                log.info("Authenticated user: {}", authenticated.getPrincipal());
+                org.springframework.security.core.context.SecurityContextHolder.getContext()
+                        .setAuthentication(authenticated);
+            }
+        } catch (AuthenticationException ex) {
+            log.error("Authentication failed", ex);
+        }
+    }
+}
+```
+// main/java/org/ru/dictionary/security/filter/RequestJwtTokensFilter.java
+```java
+package org.ru.dictionary.security.filter;
+
+
+
+@Setter
+@Slf4j
+public class RequestJwtTokensFilter extends OncePerRequestFilter {
+
+    private RequestMatcher requestMatcher = new AntPathRequestMatcher("/api/login", HttpMethod.POST.name());
+
+    private Function<Authentication, Token> refreshTokenFactory = new DefaultRefreshTokenFactory();
+
+    private Function<Token, Token> accessTokenFactory = new DefaultAccessTokenFactory();
+
+    private Function<Token, String> refreshTokenStringSerializer = Object::toString;
+
+    private Function<Token, String> accessTokenStringSerializer = Object::toString;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    private UserDetailsService userDetailsService;
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        if (requestMatcher.matches(request)) {
+            try {
+                LoginRequestDTO loginRequest = objectMapper.readValue(
+                        request.getInputStream(),
+                        LoginRequestDTO.class
+                );
+
+
+                if (StringUtils.isBlank(loginRequest.getUsername())
+                        || StringUtils.isBlank(loginRequest.getPassword())) {
+                    throw new BadCredentialsException("Empty credentials");
+                }
+
+
+                UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
+
+                if (!userDetails.isEnabled()) {
+                    throw new BadCredentialsException("User is not enabled");
+                }
+
+                if (!passwordEncoder.matches(loginRequest.getPassword(), userDetails.getPassword())) {
+                        throw new BadCredentialsException("Invalid password");
+                }
+
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+
+
+                var refreshToken = this.refreshTokenFactory.apply(authentication);
+                var accessToken = this.accessTokenFactory.apply(refreshToken);
+
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                objectMapper.writeValue(
+                        response.getWriter(),
+                        new TokenResponseDTO(
+                                accessTokenStringSerializer.apply(accessToken),
+                                accessToken.expiresAt().toString(),
+                                refreshTokenStringSerializer.apply(refreshToken),
+                                refreshToken.expiresAt().toString()
+                        )
+                );
+                return;
+
+            } catch (IOException e) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid request format");
+            } catch (UsernameNotFoundException | BadCredentialsException e) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed");
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+            }
+            return;
+        }
+        filterChain.doFilter(request, response);
+    }
+
+}
+
+```
+// main/java/org/ru/dictionary/security/filter/JwtLogoutFilter.java
+```java
+package org.ru.dictionary.security.filter;
+
+
+
+
+@RequiredArgsConstructor
+@Slf4j
+public class JwtLogoutFilter extends OncePerRequestFilter {
+
+    private final RequestMatcher requestMatcher = new AntPathRequestMatcher("/api/logout", HttpMethod.POST.name());
+
+    private final DeactivatedTokenRepository deactivatedTokenRepository;
+
+
+
+    @Override
+    @Transactional
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+
+        if (!requestMatcher.matches(request)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        var context = SecurityContextHolder.getContext();
+
+        if (context == null || context.getAuthentication() == null) {
+            throw new AccessDeniedException("User must be authenticated with JWT");
+        }
+
+        if (!(context.getAuthentication() instanceof PreAuthenticatedAuthenticationToken auth)) {
+            throw new AccessDeniedException("Invalid authentication context");
+        }
+
+        if (!(auth.getPrincipal() instanceof TokenUser user)) {
+            throw new AccessDeniedException("Principal must be TokenUser");
+        }
+
+        if (!auth.getAuthorities().contains(new SimpleGrantedAuthority(Authorities.JWT_LOGOUT.name()))) {
+            throw new AccessDeniedException("Missing JWT_LOGOUT authority");
+        }
+
+        deactivatedTokenRepository.save(new DeactivatedToken(
+                user.getToken().id(),
+                user.getToken().expiresAt()
+        ));
+
+        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    }
+
+    @Override
+    protected void initFilterBean() throws ServletException {
+        super.initFilterBean();
+        logger.info("JwtLogoutFilter initialized");
+    }
+}
+```
+// main/java/org/ru/dictionary/security/access/DefaultAccessTokenFactory.java
+```java
+package org.ru.dictionary.security.access;
+
+
+
+public class DefaultAccessTokenFactory implements Function<Token, Token> {
+
+    private Duration tokenTtl = Duration.ofMinutes(60);
+
+    @Override
+    public Token apply(Token token) {
+        var now = Instant.now();
+        return new Token(token.id(), token.subject(),
+                token.authorities().stream()
+                        .filter(authority -> authority.startsWith("GRANT_"))
+                        .map(authority -> authority.replace("GRANT_", ""))
+                        .toList(), now, now.plus(this.tokenTtl));
+    }
+
+    public void setTokenTtl(Duration tokenTtl) {
+        this.tokenTtl = tokenTtl;
+    }
+}
+```
+// main/java/org/ru/dictionary/config/S3ClientConfig.java
+```java
+package org.ru.dictionary.config;
+
+
+
+@Configuration
+class S3ClientConfig{
+    @Value("${s3.region}")
+    private String region;
+    @Value("${s3.url}")
+    private String url;
+    @Value("${s3.accessKeyId}")
+    private String accessKeyId;
+    @Value("${s3.secretAccessKey}")
+    private String  secretAccessKey;
+
+    @Bean
+    public S3Client s3Client() {
+        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+
+        S3ClientBuilder builder = S3Client.builder()
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .region(Region.of(region));
+
+        if (!url.isEmpty()) {
+            builder.endpointOverride(URI.create(url))
+                    .forcePathStyle(true);
+        }
+
+        return builder.build();
+    }
+}
+```
+// main/java/org/ru/dictionary/config/EmailConfig.java
+```java
+package org.ru.dictionary.config;
+
+
+@Component
+@ConfigurationProperties(prefix = "mailing")
+@Data
+public class EmailConfig {
+    private String activationUrl;
+    private String emailAddressSender;
+    private long activationTokenExpiration = 60;
+}
+```
+// main/java/org/ru/dictionary/config/OpenApiConfig.java
+```java
+package org.ru.dictionary.config;
+
+
+
+@Configuration
+public class OpenApiConfig {
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        final String securitySchemeName = "bearerAuth";
+        return new OpenAPI()
+                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
+                .components(
+                        new Components()
+                                .addSecuritySchemes(securitySchemeName,
+                                        new SecurityScheme()
+                                                .name(securitySchemeName)
+                                                .type(SecurityScheme.Type.HTTP)
+                                                .scheme("bearer")
+                                                .bearerFormat("JWT")
+                                )
+                )
+                .info(new Info().title("Auth API").version("1.0"))
+                .paths(new Paths()
+                        .addPathItem("/api/login", new PathItem().post(
+                                                new Operation()
+                                                        .tags(Collections.singletonList("Authentication"))
+                                                        .summary("User login")
+                                                        .requestBody(new RequestBody()
+                                                                .content(new Content()
+                                                                        .addMediaType("application/json",
+                                                                                new MediaType().schema(new Schema()
+                                                                                        .type("object")
+                                                                                        .addProperties("username",
+                                                                                                new Schema().type("string"))
+                                                                                        .addProperties("password",
+                                                                                                new Schema().type("string").format("password"))
+                                                                                )
+                                                                        )
+                                                                )
+                                                        )
+                                                        .responses(new ApiResponses()
+                                                                .addApiResponse("200", new ApiResponse()
+                                                                        .description("Successfully log in"))
+                                                                .addApiResponse("401", new ApiResponse()
+                                                                        .description("Invalid username or password"))
+                                                        )
+                                        ))
+                                        .addPathItem("/api/logout", new PathItem().post(
+                                                        new Operation()
+                                                                .tags(Collections.singletonList("Authentication"))
+                                                                .summary("User logout")
+                                                                .responses(new ApiResponses()
+                                                                        .addApiResponse("200", new ApiResponse()
+                                                                                .description("Successfully logged out"))
+                                                                        .addApiResponse("401", new ApiResponse()
+                                                                                .description("Unauthorized"))
+                                                                )
+                                                )
+                                        )
+                                        .addPathItem("/api/refresh", new PathItem().post(
+                                                        new Operation()
+                                                                .tags(Collections.singletonList("Authentication"))
+                                                                .summary("Refresh access token")
+                                                                .responses(new ApiResponses()
+                                                                        .addApiResponse("200", new ApiResponse()
+                                                                                .description("Success. Returns new access token"))
+                                                                        .addApiResponse("401", new ApiResponse()
+                                                                                .description("Invalid refresh token"))
+                                                                )
+                                                )
+                                        )
+                        );
+    }
+}
+```
+// main/java/org/ru/dictionary/config/SecurityConfig.java
+```java
+package org.ru.dictionary.config;
+
+
+@Configuration
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final TokenAuthenticationUserDetailsService tokenAuthenticationUserDetailsService;
+
+    @Value("${jwt.access-token-key}")
+    private String accessTokenKey;
+
+    @Value("${jwt.refresh-token-key}")
+    private String refreshTokenKey;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        var authenticationProvider = new PreAuthenticatedAuthenticationProvider();
+        authenticationProvider.setPreAuthenticatedUserDetailsService(tokenAuthenticationUserDetailsService);
+
+        return new ProviderManager(authenticationProvider);
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return username -> userRepository.findByUsername(username)
+                .map(user -> User.builder()
+                        .disabled(!user.getIsEnabled())
+                        .username(user.getUsername())
+                        .password(user.getPassword())
+                        .authorities(user.getRoles().stream()
+                                .map(Authorities::name)
+                                .map(SimpleGrantedAuthority::new)
+                                .toList())
+                        .build())
+                .orElseThrow(() -> new UsernameNotFoundException("User '" + username + "' not found"));
+    }
+
+    @Bean
+    public RequestJwtTokensFilter requestJwtTokensFilter(UserDetailsService userDetailsService) throws Exception {
+        var filter = new RequestJwtTokensFilter();
+        filter.setUserDetailsService(userDetailsService);
+        filter.setPasswordEncoder(passwordEncoder());
+        filter.setAccessTokenStringSerializer(new AccessTokenJwsStringSerializer(
+                new MACSigner(OctetSequenceKey.parse(accessTokenKey))
+        ));
+        filter.setRefreshTokenStringSerializer(new RefreshTokenJweStringSerializer(
+                new DirectEncrypter(OctetSequenceKey.parse(refreshTokenKey))
+        ));
+        return filter;
+    }
+
+    @Bean
+    public RefreshTokenFilter refreshTokenFilter() throws Exception {
+        var filter = new RefreshTokenFilter();
+        filter.setAccessTokenStringSerializer(new AccessTokenJwsStringSerializer(
+                new MACSigner(OctetSequenceKey.parse(accessTokenKey))
+        ));
+        return filter;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   AuthenticationManager authenticationManager,
+                                                   RequestJwtTokensFilter requestJwtTokensFilter,
+                                                   DeactivatedTokenRepository deactivatedTokenRepository,
+                                                   RefreshTokenFilter refreshTokenFilter) throws Exception {
+
+        var jwtAuthenticationFilter = new JwtAuthenticationFilter(
+                new AccessTokenJwsStringDeserializer(new MACVerifier(OctetSequenceKey.parse(accessTokenKey))),
+                new RefreshTokenJweStringDeserializer(new DirectDecrypter(OctetSequenceKey.parse(refreshTokenKey))),
+                authenticationManager
+        );
+
+        var authenticationProvider = new PreAuthenticatedAuthenticationProvider();
+        authenticationProvider.setPreAuthenticatedUserDetailsService(tokenAuthenticationUserDetailsService);
+
+        var jwtLogoutFilter = new JwtLogoutFilter(deactivatedTokenRepository);
+
+        return http
+                .securityMatcher("/api/**")
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/**")
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider)
+                .addFilterAfter(requestJwtTokensFilter, ExceptionTranslationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, CsrfFilter.class)
+                .addFilterAfter(refreshTokenFilter, ExceptionTranslationFilter.class)
+                .addFilterAfter(jwtLogoutFilter, ExceptionTranslationFilter.class)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/activation/activate").permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/users", HttpMethod.POST.name())).permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .anyRequest().authenticated())
+                .build();
+    }
+}
+```
+// main/java/org/ru/dictionary/config/WebConfig.java
+```java
+package org.ru.dictionary.config;
+
+
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("https://frontend.localhost")
+                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedHeaders("*")
+                .allowCredentials(true);
+    }
+}
+```
+// main/java/org/ru/dictionary/config/CacheConfig.java
+```java
+package org.ru.dictionary.config;
+
+
+@Configuration
+@EnableCaching
+public class CacheConfig {
+}
+```
+// main/java/org/ru/dictionary/repository/CourseDocumentRepository.java
+```java
+package org.ru.dictionary.repository;
+
+
+
+public interface CourseDocumentRepository {
+    List<CourseDocument> searchCourses(String keyword);
+}
+```
+// main/java/org/ru/dictionary/repository/WordRepository.java
+```java
+package org.ru.dictionary.repository;
+
+
+
+@Repository
+public interface WordRepository extends JpaRepository<Word, Long> {
+    List<Word> findByLevelIdAndActiveForTestingTrue(Long levelId);
+    List<Word> findByLevelId(Long levelId);
+    Integer countByLevelId(Long levelId);
+    Optional<Word> findTopByLevelIdOrderByOrderNumberDesc(Long levelId);
+}
+```
+// main/java/org/ru/dictionary/repository/LevelRepository.java
+```java
+package org.ru.dictionary.repository;
+
+
+
+public interface LevelRepository extends JpaRepository<Level, Long> {
+    List<Level> findByCourseIdOrderByOrderNumberAsc(Long courseId);
+    List<Level> findByCourseId(Long courseId);
+    Optional<Level> findMaxOrderNumberByCourseId(Long courseId);
+    List<Level> findByCourseIdOrderByOrderNumberDesc(Long courseId);
+
+}
+```
+// main/java/org/ru/dictionary/repository/UserRepository.java
+```java
+package org.ru.dictionary.repository;
+
+
+
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    Optional<User> findByUsername(String username);
+}
+```
+// main/java/org/ru/dictionary/repository/ProgressRepository.java
+```java
+package org.ru.dictionary.repository;
+
+
+
+public interface ProgressRepository extends JpaRepository<Progress, Long> {
+    Optional<Progress> findByUserIdAndWordId(long userId, long wordId);
+    @Query("SELECT p FROM Progress p " +
+            "WHERE p.user.id = :userId " +
+            "AND p.word.level.id = :levelId")
+    List<Progress> findByUserIdAndLevelId(@Param("userId") Long userId,
+                                          @Param("levelId") Long levelId);
+
+    @Query("SELECT COALESCE(SUM(p.progressValue), 0) FROM Progress p " +
+            "WHERE p.user.id = :userId AND p.word.level.id = :levelId")
+    Integer getTotalProgressForLevel(@Param("userId") Long userId,
+                                     @Param("levelId") Long levelId);
+}
+```
+// main/java/org/ru/dictionary/repository/DeactivatedTokenRepository.java
+```java
+package org.ru.dictionary.repository;
+
+
+
+public interface DeactivatedTokenRepository extends JpaRepository<DeactivatedToken, UUID> {
+
+    @Query("SELECT CASE WHEN COUNT(d) > 0 THEN true ELSE false END " +
+            "FROM DeactivatedToken d WHERE d.id = :tokenId AND d.keepUntil > CURRENT_TIMESTAMP")
+    boolean existsActiveDeactivatedToken(@Param("tokenId") UUID tokenId);
+
+    @Query("DELETE FROM DeactivatedToken d WHERE d.keepUntil <= CURRENT_TIMESTAMP")
+    void deleteExpiredTokens();
+}
+```
+// main/java/org/ru/dictionary/repository/MailTokenRepository.java
+```java
+package org.ru.dictionary.repository;
+
+
+@Repository
+public interface MailTokenRepository extends JpaRepository<MailToken, Long> {
+    Optional<MailToken> findByEmailAndEnabledAndToken(String email, boolean enabled, String token);
+
+    List<MailToken> findByEmailAndEnabledAndTokenType(String email, boolean b, MailTokenType tokenType);
+}
+```
+// main/java/org/ru/dictionary/repository/CourseRepository.java
+```java
+package org.ru.dictionary.repository;
+
+
+
+public interface CourseRepository extends JpaRepository<Course, Long> {
+    List<Course> findByParticipantsContaining(User participant);
+    List<Course> findByParticipantsId(Long userId);
+}
+```
+// main/java/org/ru/dictionary/repository/impl/CourseDocumentRepositoryImpl.java
+```java
+package org.ru.dictionary.repository.impl;
+
+
+
+@Repository
+@RequiredArgsConstructor
+@Slf4j
+public class CourseDocumentRepositoryImpl implements CourseDocumentRepository {
+
+    private final ElasticsearchClient elasticsearchClient;
+
+    public List<CourseDocument> searchCourses(String query) {
+        try {
+            SearchResponse<CourseDocument> response = elasticsearchClient.search(s -> s
+                            .index("courses")
+                            .query(q -> q
+                                    .bool(b -> b
+                                            .should(sh -> sh
+                                                    .match(m -> m
+                                                            .field("title.ngram") // частичное вхождение
+                                                            .query(query)
+                                                            .fuzziness("AUTO")
+                                                            .boost(3.0f)
+                                                    )
+                                            )
+                                            .should(sh -> sh
+                                                    .match(m -> m
+                                                            .field("description.ngram")
+                                                            .query(query)
+                                                            .fuzziness("AUTO")
+                                                            .boost(2.5f)
+                                                    )
+                                            )
+                                            .should(sh -> sh
+                                                    .nested(n -> n
+                                                            .path("levels")
+                                                            .query(nq -> nq
+                                                                    .match(m -> m
+                                                                            .field("levels.name.ngram")
+                                                                            .query(query)
+                                                                            .fuzziness("AUTO")
+                                                                            .boost(2.0f)
+                                                                    )
+                                                            )
+                                                    )
+                                            )
+                                            .should(sh -> sh
+                                                    .nested(n -> n
+                                                            .path("levels")
+                                                            .query(levelsQuery -> levelsQuery
+                                                                    .nested(nw -> nw
+                                                                            .path("levels.words")
+                                                                            .query(wordQuery -> wordQuery
+                                                                                    .bool(bq -> bq
+                                                                                            .should(wordMatch -> wordMatch
+                                                                                                    .match(m -> m
+                                                                                                            .field("levels.words.word.ngram")
+                                                                                                            .query(query)
+                                                                                                            .fuzziness("AUTO")
+                                                                                                            .boost(1.8f)
+                                                                                                    )
+                                                                                            )
+                                                                                            .should(wordMatch -> wordMatch
+                                                                                                    .match(m -> m
+                                                                                                            .field("levels.words.definition.ngram")
+                                                                                                            .query(query)
+                                                                                                            .fuzziness("AUTO")
+                                                                                                            .boost(1.5f)
+                                                                                                    )
+                                                                                            )
+                                                                                    )
+                                                                            )
+                                                                    )
+                                                            )
+                                                    )
+                                            )
+                                    )
+                            ),
+                    CourseDocument.class
+            );
+
+            return response.hits().hits().stream()
+                    .map(Hit::source)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new ApiException(BusinessErrorCodes.FILE_UPLOAD_FAILED, e.getMessage());
+        }
+    }
+
+}
+```
+Кодовая база Frontend
+// index.scss
+```css
+@import 'base/reset';
+@import 'base/variables';
+@import 'base/mixins';
+@import 'base/antd-overrides';
+@import 'components/layout';
+@import 'components/buttons';
+
+@import '~antd/dist/antd.css';
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+* {
+	font-family: 'JetBrains Mono', monospace;
+}
+.ant-modal-root {
+	z-index: 1000;
+}
+
+```
+// vite-env.d.ts
+```typescript
+/// <reference types="vite/client" />
+
+```
+// App.tsx
+```typescript
+import 'antd/dist/reset.css'
+
+import { ActivatePage } from '@/pages/auth/ActivatePage'
+import { LoginPage } from '@/pages/auth/LoginPage'
+import { RegisterPage } from '@/pages/auth/RegisterPage'
+import { Route, Routes } from 'react-router-dom'
+import { MainLayout } from './app/layouts/MainLayout'
+import { CoursePage } from './pages/course/CoursePage'
+import { LevelPage } from './pages/level/LevelPage'
+import { ProfilePage } from './pages/profile/ProfilePage'
+import { UserProgressPage } from './pages/progress/UserProgressPage'
+
+export const App = () => {
+	return (
+		<Routes>
+			<Route path='/login' element={<LoginPage />} />
+			<Route path='/register' element={<RegisterPage />} />
+			<Route path='/activate-account' element={<ActivatePage />} />
+
+			<Route element={<MainLayout />}>
+				<Route path='/courses' element={<CoursePage />} />
+				<Route path='/course/:id' element={<CoursePage />} />
+				<Route path='/level/:id' element={<LevelPage />} />
+				<Route path='/profile' element={<ProfilePage />} />
+				<Route path='/progress' element={<UserProgressPage />} />
+			</Route>
+		</Routes>
+	)
+}
+
+export default App
+
+```
+// main.tsx
+```typescript
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import App from './App'
+import { QueryProvider } from './app/QueryProvider'
+ReactDOM.createRoot(document.getElementById('root')!).render(
+	<React.StrictMode>
+		<BrowserRouter>
+			<QueryProvider>
+				<App />
+				<ReactQueryDevtools initialIsOpen={false} />
+			</QueryProvider>
+		</BrowserRouter>
+	</React.StrictMode>
+)
+
+```
+// services/api/auth.service.ts
+```typescript
+import type {
+	AuthResponse,
+	LoginFormData,
+	RegisterFormData,
+} from '@/shared/types/auth'
+import type { UserResponseDTO } from '@/shared/types/user'
+import { authAxios } from './index'
+
+export const authService = {
+	async login(data: LoginFormData) {
+		const response = await authAxios.post<AuthResponse>('/api/login', data)
+		return response.data
+	},
+
+	async register(data: RegisterFormData) {
+		const response = await authAxios.post<UserResponseDTO>('/api/users', data)
+		return response.data
+	},
+
+	async logout() {
+		await authAxios.post('/api/logout')
+	},
+
+	async refresh() {
+		const response = await authAxios.post<AuthResponse>('/api/refresh')
+		return response.data
+	},
+
+	async activateAccount(token: string, email: string) {
+		await authAxios.get('/api/activation/activate', {
+			params: { token, email },
+		})
+	},
+}
+
+```
+// services/api/index.ts
+```typescript
+import axios from 'axios'
+import { authService } from './auth.service'
+
+export const authAxios = axios.create({
+	withCredentials: true,
+})
+
+authAxios.interceptors.request.use(config => {
+	const token = localStorage.getItem('accessToken')
+	if (token && !config.url?.includes('/api/refresh')) {
+		config.headers.Authorization = `Bearer ${token}`
+	}
+	if (config.url === '/api/users/me' && !localStorage.getItem('accessToken')) {
+		// Тут мутня какая-то
+		return Promise.reject(new Error('No access token'))
+	}
+	return config
+})
+
+authAxios.interceptors.response.use(
+	response => response,
+	async error => {
+		const originalRequest = error.config
+		if (error.response?.status === 403 && !originalRequest._retry) {
+			originalRequest._retry = true
+			try {
+				const { accessToken } = await authService.refresh()
+				localStorage.setItem('accessToken', accessToken)
+				return authAxios(originalRequest)
+			} catch (refreshError) {
+				localStorage.removeItem('accessToken')
+				window.location.href = '/login'
+				return Promise.reject(refreshError)
+			}
+		}
+		return Promise.reject(error)
+	}
+)
+
+```
+// services/api/user.service.ts
+```typescript
+import type { UserResponseDTO, UserUpdateData } from '@/shared/types/user'
+import { authAxios } from './index'
+
+export const userService = {
+	async updateUser(id: number, data: UserUpdateData) {
+		const response = await authAxios.put<UserResponseDTO>(
+			`/api/users/${id}`,
+			data
+		)
+		return response.data
+	},
+
+	async getCurrentUser() {
+		const response = await authAxios.get<UserResponseDTO>('/api/users/me')
+		return response.data
+	},
+}
+
+```
+// services/api/learn.service.ts
+```typescript
+import type {
+	AnswerResultDTO,
+	AnswerSubmissionDTO,
+	LearningMaterialDTO,
+	LearningParams,
+} from '@/shared/types/learn'
+import { authAxios } from './index'
+
+export const learnService = {
+	getLearningMaterial: async (
+		params: LearningParams
+	): Promise<LearningMaterialDTO> => {
+		const response = await authAxios.get<LearningMaterialDTO>(
+			`/api/learn/${params.levelId}`,
+			{ params: { type: params.type } }
+		)
+		return response.data
+	},
+
+	checkAnswer: async (data: AnswerSubmissionDTO): Promise<AnswerResultDTO> => {
+		const response = await authAxios.post<AnswerResultDTO>(
+			'/api/learn/check-answer',
+			data
+		)
+		return response.data
+	},
+}
+
+```
+// services/api/word.service.ts
+```typescript
+import type { WordRequestDTO, WordResponseDTO } from '@/shared/types/word'
+import { authAxios } from './index'
+
+export const wordService = {
+	getWordsByLevel: async (levelId: number): Promise<WordResponseDTO[]> => {
+		const response = await authAxios.get<WordResponseDTO[]>(
+			`/api/words/level/${levelId}`
+		)
+		return response.data
+	},
+
+	getWordById: async (id: number): Promise<WordResponseDTO> => {
+		const response = await authAxios.get<WordResponseDTO>(`/api/words/${id}`)
+		return response.data
+	},
+
+	createWord: async (data: WordRequestDTO): Promise<WordResponseDTO> => {
+		const formData = new FormData()
+
+		Object.entries(data).forEach(([key, value]) => {
+			if (value instanceof File) {
+				formData.append(key, value)
+			} else if (value !== undefined) {
+				const stringValue =
+					typeof value === 'boolean' ? value.toString() : String(value)
+				formData.append(key, stringValue)
+			}
+		})
+
+		const response = await authAxios.post<WordResponseDTO>(
+			'/api/words',
+			formData,
+			{
+				headers: { 'Content-Type': 'multipart/form-data' },
+			}
+		)
+		return response.data
+	},
+
+	updateWord: async (
+		id: number,
+		data: WordRequestDTO
+	): Promise<WordResponseDTO> => {
+		const formData = new FormData()
+
+		Object.entries(data).forEach(([key, value]) => {
+			if (value instanceof File) {
+				formData.append(key, value)
+			} else if (value !== undefined) {
+				const stringValue =
+					typeof value === 'boolean' ? value.toString() : String(value)
+				formData.append(key, stringValue)
+			}
+		})
+
+		const response = await authAxios.put<WordResponseDTO>(
+			`/api/words/${id}`,
+			formData,
+			{
+				headers: { 'Content-Type': 'multipart/form-data' },
+			}
+		)
+		return response.data
+	},
+
+	deleteWord: async (id: number): Promise<void> => {
+		await authAxios.delete(`/api/words/${id}`)
+	},
+}
+
+```
+// services/api/level.service.ts
+```typescript
+import type { LevelRequestDTO, LevelResponseDTO } from '@/shared/types/level'
+import { authAxios } from './index'
+
+export const levelService = {
+	getAllLevels: async (courseId?: number): Promise<LevelResponseDTO[]> => {
+		const response = await authAxios.get<LevelResponseDTO[]>(
+			'/api/levels',
+			courseId ? { params: { courseId } } : undefined
+		)
+		return response.data
+	},
+
+	getLevelById: async (id: number): Promise<LevelResponseDTO> => {
+		const response = await authAxios.get<LevelResponseDTO>(`/api/levels/${id}`)
+		return response.data
+	},
+
+	createLevel: async (data: LevelRequestDTO): Promise<LevelResponseDTO> => {
+		const response = await authAxios.post<LevelResponseDTO>('/api/levels', data)
+		return response.data
+	},
+
+	updateLevel: async (
+		id: number,
+		data: LevelRequestDTO
+	): Promise<LevelResponseDTO> => {
+		const response = await authAxios.put<LevelResponseDTO>(
+			`/api/levels/${id}`,
+			data
+		)
+		return response.data
+	},
+
+	deleteLevel: async (id: number): Promise<void> => {
+		await authAxios.delete(`/api/levels/${id}`)
+	},
+}
+
+```
+// services/api/course.service.ts
+```typescript
+import type {
+	CourseRequestDTO,
+	CourseResponseDTO,
+	CourseSearchParams,
+	CourseUserProgressDTO,
+} from '@/shared/types/course'
+import { authAxios } from './index'
+
+export const courseService = {
+	async getCourseUsersProgress(id: number): Promise<CourseUserProgressDTO[]> {
+		const response = await authAxios.get<CourseUserProgressDTO[]>(
+			`/api/courses/${id}/progress`
+		)
+		return response.data
+	},
+	getCourseById: async (id: number): Promise<CourseResponseDTO> => {
+		const response = await authAxios.get<CourseResponseDTO>(
+			`/api/courses/${id}`
+		)
+		return response.data
+	},
+	getAllCourses: async (): Promise<CourseResponseDTO[]> => {
+		const response = await authAxios.get<CourseResponseDTO[]>('/api/courses')
+		return response.data
+	},
+
+	createCourse: async (data: CourseRequestDTO): Promise<CourseResponseDTO> => {
+		const response = await authAxios.post<CourseResponseDTO>(
+			'/api/courses',
+			data
+		)
+		return response.data
+	},
+
+	updateCourse: async (
+		id: number,
+		data: CourseRequestDTO
+	): Promise<CourseResponseDTO> => {
+		const response = await authAxios.put<CourseResponseDTO>(
+			`/api/courses/${id}`,
+			data
+		)
+		return response.data
+	},
+
+	deleteCourse: async (id: number): Promise<void> => {
+		await authAxios.delete(`/api/courses/${id}`)
+	},
+
+	joinCourse: async (id: number): Promise<void> => {
+		await authAxios.post(`/api/courses/${id}/join`)
+	},
+
+	getUserCourses: async (): Promise<CourseResponseDTO[]> => {
+		const response = await authAxios.get<CourseResponseDTO[]>(
+			'/api/courses/my-courses'
+		)
+		return response.data
+	},
+
+	searchCourses: async (
+		params: CourseSearchParams
+	): Promise<CourseResponseDTO[]> => {
+		const response = await authAxios.get<CourseResponseDTO[]>(
+			'/api/courses/search',
+			{ params }
+		)
+		return response.data
+	},
+}
+
+```
+// pages/progress/UserProgressPage.scss
+```css
+.progress-page {
+	padding: 24px;
+	max-width: 1200px;
+	margin: 0 auto;
+
+	.ant-tabs-nav {
+		margin-bottom: 32px;
+	}
+
+	.progress-bars {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 24px;
+	}
+}
+
+.radial-chart {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+	padding: 20px;
+	background: white;
+	border-radius: 12px;
+	//box-shadow: $box-shadow;
+}
+
+```
+// pages/progress/UserProgressPage.tsx
+```typescript
+import {
+	useCourseProgress,
+	useLevelProgress,
+	useWordProgress,
+} from '@/hooks/api/progress.hooks'
+import { Col, Row, Tabs, Typography } from 'antd'
+import './UserProgressPage.scss'
+import { ProgressRadialChart } from './components/ProgressRadialChart'
+
+const { Title } = Typography
+const { TabPane } = Tabs
+
+export const UserProgressPage = () => {
+	const { data: courseProgress } = useCourseProgress(1) // Пример для courseId=1
+	const { data: levelProgress } = useLevelProgress(1) // Пример для levelId=1
+	const { data: wordProgress } = useWordProgress(1) // Пример для wordId=1
+
+	return (
+		<div className='progress-page'>
+			<Title level={2}>Детальная статистика</Title>
+
+			<Tabs defaultActiveKey='1'>
+				<TabPane tab='По курсам' key='1'>
+					<Row gutter={[24, 24]}>
+						<Col span={8}>
+							<ProgressRadialChart
+								title='Общий прогресс'
+								percent={courseProgress?.averageProgress || 0}
+							/>
+						</Col>
+					</Row>
+				</TabPane>
+
+				<TabPane tab='По уровням' key='2'>
+					<div className='progress-bars'>
+						<ProgressRadialChart
+							title='Уровень 1'
+							percent={levelProgress?.averageProgress || 0}
+						/>
+					</div>
+				</TabPane>
+
+				<TabPane tab='По словам' key='3'>
+					<ProgressRadialChart
+						title="Слово 'Example'"
+						percent={wordProgress?.averageProgress || 0}
+					/>
+				</TabPane>
+			</Tabs>
+		</div>
+	)
+}
+
+```
+// pages/progress/components/ProgressRadialChart.tsx
+```typescript
+import { Progress, Typography } from 'antd'
+import '../UserProgressPage'
+
+type Props = {
+	title: string
+	percent: number
+}
+
+export const ProgressRadialChart = ({ title, percent }: Props) => (
+	<div className='radial-chart'>
+		<Typography.Text strong>{title}</Typography.Text>
+		<Progress
+			type='dashboard'
+			percent={percent}
+			strokeColor='#4F46E5'
+			format={() => `${Math.round(percent)}%`}
+			width={150}
+		/>
+	</div>
+)
+
+```
+// pages/profile/ProfilePage.scss
+```css
+.profile-page {
+  .profile-header {
+    margin-bottom: 24px;
+    
+    .ant-skeleton {
+      padding: 12px;
+    }
+  }
+
+  .profile-tabs {
+    .ant-tabs-nav {
+      margin-bottom: 24px;
+    }
+  }
+
+  .course-progress {
+    margin-top: 12px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .profile-form {
+    max-width: 600px;
+    
+    .ant-form-item-label {
+      font-weight: 500;
+    }
+  }
+}
+```
+// pages/profile/ProfilePage.tsx
+```typescript
+import { useCurrentUser } from '@/hooks/api/user.hooks'
+import { Card, Skeleton, Tabs, Typography } from 'antd'
+import './ProfilePage.scss'
+import { ProfileForm } from './components/ProfileForm'
+import { UserCourses } from './components/UserCourses'
+
+const { Title } = Typography
+const { TabPane } = Tabs
+
+export const ProfilePage = () => {
+	const { data: user, isLoading } = useCurrentUser()
+
+	return (
+		<div className='profile-page'>
+			<Card className='profile-header'>
+				{isLoading ? (
+					<Skeleton active />
+				) : (
+					<Title level={2}>Профиль: {user?.username}</Title>
+				)}
+			</Card>
+
+			<Tabs defaultActiveKey='1' className='profile-tabs'>
+				<TabPane tab='Мои курсы' key='1'>
+					<UserCourses />
+				</TabPane>
+
+				<TabPane tab='Настройки' key='2'>
+					<ProfileForm user={user || undefined} />
+				</TabPane>
+			</Tabs>
+		</div>
+	)
+}
+
+```
+// pages/profile/components/ProfileForm.tsx
+```typescript
+import { useUpdateUser } from '@/hooks/api/user.hooks'
+import type { UserResponseDTO, UserUpdateData } from '@/shared/types/user'
+import { Button, Form, Input, notification } from 'antd'
+
+type Props = {
+	user?: UserResponseDTO
+}
+
+export const ProfileForm = ({ user }: Props) => {
+	const [form] = Form.useForm()
+	const { mutate, isPending } = useUpdateUser(user?.id || 0)
+
+	const handleSubmit = (values: UserUpdateData) => {
+		mutate(values, {
+			onSuccess: () => {
+				notification.success({
+					message: 'Данные успешно обновлены',
+				})
+			},
+			onError: () => {
+				notification.error({
+					message: 'Ошибка при обновлении данных',
+				})
+			},
+		})
+	}
+
+	return (
+		<Form
+			form={form}
+			layout='vertical'
+			initialValues={user}
+			onFinish={handleSubmit}
+			className='profile-form'
+		>
+			<Form.Item
+				label='Имя пользователя'
+				name='username'
+				rules={[{ required: true, message: 'Введите имя пользователя' }]}
+			>
+				<Input />
+			</Form.Item>
+
+			<Form.Item
+				label='Новый пароль'
+				name='password'
+				rules={[{ min: 8, message: 'Минимум 8 символов' }]}
+			>
+				<Input.Password placeholder='Оставьте пустым, если не меняется' />
+			</Form.Item>
+
+			<Button type='primary' htmlType='submit' loading={isPending}>
+				Сохранить изменения
+			</Button>
+		</Form>
+	)
+}
+
+```
+// pages/profile/components/UserCourses.tsx
+```typescript
+import { useUserCourses } from '@/hooks/api/course.hooks'
+import { List, Progress, Tag, Typography } from 'antd'
+import { Link } from 'react-router-dom'
+
+const { Text } = Typography
+
+export const UserCourses = () => {
+	const { data: courses, isPending } = useUserCourses()
+
+	return (
+		<List
+			loading={isPending}
+			itemLayout='vertical'
+			dataSource={courses}
+			renderItem={course => (
+				<List.Item
+					actions={[
+						<Link key='open' to={`/course/${course.id}`}>
+							Открыть курс
+						</Link>,
+					]}
+				>
+					<List.Item.Meta
+						title={<Text strong>{course.title}</Text>}
+						description={
+							<div className='course-progress'>
+								<Progress
+									percent={course.progress || 0}
+									status='active'
+									strokeColor={{
+										'0%': '#108ee9',
+										'100%': '#87d068',
+									}}
+								/>
+								<Tag color='geekblue'>Уровней: {course.levels?.length}</Tag>
+							</div>
+						}
+					/>
+				</List.Item>
+			)}
+		/>
+	)
+}
+
+```
+// pages/auth/LoginPage.tsx
+```typescript
+import { useLogin } from '@/hooks/api/auth.hooks'
+import type { LoginFormData } from '@/shared/types/auth'
+import { Button, Card, Form, Input, Modal } from 'antd'
+import { Link, useNavigate } from 'react-router-dom'
+import './AuthPages.scss'
+
+export const LoginPage = () => {
+	const [form] = Form.useForm()
+	const { mutate, isPending } = useLogin()
+	const navigate = useNavigate()
+
+	const handleSubmit = (values: LoginFormData) => {
+		mutate(values, {
+			onSuccess: () => {
+				navigate('/courses')
+			},
+			onError: () => {
+				Modal.error({
+					title: 'Ошибка входа',
+					content: 'Неверные учетные данные или аккаунт не активирован',
+				})
+			},
+		})
+	}
+	return (
+		<div className='auth-page'>
+			<Card title='Вход в систему' className='auth-card'>
+				<Form form={form} onFinish={handleSubmit}>
+					<Form.Item
+						name='username'
+						rules={[{ required: true, message: 'Введите имя пользователя' }]}
+					>
+						<Input placeholder='Имя пользователя' />
+					</Form.Item>
+
+					<Form.Item
+						name='password'
+						rules={[{ required: true, message: 'Введите пароль' }]}
+					>
+						<Input.Password placeholder='Пароль' />
+					</Form.Item>
+
+					<Button type='primary' htmlType='submit' loading={isPending} block>
+						Войти
+					</Button>
+
+					<div className='auth-link'>
+						Нет аккаунта? <Link to='/register'>Зарегистрироваться</Link>
+					</div>
+				</Form>
+			</Card>
+		</div>
+	)
+}
+
+```
+// pages/auth/ActivatePage.tsx
+```typescript
+import { useActivateAccount } from '@/hooks/api/auth.hooks'
+import { Button, Modal, Result, Spin } from 'antd'
+import { useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import './AuthPages.scss'
+
+export const ActivatePage = () => {
+	const [searchParams] = useSearchParams()
+	const email = searchParams.get('email')
+	const token = searchParams.get('token')
+
+	const { isPending, isError, error } = useActivateAccount(
+		token || '',
+		email || ''
+	)
+
+	useEffect(() => {
+		if (isError && error) {
+			Modal.error({
+				title: 'Ошибка активации',
+				content: error.message,
+			})
+		}
+	}, [isError, error])
+
+	if (isPending) {
+		return (
+			<div className='auth-page'>
+				<Spin size='large' tip='Активация аккаунта...' />
+			</div>
+		)
+	}
+
+	return (
+		<div className='auth-page'>
+			<Result
+				status={!isError ? 'error' : 'success'}
+				title={!isError ? 'Ошибка активации' : 'Аккаунт активирован'}
+				subTitle={
+					!isError
+						? 'Неверная или устаревшая ссылка активации'
+						: 'Теперь вы можете войти в систему'
+				}
+				extra={[
+					<Button type='primary' key='login' href='/login'>
+						Перейти к авторизации
+					</Button>,
+				]}
+			/>
+		</div>
+	)
+}
+
+```
+// pages/auth/RegisterPage.tsx
+```typescript
+import { EmailServiceModal } from '@/components/modals/EmailServiceModal'
+import { useRegister } from '@/hooks/api/auth.hooks'
+import type { RegisterFormData } from '@/shared/types/auth'
+import { Button, Card, Form, Input, Modal } from 'antd'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import './AuthPages.scss'
+
+export const RegisterPage = () => {
+	const [form] = Form.useForm()
+	const { mutate, isPending } = useRegister()
+	const [successModalOpen, setSuccessModalOpen] = useState(false)
+	const [registeredEmail, setRegisteredEmail] = useState('')
+
+	const handleSubmit = (values: RegisterFormData) => {
+		mutate(values, {
+			onSuccess: () => {
+				setRegisteredEmail(values.username)
+				setSuccessModalOpen(true)
+				form.resetFields()
+			},
+			onError: error => {
+				Modal.error({
+					title: 'Ошибка регистрации',
+					content: error.message || 'Произошла ошибка при регистрации',
+				})
+			},
+		})
+	}
+
+	return (
+		<div className='auth-page'>
+			<Card title='Регистрация' className='auth-card'>
+				<Form form={form} onFinish={handleSubmit}>
+					<Form.Item
+						name='username'
+						rules={[{ required: true, message: 'Введите имя пользователя' }]}
+					>
+						<Input placeholder='Имя пользователя' />
+					</Form.Item>
+
+					<Form.Item
+						name='password'
+						rules={[
+							{
+								required: true,
+								min: 8,
+								message: 'Пароль должен быть не менее 8 символов',
+							},
+						]}
+					>
+						<Input.Password placeholder='Пароль' />
+					</Form.Item>
+
+					<Button type='primary' htmlType='submit' loading={isPending} block>
+						Зарегистрироваться
+					</Button>
+
+					<div className='auth-link'>
+						Уже есть аккаунт? <Link to='/login'>Войти</Link>
+					</div>
+				</Form>
+			</Card>
+
+			<EmailServiceModal
+				email={registeredEmail}
+				open={successModalOpen}
+				onClose={() => setSuccessModalOpen(false)}
+			/>
+		</div>
+	)
+}
+
+```
+// pages/auth/AuthPages.scss
+```css
+.auth-page {
+	height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #f0f2f5;
+
+	.auth-card {
+		width: 400px;
+		border-radius: 8px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+		.ant-card-head {
+			text-align: center;
+			font-size: 1.5rem;
+		}
+
+		.auth-link {
+			margin-top: 16px;
+			text-align: center;
+		}
+	}
+}
+
+```
+// pages/level/LevelPage.scss
+```css
+.level-page {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+
+  .learning-card {
+    .exercise-title {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+  }
+}
+```
+// pages/level/LevelPage.tsx
+```typescript
+import { useLearningMaterial } from '@/hooks/api/learn.hooks'
+import { Card, Skeleton, Typography } from 'antd'
+import { useParams } from 'react-router-dom'
+import './LevelPage.scss'
+import { LearningExercise } from './components/LearningExercise'
+
+const { Title } = Typography
+
+export const LevelPage = () => {
+	const { id } = useParams<{ id: string }>()
+	const {
+		data: material,
+		isLoading,
+		refetch,
+	} = useLearningMaterial({
+		levelId: Number(id),
+		type: 'WORD_TO_IMAGE', // Default type
+	})
+
+	return (
+		<div className='level-page'>
+			<Card className='learning-card'>
+				{isLoading ? (
+					<Skeleton active />
+				) : (
+					<>
+						<Title level={3} className='exercise-title'>
+							{material?.targetWord.word}
+						</Title>
+
+						<LearningExercise material={material} onNext={() => refetch()} />
+					</>
+				)}
+			</Card>
+		</div>
+	)
+}
+
+```
+// pages/level/components/AudioPlayer.tsx
+```typescript
+import { SoundOutlined } from '@ant-design/icons'
+import { Button } from 'antd'
+import './LearningExercise.scss'
+
+type Props = {
+	src?: string
+}
+
+export const AudioPlayer = ({ src }: Props) => {
+	const handlePlay = () => {
+		if (!src) return
+		new Audio(src).play()
+	}
+
+	return (
+		<div className='audio-player'>
+			<Button
+				type='primary'
+				shape='circle'
+				icon={<SoundOutlined />}
+				size='large'
+				onClick={handlePlay}
+			/>
+		</div>
+	)
+}
+
+```
+// pages/level/components/LearningExercise.scss
+```css
+.exercise-container {
+  .options-grid {
+    display: grid;
+    gap: 16px;
+    margin-top: 32px;
+
+    &.desktop {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .option-button {
+      width: 100%;
+      height: 100px;
+      padding: 8px;
+
+      .image-option {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+    }
+  }
+
+  .audio-player {
+    display: flex;
+    justify-content: center;
+    margin: 24px 0;
+  }
+}
+```
+// pages/level/components/LearningExercise.tsx
+```typescript
+import { useCheckAnswer } from '@/hooks/api/learn.hooks'
+import type { LearningMaterialDTO } from '@/shared/types/learn'
+import { Button, Grid, notification } from 'antd'
+import './LearningExercise.scss'
+import { AudioPlayer } from './AudioPlayer'
+
+const { useBreakpoint } = Grid
+
+type Props = {
+	material?: LearningMaterialDTO
+	onNext: () => void
+}
+
+export const LearningExercise = ({ material, onNext }: Props) => {
+	const screens = useBreakpoint()
+	const { mutate: checkAnswer } = useCheckAnswer()
+
+	const handleAnswer = (answer: string) => {
+		if (!material) return
+
+		checkAnswer(
+			{
+				wordId: material.targetWord.id,
+				answer,
+				type: material.type,
+			},
+			{
+				onSuccess: result => {
+					notification[result.correct ? 'success' : 'error']({
+						message: result.correct ? 'Правильно!' : 'Ошибка',
+						description: result.correct
+							? `Прогресс: +${result.newProgress}%`
+							: `Правильный ответ: ${material.targetWord.word}`,
+					})
+					if (result.correct) onNext()
+				},
+			}
+		)
+	}
+
+	return (
+		<div className='exercise-container'>
+			{material?.type === 'AUDIO_TO_WORD' && (
+				<AudioPlayer src={material.targetWord.audioPath} />
+			)}
+
+			<div className={`options-grid ${screens.md ? 'desktop' : 'mobile'}`}>
+				{material?.options.map(option => (
+					<Button
+						key={option}
+						size='large'
+						className='option-button'
+						onClick={() => handleAnswer(option)}
+					>
+						{material.type === 'IMAGE_TO_WORD' ? (
+							<img src={option} alt='Вариант' className='image-option' />
+						) : (
+							option
+						)}
+					</Button>
+				))}
+			</div>
+		</div>
+	)
+}
+
+```
+// pages/course/CoursePage.scss
+```css
+.course-page {
+	.course-header {
+		margin-bottom: 24px;
+
+		.course-meta {
+			margin-top: 16px;
+			display: flex;
+			gap: 8px;
+			align-items: center;
+		}
+	}
+
+	.course-tabs {
+		.ant-tabs-nav {
+			margin-bottom: 24px;
+		}
+	}
+
+	.level-title {
+		display: flex;
+		gap: 8px;
+		align-items: center;
+	}
+}
+
+```
+// pages/course/CoursePage.tsx
+```typescript
+import { useCourseDetails } from '@/hooks/api/course.hooks'
+import { Card, Skeleton, Tabs, Tag, Typography } from 'antd'
+import { useParams } from 'react-router-dom'
+
+import './CoursePage.scss'
+import { CourseProgress } from './components/CourseProgress'
+import { JoinCourseButton } from './components/JoinCourseButton'
+import { LevelList } from './components/LevelList'
+
+const { Title, Paragraph } = Typography
+const { TabPane } = Tabs
+
+export const CoursePage = () => {
+	const { id } = useParams<{ id: string }>()
+	const { data: course, isLoading } = useCourseDetails(Number(id))
+
+	return (
+		<div className='course-page'>
+			{isLoading ? (
+				<Skeleton active />
+			) : (
+				<>
+					<Card className='course-header'>
+						<Title level={2}>{course?.title}</Title>
+						<Paragraph>{course?.description}</Paragraph>
+
+						<div className='course-meta'>
+							<Tag color='blue'>Автор: {course?.author.username}</Tag>
+							{/* <Tag>
+								Создан: {new Date(course?.createdAt).toLocaleDateString()}
+							</Tag> */}
+							<JoinCourseButton courseId={Number(id)} />
+						</div>
+					</Card>
+
+					<Tabs defaultActiveKey='1' className='course-tabs'>
+						<TabPane tab='Уровни' key='1'>
+							<LevelList levels={course?.levels || []} />
+						</TabPane>
+
+						<TabPane tab='Прогресс' key='2'>
+							<CourseProgress courseId={Number(id)} />
+						</TabPane>
+					</Tabs>
+				</>
+			)}
+		</div>
+	)
+}
+
+```
+// pages/course/components/LevelList.tsx
+```typescript
+import type { LevelResponseDTO } from '@/shared/types/level'
+import { List, Tag } from 'antd'
+import { Link } from 'react-router-dom'
+
+type Props = {
+	levels: LevelResponseDTO[]
+}
+
+export const LevelList = ({ levels }: Props) => (
+	<List
+		itemLayout='horizontal'
+		dataSource={levels}
+		renderItem={level => (
+			<List.Item
+				actions={[
+					<Link key='enter' to={`/level/${level.id}`}>
+						Перейти
+					</Link>,
+				]}
+			>
+				<List.Item.Meta
+					title={
+						<div className='level-title'>
+							<span>{level.name}</span>
+							<Tag color='geekblue'>Слов: {level.words.length}</Tag>
+						</div>
+					}
+					description={`Порядковый номер: ${level.orderNumber}`}
+				/>
+			</List.Item>
+		)}
+	/>
+)
+
+```
+// pages/course/components/CourseProgress.tsx
+```typescript
+import { useCourseProgressUsers } from '@/hooks/api/course.hooks'
+import { List, Progress } from 'antd'
+
+type Props = {
+	courseId: number
+}
+
+export const CourseProgress = ({ courseId }: Props) => {
+	const { data: progressData, isLoading } = useCourseProgressUsers(courseId)
+
+	return (
+		<List
+			loading={isLoading}
+			dataSource={progressData}
+			renderItem={({ user, averageProgress }) => (
+				<List.Item>
+					<List.Item.Meta
+						title={user.username}
+						description={
+							<Progress
+								percent={averageProgress}
+								status='active'
+								strokeColor={{
+									'0%': '#108ee9',
+									'100%': '#87d068',
+								}}
+							/>
+						}
+					/>
+				</List.Item>
+			)}
+		/>
+	)
+}
+
+```
+// pages/course/components/JoinCourseButton.tsx
+```typescript
+import { useJoinCourse } from '@/hooks/api/course.hooks'
+import { Button, notification } from 'antd'
+
+type Props = {
+	courseId: number
+}
+
+export const JoinCourseButton = ({ courseId }: Props) => {
+	const { mutate, isPending } = useJoinCourse()
+
+	const handleJoin = () => {
+		mutate(courseId, {
+			onSuccess: () => {
+				notification.success({
+					message: 'Вы успешно присоединились к курсу',
+				})
+			},
+			onError: () => {
+				notification.error({
+					message: 'Ошибка при присоединении к курсу',
+				})
+			},
+		})
+	}
+
+	return (
+		<Button type='primary' loading={isPending} onClick={handleJoin}>
+			Присоединиться
+		</Button>
+	)
+}
+
+```
+// shared/types/level.ts
+```typescript
+import type { CourseResponseDTO } from './course'
+import type { WordResponseDTO } from './word'
+
+export type LevelRequestDTO = {
+	name: string
+	orderNumber: number
+	courseId: number
+}
+
+export type LevelResponseDTO = {
+	id: number
+	name: string
+	orderNumber: number
+	courseId: number
+	words: WordResponseDTO[]
+	course?: CourseResponseDTO
+}
+
+```
+// shared/types/auth.ts
+```typescript
+import type { UserResponseDTO } from './user'
+
+export type LoginFormData = {
+	username: string
+	password: string
+}
+
+export type RegisterFormData = {
+	username: string
+	password: string
+}
+
+export type Tokens = {
+	accessToken: string
+	refreshToken: string
+}
+
+export type AuthResponse = {
+	user: UserResponseDTO
+} & Tokens
+
+```
+// shared/types/course.ts
+```typescript
+import type { LevelResponseDTO } from './level'
+import type { UserResponseDTO } from './user'
+
+export type CourseRequestDTO = {
+	title: string
+	description?: string
+}
+
+export type CourseResponseDTO = {
+	id: number
+	title: string
+	description?: string
+	author: UserResponseDTO
+	levels: LevelResponseDTO[]
+	participants: UserResponseDTO[]
+	createdAt: string
+	progress?: number
+}
+
+export type CourseJoinDTO = {
+	courseId: number
+}
+
+export type CourseSearchParams = {
+	query: string
+}
+
+export type CourseUserProgressDTO = {
+	user: UserResponseDTO
+	averageProgress: number
+}
+
+```
+// shared/types/word.ts
+```typescript
+export type WordRequestDTO = {
+	word: string
+	definition: string
+	levelId: number
+	activeForTesting?: boolean
+	audioFile?: File | null
+	videoFile?: File | null
+	imageFile?: File | null
+}
+
+export type WordResponseDTO = {
+	id: number
+	word: string
+	definition: string
+	imagePath?: string
+	audioPath?: string
+	videoPath?: string
+	activeForTesting: boolean
+	levelId: number
+}
+
+export type WordMediaType = 'audio' | 'video' | 'image'
+
+```
+// shared/types/user.ts
+```typescript
+import type { CourseResponseDTO } from './course'
+
+export type UserUpdateData = {
+	username?: string
+	password?: string
+}
+
+export type UserResponseDTO = {
+	isEnabled: any
+	id: number
+	username: string
+	roles: string[]
+	createdAt: string
+	courses?: CourseResponseDTO[]
+}
+
+```
+// shared/types/learn.ts
+```typescript
+import type { WordResponseDTO } from './word'
+
+export type AnswerSubmissionDTO = {
+	wordId: number
+	answer: string
+	type: LearningType
+}
+
+export type AnswerResultDTO = {
+	newProgress: number
+	correct: boolean
+}
+
+export type LearningMaterialDTO = {
+	targetWord: WordResponseDTO
+	options: string[]
+	type: LearningType
+	levelId?: number
+}
+
+export type LearningType = 'WORD_TO_IMAGE' | 'IMAGE_TO_WORD' | 'AUDIO_TO_WORD'
+
+export type LearningParams = {
+	levelId: number
+	type: LearningType
+}
+
+```
+// shared/types/progress.ts
+```typescript
+export type ProgressAverageDTO = {
+	averageProgress: number
+}
+
+```
+// shared/constants/queryKeys.ts
+```typescript
+import type { LearningParams } from '../types/learn'
+
+export const QUERY_KEYS = {
+	CURRENT_USER: ['currentUser'],
+	USERS: ['users'],
+	COURSES: ['courses'],
+	USER_COURSES: ['user-courses'],
+	COURSE_SEARCH: ['course-search'],
+	LEVELS: ['levels'],
+	LEVEL_DETAILS: (id: number) => ['level', id],
+	WORDS: ['words'],
+	WORD_DETAILS: (id: number) => ['word', id],
+	LEARNING_MATERIAL: (params: LearningParams) => ['learning', params],
+	COURSE_PROGRESS_USERS: (id: number) => ['course-progress-users', id],
+} as const
+
+```
+// app/QueryProvider.tsx
+```typescript
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			staleTime: 5 * 60 * 1000,
+			gcTime: 15 * 60 * 1000,
+			retry: 2,
+			refetchOnWindowFocus: false,
+			retryDelay: attempt => Math.min(attempt * 1000, 30 * 1000),
+		},
+	},
+})
+
+export const QueryProvider = ({ children }: { children: React.ReactNode }) => (
+	<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+)
+
+```
+// app/components/ProtectedRoute.tsx
+```typescript
+import { useCurrentUser } from '@/hooks/api/user.hooks'
+import type { JSX } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
+
+export const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+	const { data: user } = useCurrentUser()
+	const location = useLocation()
+
+	if (!user) {
+		return <Navigate to='/login' state={{ from: location }} replace />
+	}
+
+	return children
+}
+
+```
+// app/layouts/MainLayout.scss
+```css
+.main-layout {
+  height: 100vh;
+  
+  .logo {
+    height: 64px;
+    line-height: 64px;
+    padding: 0 24px;
+    font-size: 20px;
+    font-weight: 700;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .header {
+    background: #fff;
+    padding: 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .content {
+    margin: 24px;
+    padding: 24px;
+    background: #fff;
+    min-height: calc(100vh - 112px);
+  }
+}
+```
+// app/layouts/MainLayout.tsx
+```typescript
+import { Layout, Menu } from 'antd'
+import { Link, Outlet } from 'react-router-dom'
+import './MainLayout.scss'
+
+const { Header, Sider, Content } = Layout
+
+export const MainLayout = () => {
+	return (
+		<Layout className='main-layout'>
+			<Sider theme='light' width={250} breakpoint='lg' collapsedWidth='0'>
+				<div className='logo'>Course Platform</div>
+				<Menu mode='inline' defaultSelectedKeys={['1']}>
+					<Menu.Item key='1'>
+						<Link to='/courses'>Все курсы</Link>
+					</Menu.Item>
+					<Menu.Item key='2'>
+						<Link to='/profile'>Мой профиль</Link>
+					</Menu.Item>
+				</Menu>
+			</Sider>
+			<Layout>
+				<Header className='header' />
+				<Content className='content'>
+					<Outlet />
+				</Content>
+			</Layout>
+		</Layout>
+	)
+}
+
+```
+// hooks/api/progress.hooks.ts
+```typescript
+import { authAxios } from '@/services/api'
+import type { ProgressAverageDTO } from '@/shared/types/progress'
+import { useQuery } from '@tanstack/react-query'
+export const useWordProgress = (wordId: number) => {
+	return useQuery({
+		queryKey: ['progress', 'word', wordId],
+		queryFn: async () => {
+			const response = await authAxios.get<ProgressAverageDTO>(
+				`/api/progress/word/${wordId}`
+			)
+			return response.data
+		},
+		enabled: !!wordId,
+	})
+}
+
+export const useLevelProgress = (levelId: number) => {
+	return useQuery({
+		queryKey: ['progress', 'level', levelId],
+		queryFn: async () => {
+			const response = await authAxios.get<ProgressAverageDTO>(
+				`/api/progress/level/${levelId}`
+			)
+			return response.data
+		},
+		enabled: !!levelId,
+	})
+}
+
+export const useCourseProgress = (courseId: number) => {
+	return useQuery({
+		queryKey: ['progress', 'course', courseId],
+		queryFn: async () => {
+			const response = await authAxios.get<ProgressAverageDTO>(
+				`/api/progress/course/${courseId}`
+			)
+			return response.data
+		},
+		enabled: !!courseId,
+	})
+}
+
+```
+// hooks/api/level.hooks.ts
+```typescript
+import { levelService } from '@/services/api/level.service'
+import { QUERY_KEYS } from '@/shared/constants/queryKeys'
+import type { LevelRequestDTO } from '@/shared/types/level'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
+export const useLevels = (courseId?: number) => {
+	return useQuery({
+		queryKey: [...QUERY_KEYS.LEVELS, courseId],
+		queryFn: () => levelService.getAllLevels(courseId),
+		enabled: !!courseId,
+	})
+}
+
+export const useLevelDetails = (id: number) => {
+	return useQuery({
+		queryKey: QUERY_KEYS.LEVEL_DETAILS(id),
+		queryFn: () => levelService.getLevelById(id),
+	})
+}
+
+export const useCreateLevel = () => {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (data: LevelRequestDTO) => levelService.createLevel(data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEVELS })
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COURSES })
+		},
+	})
+}
+
+export const useUpdateLevel = (id: number) => {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (data: LevelRequestDTO) => levelService.updateLevel(id, data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEVELS })
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COURSES })
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEVEL_DETAILS(id) })
+		},
+	})
+}
+
+export const useDeleteLevel = () => {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (id: number) => levelService.deleteLevel(id),
+		onSuccess: (_, id) => {
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEVELS })
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COURSES })
+			queryClient.removeQueries({ queryKey: QUERY_KEYS.LEVEL_DETAILS(id) })
+		},
+	})
+}
+
+```
+// hooks/api/auth.hooks.ts
+```typescript
+import { authService } from '@/services/api/auth.service'
+import type { LoginFormData, RegisterFormData } from '@/shared/types/auth'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
+export const useActivateAccount = (token: string, email: string) => {
+	return useQuery({
+		queryKey: ['activate', token, email],
+		queryFn: () => authService.activateAccount(token, email),
+		retry: false,
+		enabled: !!token && !!email,
+	})
+}
+
+export const useLogin = () => {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (data: LoginFormData) => authService.login(data),
+		onSuccess: ({ accessToken, user }) => {
+			localStorage.setItem('accessToken', accessToken)
+			queryClient.setQueryData(['currentUser'], user)
+		},
+	})
+}
+
+export const useRegister = () => {
+	return useMutation({
+		mutationFn: (data: RegisterFormData) => authService.register(data),
+	})
+}
+
+export const useLogout = () => {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: () => authService.logout(),
+		onSuccess: () => {
+			localStorage.removeItem('accessToken')
+			queryClient.removeQueries()
+		},
+	})
+}
+
+```
+// hooks/api/course.hooks.ts
+```typescript
+import { courseService } from '@/services/api/course.service'
+import { QUERY_KEYS } from '@/shared/constants/queryKeys'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
+export const useUserCourses = () => {
+	return useQuery({
+		queryKey: QUERY_KEYS.USER_COURSES,
+		queryFn: () => courseService.getUserCourses(),
+	})
+}
+
+export const useCourseProgressUsers = (courseId: number | undefined) => {
+	return useQuery({
+		queryKey: courseId ? QUERY_KEYS.COURSE_PROGRESS_USERS(courseId) : [],
+		queryFn: () => courseService.getCourseUsersProgress(courseId!),
+		enabled: !!courseId,
+	})
+}
+export const useCourseDetails = (id: number) => {
+	return useQuery({
+		queryKey: ['course-details', id],
+		queryFn: () => courseService.getCourseById(id),
+		enabled: !!id,
+	})
+}
+export const useJoinCourse = () => {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (id: number) => courseService.joinCourse(id),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COURSES })
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER_COURSES })
+		},
+	})
+}
+
+export const useCourses = () => {
+	return useQuery({
+		queryKey: QUERY_KEYS.COURSES,
+		queryFn: () => courseService.getAllCourses(),
+	})
+}
+
+```
+// hooks/api/learn.hooks.ts
+```typescript
+import { learnService } from '@/services/api/learn.service'
+import { QUERY_KEYS } from '@/shared/constants/queryKeys'
+import type { AnswerSubmissionDTO, LearningParams } from '@/shared/types/learn'
+import { useMutation, useQuery } from '@tanstack/react-query'
+
+export const useLearningMaterial = (params: LearningParams) => {
+	return useQuery({
+		queryKey: QUERY_KEYS.LEARNING_MATERIAL(params),
+		queryFn: () => learnService.getLearningMaterial(params),
+		enabled: !!params.levelId && !!params.type,
+	})
+}
+
+export const useCheckAnswer = () => {
+	return useMutation({
+		mutationFn: (data: AnswerSubmissionDTO) => learnService.checkAnswer(data),
+	})
+}
+
+```
+// hooks/api/user.hooks.ts
+```typescript
+import { userService } from '@/services/api/user.service'
+import { QUERY_KEYS } from '@/shared/constants/queryKeys'
+import type { UserResponseDTO, UserUpdateData } from '@/shared/types/user'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+export const useCurrentUser = () => {
+	return useQuery<UserResponseDTO | null>({
+		queryKey: QUERY_KEYS.CURRENT_USER,
+		queryFn: async () => {
+			try {
+				return await userService.getCurrentUser()
+			} catch (error) {
+				console.log(error)
+				return null
+			}
+		},
+		staleTime: Infinity,
+	})
+}
+
+export const useUpdateUser = (id: number) => {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (data: UserUpdateData) => userService.updateUser(id, data),
+		onSuccess: updatedUser => {
+			queryClient.setQueryData(QUERY_KEYS.CURRENT_USER, updatedUser)
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USERS })
+		},
+	})
+}
+
+```
+// hooks/api/word.hooks.ts
+```typescript
+import { wordService } from '@/services/api/word.service'
+import { QUERY_KEYS } from '@/shared/constants/queryKeys'
+import type { WordRequestDTO } from '@/shared/types/word'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
+export const useWordsByLevel = (levelId: number) => {
+	return useQuery({
+		queryKey: [...QUERY_KEYS.WORDS, levelId],
+		queryFn: () => wordService.getWordsByLevel(levelId),
+		enabled: !!levelId,
+	})
+}
+
+export const useWordDetails = (id: number) => {
+	return useQuery({
+		queryKey: QUERY_KEYS.WORD_DETAILS(id),
+		queryFn: () => wordService.getWordById(id),
+	})
+}
+
+export const useCreateWord = () => {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (data: WordRequestDTO) => wordService.createWord(data),
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		onSuccess: (_, _variables) => {
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.WORDS })
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEVELS })
+		},
+	})
+}
+
+export const useUpdateWord = (id: number) => {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (data: WordRequestDTO) => wordService.updateWord(id, data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.WORDS })
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEVELS })
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.WORD_DETAILS(id) })
+		},
+	})
+}
+
+export const useDeleteWord = () => {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (id: number) => wordService.deleteWord(id),
+		onSuccess: (_, id) => {
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.WORDS })
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEVELS })
+			queryClient.removeQueries({ queryKey: QUERY_KEYS.WORD_DETAILS(id) })
+		},
+	})
+}
+
+```
+// components/modals/EmailServiceModal.tsx
+```typescript
+import { MailOutlined } from '@ant-design/icons'
+import { Button, Modal } from 'antd'
+import { useEffect, useState } from 'react'
+
+type EmailDomain = 'gmail' | 'yandex' | 'mail' | 'other'
+
+const getEmailServiceLink = (email: string): { url: string; name: string } => {
+  const domain = email.split('@')[1]?.split('.')[0] || 'gmail'
+  
+  const services: Record<EmailDomain, { url: string; name: string }> = {
+    gmail: { url: 'https://mail.google.com', name: 'Gmail' },
+    yandex: { url: 'https://mail.yandex.ru', name: 'Яндекс.Почта' },
+    mail: { url: 'https://e.mail.ru', name: 'Mail.ru' },
+    other: { url: 'https://mail.google.com', name: 'Email-сервис' }
+  }
+
+  return services[domain as EmailDomain] || services.other
+}
+
+export const EmailServiceModal = ({ email, open, onClose }: { 
+  email: string 
+  open: boolean
+  onClose: () => void
+}) => {
+  const [service, setService] = useState<{ url: string; name: string }>()
+
+  useEffect(() => {
+    if (email) {
+      setService(getEmailServiceLink(email))
+    }
+  }, [email])
+
+  return (
+    <Modal
+      title="Активация аккаунта"
+      open={open}
+      onCancel={onClose}
+      footer={[
+        <Button key="close" onClick={onClose}>
+          Закрыть
+        </Button>
+      ]}
+    >
+      <div style={{ textAlign: 'center', padding: '20px 0' }}>
+        <p>Мы отправили письмо с подтверждением на вашу почту: {email}</p>
+        {service && (
+          <Button
+            type="primary"
+            icon={<MailOutlined />}
+            href={service.url}
+            target="_blank"
+            style={{ marginTop: 16 }}
+          >
+            Открыть {service.name}
+          </Button>
+        )}
+      </div>
+    </Modal>
+  )
+}
+```
+// styles/_variables.scss
+```css
+// Цветовая схема
+$primary-color: #4f46e5;
+$success-color: #10b981;
+$error-color: #ef4444;
+$text-color: #1f2937;
+
+// Тени
+$box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+```
+// styles/_animations.scss
+```css
+.fade-enter {
+	opacity: 0;
+}
+.fade-enter-active {
+	opacity: 1;
+	transition: opacity 300ms;
+}
+
+```
+// styles/components/_modals.scss
+```css
+.activation-modal {
+	.ant-modal-body {
+		text-align: center;
+		padding: 40px;
+
+		.mail-button {
+			margin-top: 20px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+		}
+	}
+}
+
+```
+// styles/components/_layout.scss
+```css
+.ant-modal {
+	&-content {
+		border-radius: 8px;
+	}
+
+	&-header {
+		border-radius: 8px 8px 0 0;
+	}
+}
+
+```
+// styles/base/_variables.scss
+```css
+$primary-color: #1890ff;
+$text-color: rgba(0, 0, 0, 0.85);
+$border-radius-base: 4px;
+$box-shadow-base: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+```
+// styles/base/_reset.scss
+```css
+* {
+	margin: 0;
+	padding: 0;
+	background: #f5f5f5;
+	box-sizing: border-box;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+		'Helvetica Neue', Arial, sans-serif;
+}
+
+html,
+body {
+	height: 100%;
+	background: #f5f5f5;
+	padding-bottom: 64px;
+}
+
+```
+// styles/base/_mixins.scss
+```css
+@mixin flex-center {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+@mixin transition($prop: all, $time: 0.3s) {
+	transition: $prop $time cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+```
+// styles/base/_antd-overrides.scss
+```css
+@import '~antd/es/style/themes/default.less';
+
+:root {
+	--primary-color: @primary-color;
+	--border-radius-base: @border-radius-base;
+	--box-shadow-base: @box-shadow-base;
+}
+
+.ant-btn-primary {
+	background: var(--primary-color);
+	&:hover {
+		background: lighten(var(--primary-color), 10%);
+	}
+}
+
+```
