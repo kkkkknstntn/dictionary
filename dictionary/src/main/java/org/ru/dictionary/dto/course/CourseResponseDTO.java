@@ -19,6 +19,7 @@ public class CourseResponseDTO implements Serializable {
     private Long id;
     private String title;
     private String description;
+    private String imagePath;
     private UserResponseDTO author;
     private List<LevelResponseDTO> levels;
     private Set<UserResponseDTO> participants;

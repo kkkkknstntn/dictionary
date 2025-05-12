@@ -14,6 +14,7 @@ import java.util.Set;
 public class UserResponseDTO implements Serializable {
     Long id;
     String username;
+    String imagePath;
     Set<String> roles;
     LocalDateTime createdAt;
 }

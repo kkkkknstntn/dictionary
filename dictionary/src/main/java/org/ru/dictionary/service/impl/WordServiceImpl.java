@@ -47,7 +47,7 @@ public class WordServiceImpl implements WordService {
                         "Level ID: " + dto.getLevelId()
                 ));
 
-        courseService.checkAuthorOrAdmin(level.getCourse(), userDetails);
+        courseService.checkAuthorOrAdmin(level.getCourse());
 
         String audioUrl = s3Service.uploadFile(dto.getAudioFile());
         String videoUrl = s3Service.uploadFile(dto.getVideoFile());
@@ -98,7 +98,7 @@ public class WordServiceImpl implements WordService {
                         "Word ID: " + id
                 ));
 
-        courseService.checkAuthorOrAdmin(word.getLevel().getCourse(), userDetails);
+        courseService.checkAuthorOrAdmin(word.getLevel().getCourse());
 
         Level newLevel = levelRepository.findById(dto.getLevelId())
                 .orElseThrow(() -> new ApiException(
@@ -131,7 +131,7 @@ public class WordServiceImpl implements WordService {
                         "Word ID: " + id
                 ));
 
-        courseService.checkAuthorOrAdmin(word.getLevel().getCourse(), userDetails);
+        courseService.checkAuthorOrAdmin(word.getLevel().getCourse());
         wordRepository.delete(word);
     }
 

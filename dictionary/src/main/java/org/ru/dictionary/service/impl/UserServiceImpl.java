@@ -10,10 +10,13 @@ import org.ru.dictionary.exception.ApiException;
 import org.ru.dictionary.mapper.UserMapper;
 import org.ru.dictionary.repository.UserRepository;
 import org.ru.dictionary.service.ActivationService;
+import org.ru.dictionary.service.S3Service;
 import org.ru.dictionary.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +31,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final ActivationService activationService;
+    private final S3Service s3Service;
 
     public List<UserResponseDTO> getAllUsers() {
         return userRepository.findAll().stream()
@@ -49,6 +53,7 @@ public class UserServiceImpl implements UserService {
         user.setUsername(request.getUsername());
         user.getRoles().add(Authorities.ROLE_USER);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        Optional.ofNullable(request.getImageFile()).ifPresent(image -> user.setImagePath(s3Service.uploadFile(request.getImageFile())));
         activationService.sendActivationEmail(user);
 
         return userMapper.toResponseDTO(userRepository.save(user));
@@ -65,6 +70,7 @@ public class UserServiceImpl implements UserService {
         Optional.ofNullable(dto.getUsername()).ifPresent(user::setUsername);
         Optional.ofNullable(dto.getPassword())
                 .ifPresent(pass -> user.setPassword(passwordEncoder.encode(pass)));
+        Optional.ofNullable(dto.getImageFile()).ifPresent(image -> user.setImagePath(s3Service.uploadFile(dto.getImageFile())));
 
         return userMapper.toResponseDTO(userRepository.save(user));
     }
@@ -83,5 +89,18 @@ public class UserServiceImpl implements UserService {
                     }
                 })
                 .collect(Collectors.toSet());
+    }
+
+    @Override
+    public UserResponseDTO getCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ApiException(
+                        BusinessErrorCodes.USER_NOT_FOUND,
+                        "Username: " + username
+                ));
+
+        return userMapper.toResponseDTO(user);
     }
 }

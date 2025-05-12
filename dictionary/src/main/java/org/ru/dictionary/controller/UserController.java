@@ -36,7 +36,7 @@ public class UserController {
             @ApiResponse(responseCode = "409", description = "Пользователь с таким именем уже существует")
     })
     public UserResponseDTO createUser(
-            @Validated(ValidationGroups.Create.class) @RequestBody UserRequestDTO dto) {
+            @Validated(ValidationGroups.Create.class) @ModelAttribute UserRequestDTO dto) {
         return userService.createUser(dto);
     }
 
@@ -68,7 +68,22 @@ public class UserController {
     @PutMapping("/{id}")
     public UserResponseDTO updateUser(
             @PathVariable Long id,
-            @Validated(ValidationGroups.Update.class) @RequestBody UserRequestDTO dto) {
+            @Validated(ValidationGroups.Update.class) @ModelAttribute UserRequestDTO dto) {
         return userService.updateUser(id, dto);
+    }
+
+    @Operation(
+            summary = "Получить информацию о текущем пользователе",
+            description = "Получение данных аутентифицированного пользователя"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Информация получена"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/me")
+    public UserResponseDTO getCurrentUser() {
+        return userService.getCurrentUser();
     }
 }

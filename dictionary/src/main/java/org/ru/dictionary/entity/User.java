@@ -27,6 +27,10 @@ public class User {
 
     private LocalDateTime createdAt;
 
+
+    @Column(name = "imagePath")
+    private String imagePath;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "user_roles",

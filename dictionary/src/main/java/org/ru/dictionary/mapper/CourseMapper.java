@@ -63,6 +63,4 @@ public abstract class CourseMapper {
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "participants", ignore = true)
     public abstract void updateFromDto(CourseRequestDTO dto, @MappingTarget Course entity);
-
-    public abstract CourseResponseDTO toDto(CourseDocument course);
 }
