@@ -1,5 +1,6 @@
 package org.ru.dictionary.service.impl;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ru.dictionary.document.CourseDocument;
@@ -152,8 +153,8 @@ public class CourseServiceImpl implements CourseService {
 
     @Transactional
     @CacheEvict(value = "userCourses", key = "#userDetails.username")
-    public void joinCourse(Long courseId, UserDetails userDetails) {
-        Course course = courseRepository.findById(courseId)
+    public CourseResponseDTO joinCourse(Long courseId, UserDetails userDetails) {
+        Course course = courseRepository.findByIdWithParticipants(courseId)
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,
                         "Course ID: " + courseId));
 
@@ -165,8 +166,9 @@ public class CourseServiceImpl implements CourseService {
 
         if (!course.getParticipants().contains(user)) {
             course.getParticipants().add(user);
-            courseRepository.save(course);
+             return courseMapper.toResponseDTO(courseRepository.save(course));
         }
+        throw new ApiException(BusinessErrorCodes.USER_ALREADY_EXISTS,  "Course ID: " + courseId);
     }
 
     @Transactional
