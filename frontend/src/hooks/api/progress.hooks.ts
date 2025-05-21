@@ -1,6 +1,8 @@
 import { authAxios } from '@/services/api'
+import { progressService } from '@/services/api/progress.service'
 import type { ProgressAverageDTO } from '@/shared/types/progress'
 import { useQuery } from '@tanstack/react-query'
+
 export const useWordProgress = (wordId: number) => {
 	return useQuery({
 		queryKey: ['progress', 'word', wordId],
@@ -27,15 +29,10 @@ export const useLevelProgress = (levelId: number) => {
 	})
 }
 
-export const useCourseProgress = (courseId: number) => {
+export const useCourseProgress = (courseId: number | undefined) => {
 	return useQuery({
-		queryKey: ['progress', 'course', courseId],
-		queryFn: async () => {
-			const response = await authAxios.get<ProgressAverageDTO>(
-				`/api/progress/course/${courseId}`
-			)
-			return response.data
-		},
+		queryKey: courseId ? ['courseProgress', courseId] : [],
+		queryFn: () => progressService.getCourseProgress(courseId!),
 		enabled: !!courseId,
 	})
 }

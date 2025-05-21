@@ -1,16 +1,16 @@
+// CoursePage.tsx
 import { useCourseDetails } from '@/hooks/api/course.hooks'
-import { Button, Card, Skeleton, Tabs, Tag, Typography } from 'antd'
-import { useParams } from 'react-router-dom'
-
 import { useCurrentUser } from '@/hooks/api/user.hooks'
 import { PlusOutlined } from '@ant-design/icons'
+import { Button, Card, Skeleton, Tabs, Tag, Typography } from 'antd'
 import { useState } from 'react'
+import { useParams } from 'react-router-dom'
 import './CoursePage.scss'
 import { AddLevelModal } from './components/AddLevelModal'
 import { CourseProgress } from './components/CourseProgress'
+import { CourseRating } from './components/CourseRating'
 import { JoinCourseButton } from './components/JoinCourseButton'
 import { LevelList } from './components/LevelList'
-import { WordList } from './components/WordList'
 
 const { Title, Paragraph } = Typography
 const { TabPane } = Tabs
@@ -58,11 +58,15 @@ export const CoursePage = () => {
 						</TabPane>
 
 						<TabPane tab='Слова' key='2'>
-							<WordList levels={course?.levels || []} />
+							<div>Список слов</div>
 						</TabPane>
 
 						<TabPane tab='Прогресс' key='3'>
 							<CourseProgress courseId={Number(id)} />
+						</TabPane>
+
+						<TabPane tab='Рейтинг' key='4'>
+							<CourseRating courseId={Number(id)} />
 						</TabPane>
 					</Tabs>
 				</>

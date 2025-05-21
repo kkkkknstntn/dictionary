@@ -53,3 +53,11 @@ export const useCourses = () => {
 		queryFn: () => courseService.getAllCourses(),
 	})
 }
+
+export const useCourseProgress = (courseId: number | undefined) => {
+	return useQuery({
+		queryKey: courseId ? ['courseProgress', courseId] : [],
+		queryFn: () => courseService.getCourseUsersProgress(courseId!),
+		enabled: !!courseId,
+	})
+}

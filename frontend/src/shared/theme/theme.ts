@@ -16,7 +16,7 @@ const baseTheme = {
 		colorBgBase: '#FFFFFF',
 		colorBgContainer: '#FFFFFF',
 		colorBgElevated: '#FFFFFF',
-		colorBgLayout: '#F8F9FA',
+		colorBgLayout: '#FFFFFF',
 
 		// Цвета компонентов
 		colorBorder: '#E9ECEF',
@@ -84,7 +84,7 @@ export const lightTheme: ThemeConfig = {
 		...baseTheme.token,
 		// Дополнительные настройки для светлой темы
 		colorBgContainer: '#FFFFFF',
-		colorBgLayout: '#F8F9FA',
+		colorBgLayout: '#FFFFFF',
 		colorTextBase: '#2D3436',
 	},
 }

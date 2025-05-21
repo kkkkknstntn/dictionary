@@ -8,7 +8,6 @@ import { CoursesPage } from './pages/courses/CoursesPage'
 import { LevelPage } from './pages/level/LevelPage'
 import { ProfilePage } from './pages/profile/ProfilePage'
 import { UserProgressPage } from './pages/progress/UserProgressPage'
-import { WordPage } from './pages/word/WordPage'
 
 export const router = createBrowserRouter([
 	{
@@ -38,10 +37,7 @@ export const router = createBrowserRouter([
 				path: '/level/:id',
 				element: <LevelPage />,
 			},
-			{
-				path: '/course/:courseId/word/:id',
-				element: <WordPage />,
-			},
+
 			{
 				path: '/profile',
 				element: <ProfilePage />,

@@ -5,6 +5,16 @@
     .ant-skeleton {
       padding: 12px;
     }
+
+    .profile-info {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+
+      .profile-avatar {
+        background-color: #1890ff;
+      }
+    }
   }
 
   .profile-tabs {

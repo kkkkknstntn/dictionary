@@ -22,3 +22,33 @@
 		align-items: center;
 	}
 }
+
+.course-rating {
+	margin-top: 16px;
+
+	.rating-position {
+		width: 32px;
+		height: 32px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 18px;
+		font-weight: bold;
+	}
+}
+
+.course-progress {
+	.progress-content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 24px;
+		padding: 24px 0;
+
+		.progress-description {
+			text-align: center;
+			font-size: 16px;
+			max-width: 400px;
+		}
+	}
+}

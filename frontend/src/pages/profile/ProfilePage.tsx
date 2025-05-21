@@ -1,5 +1,6 @@
 import { useCurrentUser } from '@/hooks/api/user.hooks'
-import { Card, Skeleton, Tabs, Typography } from 'antd'
+import { UserOutlined } from '@ant-design/icons'
+import { Avatar, Card, Skeleton, Tabs, Typography } from 'antd'
 import './ProfilePage.scss'
 import { ProfileForm } from './components/ProfileForm'
 import { UserCourses } from './components/UserCourses'
@@ -16,7 +17,15 @@ export const ProfilePage = () => {
 				{isLoading ? (
 					<Skeleton active />
 				) : (
-					<Title level={2}>Профиль: {user?.username}</Title>
+					<div className='profile-info'>
+						<Avatar
+							size={100}
+							src={user?.imagePath}
+							icon={<UserOutlined />}
+							className='profile-avatar'
+						/>
+						<Title level={2}>{user?.username}</Title>
+					</div>
 				)}
 			</Card>
 
