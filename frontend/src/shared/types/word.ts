@@ -16,7 +16,11 @@ export type WordResponseDTO = {
 	audioPath?: string
 	videoPath?: string
 	activeForTesting: boolean
-	levelId: number
+	level: {
+		id: number
+		name: string
+		courseId: number
+	}
 }
 
 export type WordMediaType = 'audio' | 'video' | 'image'

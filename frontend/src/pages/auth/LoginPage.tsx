@@ -22,15 +22,22 @@ export const LoginPage = () => {
 			},
 		})
 	}
+
 	return (
 		<div className='auth-page'>
 			<Card title='Вход в систему' className='auth-card'>
+				<div className='auth-info'>
+					Добро пожаловать! Войдите в свой аккаунт, чтобы продолжить обучение
+				</div>
 				<Form form={form} onFinish={handleSubmit}>
 					<Form.Item
 						name='username'
-						rules={[{ required: true, message: 'Введите имя пользователя' }]}
+						rules={[
+							{ required: true, message: 'Введите email' },
+							{ type: 'email', message: 'Введите корректный email' },
+						]}
 					>
-						<Input placeholder='Имя пользователя' />
+						<Input placeholder='Email' />
 					</Form.Item>
 
 					<Form.Item
@@ -43,6 +50,8 @@ export const LoginPage = () => {
 					<Button type='primary' htmlType='submit' loading={isPending} block>
 						Войти
 					</Button>
+
+					<div className='auth-divider'>или</div>
 
 					<div className='auth-link'>
 						Нет аккаунта? <Link to='/register'>Зарегистрироваться</Link>
