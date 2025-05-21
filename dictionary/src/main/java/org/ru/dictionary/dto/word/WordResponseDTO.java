@@ -16,5 +16,7 @@ public class WordResponseDTO implements Serializable {
     private String imagePath;
     private String audioPath;
     private String videoPath;
+    private Long courseId;
+    private Long levelId;
     private boolean activeForTesting;
 }
