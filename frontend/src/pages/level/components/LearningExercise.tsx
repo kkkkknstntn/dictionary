@@ -1,7 +1,9 @@
 import { useCheckAnswer } from '@/hooks/api/learn.hooks'
 import type { LearningMaterialDTO } from '@/shared/types/learn'
+import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons'
 import { Button, Grid } from 'antd'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AudioPlayer } from './AudioPlayer'
 import './LearningExercise.scss'
 
@@ -11,10 +13,18 @@ const FEEDBACK_DELAY = 900 // - время, пока подсветка видн
 interface Props {
 	material?: LearningMaterialDTO
 	onNext: () => void
+	onRestart: () => void
+	levelId: number
 }
 
-export const LearningExercise = ({ material, onNext }: Props) => {
+export const LearningExercise = ({
+	material,
+	onNext,
+	onRestart,
+	levelId,
+}: Props) => {
 	const screens = useBreakpoint()
+	const navigate = useNavigate()
 	const { mutate: checkAnswer } = useCheckAnswer()
 
 	/** выбранный пользователем вариант */
@@ -48,8 +58,18 @@ export const LearningExercise = ({ material, onNext }: Props) => {
 		)
 	}
 
+	const handleBack = () => {
+		navigate(`/level/${levelId}`)
+	}
+
 	return (
 		<div className='exercise-container'>
+			<div className='exercise-header'>
+				<Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
+					Вернуться к уровню
+				</Button>
+			</div>
+
 			{/* 1. Аудио-подсказка (AUDIO_TO_WORD) */}
 			{isAudioToWord && <AudioPlayer src={material?.targetWord.audioPath} />}
 
@@ -90,6 +110,12 @@ export const LearningExercise = ({ material, onNext }: Props) => {
 						</Button>
 					)
 				})}
+			</div>
+
+			<div className='exercise-footer'>
+				<Button icon={<ReloadOutlined />} onClick={onRestart}>
+					Перезапустить уровень
+				</Button>
 			</div>
 		</div>
 	)

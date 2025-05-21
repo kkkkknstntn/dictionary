@@ -1,11 +1,28 @@
-export type WordRequestDTO = {
+export interface WordDTO {
+	id: number
 	word: string
 	definition: string
+	imagePath?: string
+	audioPath?: string
+	videoPath?: string
 	levelId: number
-	activeForTesting?: boolean
-	audioFile?: File | null
-	videoFile?: File | null
-	imageFile?: File | null
+	courseId: number
+}
+
+export interface LevelDTO {
+	id: number
+	title: string
+	orderNumber: number
+	courseId: number
+}
+
+export interface WordRequestDTO {
+	word: string
+	definition: string
+	imagePath?: string
+	audioPath?: string
+	videoPath?: string
+	levelId: number
 }
 
 export type WordResponseDTO = {

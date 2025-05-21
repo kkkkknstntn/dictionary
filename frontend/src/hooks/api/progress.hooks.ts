@@ -19,12 +19,7 @@ export const useWordProgress = (wordId: number) => {
 export const useLevelProgress = (levelId: number) => {
 	return useQuery({
 		queryKey: ['progress', 'level', levelId],
-		queryFn: async () => {
-			const response = await authAxios.get<ProgressAverageDTO>(
-				`/api/progress/level/${levelId}`
-			)
-			return response.data
-		},
+		queryFn: () => progressService.getLevelProgress(levelId),
 		enabled: !!levelId,
 	})
 }

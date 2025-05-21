@@ -16,7 +16,11 @@ export const WordPage = () => {
 		useWordNavigation(Number(id), word?.levelId ?? 0)
 
 	const handleBack = () => {
-		navigate(-1)
+		if (word?.courseId) {
+			navigate(`/course/${word.courseId}`)
+		} else {
+			navigate(-1)
+		}
 	}
 
 	if (isLoading) {
@@ -53,19 +57,28 @@ export const WordPage = () => {
 						</Space>
 					</div>
 
-					<Title level={2}>{word.word}</Title>
-					<Text type='secondary'>{word.definition}</Text>
-
-					{progress && (
-						<div className='progress-section'>
-							<Text>Ваш прогресс:</Text>
-							<Progress percent={progress.averageProgress} />
+					<div className='word-info'>
+						<div className='word-section'>
+							<Title level={4} className='section-title'>
+								Слово
+							</Title>
+							<Title level={2}>{word.word}</Title>
 						</div>
-					)}
+
+						<div className='definition-section'>
+							<Title level={4} className='section-title'>
+								Определение
+							</Title>
+							<Text type='secondary'>{word.definition}</Text>
+						</div>
+					</div>
 
 					<div className='media-section'>
 						{word.imagePath && (
 							<div className='media-item'>
+								<Title level={4} className='section-title'>
+									Изображение
+								</Title>
 								<img
 									src={word.imagePath}
 									alt={word.word}
@@ -76,6 +89,9 @@ export const WordPage = () => {
 
 						{word.audioPath && (
 							<div className='media-item'>
+								<Title level={4} className='section-title'>
+									Аудио
+								</Title>
 								<audio controls src={word.audioPath}>
 									Ваш браузер не поддерживает аудио элемент.
 								</audio>
@@ -84,12 +100,24 @@ export const WordPage = () => {
 
 						{word.videoPath && (
 							<div className='media-item'>
+								<Title level={4} className='section-title'>
+									Видео
+								</Title>
 								<video controls src={word.videoPath}>
 									Ваш браузер не поддерживает видео элемент.
 								</video>
 							</div>
 						)}
 					</div>
+
+					{progress && (
+						<div className='progress-section'>
+							<Title level={4} className='section-title'>
+								Ваш прогресс
+							</Title>
+							<Progress percent={progress.averageProgress} />
+						</div>
+					)}
 				</Space>
 			</Card>
 		</div>

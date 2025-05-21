@@ -8,4 +8,14 @@ export const progressService = {
 		)
 		return response.data
 	},
+
+	getWordProgress: (wordId: number) =>
+		authAxios
+			.get<ProgressAverageDTO>(`/api/progress/word/${wordId}`)
+			.then(res => res.data),
+
+	getLevelProgress: (levelId: number) =>
+		authAxios
+			.get<ProgressAverageDTO>(`/api/progress/level/${levelId}`)
+			.then(res => res.data),
 }

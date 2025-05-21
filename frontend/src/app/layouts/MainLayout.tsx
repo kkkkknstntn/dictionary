@@ -1,29 +1,37 @@
 import { Layout, Menu } from 'antd'
-import { Link, Outlet } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import './MainLayout.scss'
 
-const { Header, Sider, Content } = Layout
+const { Header, Content } = Layout
 
 export const MainLayout = () => {
+	const location = useLocation()
+	const currentPath = location.pathname
+
 	return (
 		<Layout className='main-layout'>
-			<Sider theme='light' width={250} breakpoint='lg' collapsedWidth='0'>
-				<div className='logo'>Course Platform</div>
-				<Menu mode='inline' defaultSelectedKeys={['1']}>
-					<Menu.Item key='1'>
-						<Link to='/courses'>Все курсы</Link>
-					</Menu.Item>
-					<Menu.Item key='2'>
-						<Link to='/profile'>Мой профиль</Link>
-					</Menu.Item>
-				</Menu>
-			</Sider>
-			<Layout>
-				<Header className='header' />
-				<Content className='content'>
-					<Outlet />
-				</Content>
-			</Layout>
+			<Header className='header'>
+				<div className='header-content'>
+					<div className='logo'>Course Platform</div>
+					<Menu
+						mode='horizontal'
+						selectedKeys={[currentPath]}
+						items={[
+							{
+								key: '/courses',
+								label: <Link to='/courses'>Все курсы</Link>,
+							},
+							{
+								key: '/profile',
+								label: <Link to='/profile'>Мой профиль</Link>,
+							},
+						]}
+					/>
+				</div>
+			</Header>
+			<Content className='content'>
+				<Outlet />
+			</Content>
 		</Layout>
 	)
 }

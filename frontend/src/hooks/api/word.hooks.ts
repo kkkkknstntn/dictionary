@@ -1,6 +1,7 @@
+import { authAxios } from '@/services/api'
 import { wordService } from '@/services/api/word.service'
 import { QUERY_KEYS } from '@/shared/constants/queryKeys'
-import type { WordRequestDTO } from '@/shared/types/word'
+import type { LevelDTO, WordRequestDTO } from '@/shared/types/word'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
@@ -12,11 +13,22 @@ export const useWordsByLevel = (levelId: number) => {
 	})
 }
 
-export const useWordDetails = (id: number) => {
+export const useWordDetails = (wordId: number) => {
 	return useQuery({
-		queryKey: ['word', id],
-		queryFn: () => wordService.getWordById(id),
-		enabled: !!id,
+		queryKey: ['word', wordId],
+		queryFn: () => wordService.getWordDetails(wordId),
+		enabled: !!wordId,
+	})
+}
+
+export const useLevelDetails = (levelId: number) => {
+	return useQuery({
+		queryKey: ['level', levelId],
+		queryFn: async () => {
+			const response = await authAxios.get<LevelDTO>(`/api/levels/${levelId}`)
+			return response.data
+		},
+		enabled: !!levelId,
 	})
 }
 
@@ -63,23 +75,26 @@ export const useWordNavigation = (currentWordId: number, levelId: number) => {
 	const { data: words } = useWordsByLevel(levelId)
 	const navigate = useNavigate()
 
-	const currentIndex = words?.findIndex(word => word.id === currentWordId) ?? -1
+	const currentIndex = words?.findIndex(w => w.id === currentWordId) ?? -1
+	const canGoNext =
+		currentIndex !== -1 && currentIndex < (words?.length ?? 0) - 1
+	const canGoPrevious = currentIndex > 0
 
 	const goToNextWord = () => {
-		if (words && currentIndex < words.length - 1) {
+		if (canGoNext && words) {
 			navigate(`/word/${words[currentIndex + 1].id}`)
 		}
 	}
 
 	const goToPreviousWord = () => {
-		if (words && currentIndex > 0) {
+		if (canGoPrevious && words) {
 			navigate(`/word/${words[currentIndex - 1].id}`)
 		}
 	}
 
 	return {
-		canGoNext: currentIndex < (words?.length ?? 0) - 1,
-		canGoPrevious: currentIndex > 0,
+		canGoNext,
+		canGoPrevious,
 		goToNextWord,
 		goToPreviousWord,
 	}
