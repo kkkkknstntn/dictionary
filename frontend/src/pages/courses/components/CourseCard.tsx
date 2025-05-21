@@ -1,5 +1,6 @@
 import type { CourseResponseDTO } from '@/shared/types/course'
-import { Card, Progress, Tag, Typography } from 'antd'
+import { BookOutlined } from '@ant-design/icons'
+import { Avatar, Card, Progress, Tag, Typography } from 'antd'
 import { Link } from 'react-router-dom'
 import './CourseCard.scss'
 
@@ -13,7 +14,19 @@ export const CourseCard = ({ course }: Props) => (
 	<Card
 		className='course-card'
 		hoverable
-		cover={<img alt={course.title} src={course.imagePath} className='cover' />}
+		cover={
+			course.imagePath ? (
+				<img alt={course.title} src={course.imagePath} className='cover' />
+			) : (
+				<div className='cover-placeholder'>
+					<Avatar
+						size={64}
+						icon={<BookOutlined />}
+						style={{ backgroundColor: '#FF6B35' }}
+					/>
+				</div>
+			)
+		}
 		actions={[
 			<Link key='open' to={`/course/${course.id}`}>
 				Перейти

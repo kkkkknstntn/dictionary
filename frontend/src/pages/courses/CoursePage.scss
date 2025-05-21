@@ -2,6 +2,13 @@
 	.course-header {
 		margin-bottom: 24px;
 
+		.course-avatar {
+			width: 64px;
+			height: 64px;
+			object-fit: cover;
+			border-radius: 8px;
+		}
+
 		.course-meta {
 			margin-top: 16px;
 			display: flex;
@@ -11,15 +18,9 @@
 	}
 
 	.course-tabs {
-		.ant-tabs-nav {
+		.level-words {
 			margin-bottom: 24px;
 		}
-	}
-
-	.level-title {
-		display: flex;
-		gap: 8px;
-		align-items: center;
 	}
 }
 

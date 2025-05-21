@@ -5,7 +5,15 @@
 
 	.cover {
 		height: 140px;
-		background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+		object-fit: cover;
+	}
+
+	.cover-placeholder {
+		height: 140px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: linear-gradient(135deg, #ff6b35 0%, #ff8c61 100%);
 	}
 
 	.meta {

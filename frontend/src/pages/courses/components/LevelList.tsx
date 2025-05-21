@@ -1,5 +1,5 @@
 import type { LevelResponseDTO } from '@/shared/types/level'
-import { List, Tag } from 'antd'
+import { List } from 'antd'
 import { Link } from 'react-router-dom'
 
 type Props = {
@@ -19,12 +19,7 @@ export const LevelList = ({ levels }: Props) => (
 				]}
 			>
 				<List.Item.Meta
-					title={
-						<div className='level-title'>
-							<span>{level.name}</span>
-							<Tag color='geekblue'>Слов: {level.words.length}</Tag>
-						</div>
-					}
+					title={level.name}
 					description={`Порядковый номер: ${level.orderNumber}`}
 				/>
 			</List.Item>

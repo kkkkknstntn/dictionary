@@ -1,8 +1,17 @@
 // CoursePage.tsx
 import { useCourseDetails } from '@/hooks/api/course.hooks'
 import { useCurrentUser } from '@/hooks/api/user.hooks'
-import { PlusOutlined } from '@ant-design/icons'
-import { Button, Card, Skeleton, Tabs, Tag, Typography } from 'antd'
+import { BookOutlined, PlusOutlined } from '@ant-design/icons'
+import {
+	Avatar,
+	Button,
+	Card,
+	Skeleton,
+	Space,
+	Tabs,
+	Tag,
+	Typography,
+} from 'antd'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import './CoursePage.scss'
@@ -29,13 +38,31 @@ export const CoursePage = () => {
 			) : (
 				<>
 					<Card className='course-header'>
-						<Title level={2}>{course?.title}</Title>
-						<Paragraph>{course?.description}</Paragraph>
+						<Space align='start' size='large'>
+							{course?.imagePath ? (
+								<img
+									src={course.imagePath}
+									alt={course.title}
+									className='course-avatar'
+								/>
+							) : (
+								<Avatar
+									size={64}
+									icon={<BookOutlined />}
+									style={{ backgroundColor: '#FF6B35' }}
+									className='course-avatar'
+								/>
+							)}
+							<div>
+								<Title level={2}>{course?.title}</Title>
+								<Paragraph>{course?.description}</Paragraph>
 
-						<div className='course-meta'>
-							<Tag color='blue'>Автор: {course?.author.username}</Tag>
-							<JoinCourseButton courseId={Number(id)} />
-						</div>
+								<div className='course-meta'>
+									<Tag color='blue'>Автор: {course?.author.username}</Tag>
+									<JoinCourseButton courseId={Number(id)} />
+								</div>
+							</div>
+						</Space>
 					</Card>
 
 					<Tabs defaultActiveKey='1' className='course-tabs'>
