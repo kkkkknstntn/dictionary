@@ -18,6 +18,14 @@ export const useIsUserInCourse = (courseId: number | undefined) => {
 	}
 }
 
+export const useSearchCourses = (searchQuery: string) => {
+	return useQuery({
+		queryKey: [...QUERY_KEYS.COURSES, 'search', searchQuery],
+		queryFn: () => courseService.searchCourses({ query: searchQuery }),
+		enabled: searchQuery.length > 0,
+	})
+}
+
 export const useCreateCourse = () => {
 	const queryClient = useQueryClient()
 
