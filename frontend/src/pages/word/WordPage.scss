@@ -1,0 +1,45 @@
+.word-page {
+	padding: 24px;
+	max-width: 1200px;
+	margin: 0 auto;
+
+	.word-content {
+		background: #fff;
+		border-radius: 8px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	}
+
+	.word-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 24px;
+	}
+
+	.progress-section {
+		margin: 24px 0;
+	}
+
+	.media-section {
+		display: grid;
+		gap: 24px;
+		margin-top: 24px;
+
+		.media-item {
+			width: 100%;
+
+			.word-image {
+				width: 100%;
+				max-height: 400px;
+				object-fit: contain;
+				border-radius: 8px;
+			}
+
+			audio,
+			video {
+				width: 100%;
+				border-radius: 8px;
+			}
+		}
+	}
+}

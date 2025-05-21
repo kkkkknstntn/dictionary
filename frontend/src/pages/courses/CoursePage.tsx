@@ -11,6 +11,7 @@ import { CourseProgress } from './components/CourseProgress'
 import { CourseRating } from './components/CourseRating'
 import { JoinCourseButton } from './components/JoinCourseButton'
 import { LevelList } from './components/LevelList'
+import { WordList } from './components/WordList'
 
 const { Title, Paragraph } = Typography
 const { TabPane } = Tabs
@@ -58,7 +59,22 @@ export const CoursePage = () => {
 						</TabPane>
 
 						<TabPane tab='Слова' key='2'>
-							<div>Список слов</div>
+							{isAuthor && (
+								<Button
+									type='dashed'
+									icon={<PlusOutlined />}
+									style={{ marginBottom: 16 }}
+									onClick={() => setLevelModalOpen(true)}
+								>
+									Добавить слово
+								</Button>
+							)}
+							{course?.levels.map(level => (
+								<div key={level.id} className='level-words'>
+									<Title level={3}>{level.name}</Title>
+									<WordList levelId={level.id} />
+								</div>
+							))}
 						</TabPane>
 
 						<TabPane tab='Прогресс' key='3'>
