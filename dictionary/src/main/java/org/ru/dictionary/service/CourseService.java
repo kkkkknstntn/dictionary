@@ -16,7 +16,7 @@ public interface CourseService {
     List<CourseResponseDTO> getCourses(String query);
     List<CourseResponseDTO> getUserCourses();
     void deleteCourse(Long courseId);
-    void joinCourse(Long courseId, UserDetails userDetails);
+    CourseResponseDTO joinCourse(Long courseId, UserDetails userDetails);
     void checkAuthorOrAdmin(Course course);
 
     List<ProgressAverageDTO> getCourseUserProgress(Long courseId);

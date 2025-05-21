@@ -104,10 +104,10 @@ public class CourseController {
     })
     @PostMapping("/{id}/join")
     @ResponseStatus(HttpStatus.OK)
-    public void joinCourse(
+    public CourseResponseDTO joinCourse(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        courseService.joinCourse(id, userDetails);
+        return courseService.joinCourse(id, userDetails);
     }
 
     @Operation(summary = "Получить курсы по строке", description = "Публичный доступ")

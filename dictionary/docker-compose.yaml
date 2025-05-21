@@ -34,7 +34,7 @@ services:
     container_name: elasticsearch
     environment:
       - xpack.security.http.ssl.enabled=false
-      - xpack.security.roles.file.url=file:///usr/share/elasticsearch/config/roles/*.json # Активиру
+#      - xpack.security.roles.file.url=file:///usr/share/elasticsearch/config/roles/*.json # Активиру
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms2g -Xmx2g
       - xpack.security.enabled=true
