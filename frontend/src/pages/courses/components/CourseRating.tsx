@@ -1,4 +1,4 @@
-import { useCourseProgress } from '@/hooks/api/course.hooks'
+import { useCourseProgressUsers } from '@/hooks/api/course.hooks'
 import { ProgressAverageDTO } from '@/shared/types/progress'
 import { TrophyOutlined } from '@ant-design/icons'
 import { Card, List, Skeleton, Typography } from 'antd'
@@ -8,7 +8,7 @@ interface CourseRatingProps {
 }
 
 export const CourseRating = ({ courseId }: CourseRatingProps) => {
-	const { data: progress, isLoading } = useCourseProgress(courseId)
+	const { data: progressData, isLoading } = useCourseProgressUsers(courseId)
 
 	if (!courseId) {
 		return null
@@ -18,7 +18,7 @@ export const CourseRating = ({ courseId }: CourseRatingProps) => {
 		return <Skeleton active />
 	}
 
-	const sortedProgress = [...(progress || [])].sort(
+	const sortedProgress = [...(progressData || [])].sort(
 		(a, b) => b.averageProgress - a.averageProgress
 	)
 
