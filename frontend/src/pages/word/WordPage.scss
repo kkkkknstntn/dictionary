@@ -1,0 +1,41 @@
+.word-page {
+	padding: 24px;
+	max-width: 1200px;
+	margin: 0 auto;
+
+	.word-card {
+		background: #fff;
+		border-radius: 16px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+		.word-header {
+			margin-bottom: 24px;
+		}
+
+		.word-content {
+			.definition {
+				font-size: 18px;
+				color: #666;
+				margin-bottom: 32px;
+			}
+
+			.media-section {
+				display: grid;
+				gap: 24px;
+				margin-bottom: 32px;
+
+				.media-item {
+					.ant-typography {
+						margin-bottom: 16px;
+					}
+
+					.word-image {
+						max-width: 100%;
+						border-radius: 8px;
+						box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+					}
+				}
+			}
+		}
+	}
+}

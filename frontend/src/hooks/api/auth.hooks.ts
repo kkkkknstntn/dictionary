@@ -16,8 +16,9 @@ export const useLogin = () => {
 
 	return useMutation({
 		mutationFn: (data: LoginFormData) => authService.login(data),
-		onSuccess: ({ accessToken, user }) => {
+		onSuccess: ({ accessToken, refreshToken, user }) => {
 			localStorage.setItem('accessToken', accessToken)
+			localStorage.setItem('refreshToken', refreshToken)
 			queryClient.setQueryData(['currentUser'], user)
 		},
 	})
@@ -36,6 +37,7 @@ export const useLogout = () => {
 		mutationFn: () => authService.logout(),
 		onSuccess: () => {
 			localStorage.removeItem('accessToken')
+			localStorage.removeItem('refreshToken')
 			queryClient.removeQueries()
 		},
 	})

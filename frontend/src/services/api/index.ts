@@ -6,9 +6,14 @@ export const authAxios = axios.create({
 })
 
 authAxios.interceptors.request.use(config => {
-	const token = localStorage.getItem('accessToken')
-	if (token && !config.url?.includes('/api/refresh')) {
-		config.headers.Authorization = `Bearer ${token}`
+	const accessToken = localStorage.getItem('accessToken')
+	const refreshToken = localStorage.getItem('refreshToken')
+	if (config.url?.includes('/api/refresh')) {
+		if (refreshToken) {
+			config.headers.Authorization = `Bearer ${refreshToken}`
+		}
+	} else if (accessToken) {
+		config.headers.Authorization = `Bearer ${accessToken}`
 	}
 	if (config.url === '/api/users/me' && !localStorage.getItem('accessToken')) {
 		// Тут мутня какая-то
@@ -29,6 +34,7 @@ authAxios.interceptors.response.use(
 				return authAxios(originalRequest)
 			} catch (refreshError) {
 				localStorage.removeItem('accessToken')
+				localStorage.removeItem('refreshToken')
 				window.location.href = '/login'
 				return Promise.reject(refreshError)
 			}

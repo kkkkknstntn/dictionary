@@ -1,23 +1,145 @@
 .auth-page {
-	height: 100vh;
+	min-height: 100vh;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: #f0f2f5;
+	background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+	padding: 20px;
 
 	.auth-card {
-		width: 400px;
-		border-radius: 8px;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		width: 100%;
+		max-width: 420px;
+		border-radius: 16px;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+		background: rgba(255, 255, 255, 0.95);
+		backdrop-filter: blur(10px);
 
 		.ant-card-head {
-			text-align: center;
-			font-size: 1.5rem;
+			border-bottom: none;
+			padding: 24px 24px 0;
+
+			.ant-card-head-title {
+				font-size: 24px;
+				font-weight: 600;
+				color: #1a1a1a;
+				text-align: center;
+			}
+		}
+
+		.ant-card-body {
+			padding: 24px;
+		}
+
+		.ant-form-item {
+			margin-bottom: 20px;
+		}
+
+		.ant-input-affix-wrapper {
+			border-radius: 8px;
+			padding: 8px 12px;
+			border: 1px solid #e0e0e0;
+			transition: all 0.3s ease;
+
+			&:hover,
+			&:focus {
+				border-color: #1890ff;
+				box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+			}
+		}
+
+		.ant-btn {
+			height: 44px;
+			border-radius: 8px;
+			font-size: 16px;
+			font-weight: 500;
+			margin-top: 8px;
 		}
 
 		.auth-link {
-			margin-top: 16px;
 			text-align: center;
+			margin-top: 16px;
+			color: #666;
+			font-size: 14px;
+
+			a {
+				color: #1890ff;
+				font-weight: 500;
+				transition: color 0.3s ease;
+
+				&:hover {
+					color: #40a9ff;
+				}
+			}
 		}
+	}
+}
+
+.password-strength {
+	margin-top: 8px;
+	font-size: 12px;
+
+	.strength-meter {
+		height: 4px;
+		background: #f0f0f0;
+		border-radius: 2px;
+		margin-top: 4px;
+		overflow: hidden;
+
+		.strength-meter-fill {
+			height: 100%;
+			transition: all 0.3s ease;
+
+			&.weak {
+				background: #ff4d4f;
+				width: 33.33%;
+			}
+
+			&.medium {
+				background: #faad14;
+				width: 66.66%;
+			}
+
+			&.strong {
+				background: #52c41a;
+				width: 100%;
+			}
+		}
+	}
+
+	.strength-text {
+		margin-top: 4px;
+		color: #666;
+	}
+}
+
+.auth-info {
+	text-align: center;
+	margin-bottom: 24px;
+	color: #666;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.auth-divider {
+	margin: 24px 0;
+	display: flex;
+	align-items: center;
+	color: #999;
+	font-size: 14px;
+
+	&::before,
+	&::after {
+		content: '';
+		flex: 1;
+		height: 1px;
+		background: #e0e0e0;
+	}
+
+	&::before {
+		margin-right: 16px;
+	}
+
+	&::after {
+		margin-left: 16px;
 	}
 }
