@@ -1,0 +1,35 @@
+.word-list {
+	.level-section {
+		margin-bottom: 32px;
+
+		&:not(:last-child) {
+			padding-bottom: 32px;
+			border-bottom: 1px solid #f0f0f0;
+		}
+
+		.level-title {
+			margin-bottom: 16px;
+			color: #1890ff;
+		}
+	}
+
+	.word-card {
+		height: 100%;
+		transition: all 0.3s;
+
+		&:hover {
+			transform: translateY(-4px);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		}
+
+		.definition {
+			color: #666;
+			margin: 0;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+		}
+	}
+}

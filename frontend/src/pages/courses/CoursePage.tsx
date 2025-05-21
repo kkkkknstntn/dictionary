@@ -10,6 +10,7 @@ import { AddLevelModal } from './components/AddLevelModal'
 import { CourseProgress } from './components/CourseProgress'
 import { JoinCourseButton } from './components/JoinCourseButton'
 import { LevelList } from './components/LevelList'
+import { WordList } from './components/WordList'
 
 const { Title, Paragraph } = Typography
 const { TabPane } = Tabs
@@ -56,7 +57,11 @@ export const CoursePage = () => {
 							/>
 						</TabPane>
 
-						<TabPane tab='Прогресс' key='2'>
+						<TabPane tab='Слова' key='2'>
+							<WordList levels={course?.levels || []} />
+						</TabPane>
+
+						<TabPane tab='Прогресс' key='3'>
 							<CourseProgress courseId={Number(id)} />
 						</TabPane>
 					</Tabs>

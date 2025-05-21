@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export const useWordsByLevel = (levelId: number) => {
 	return useQuery({
-		queryKey: [...QUERY_KEYS.WORDS, levelId],
+		queryKey: ['words', 'level', levelId],
 		queryFn: () => wordService.getWordsByLevel(levelId),
 		enabled: !!levelId,
 	})
@@ -13,8 +13,9 @@ export const useWordsByLevel = (levelId: number) => {
 
 export const useWordDetails = (id: number) => {
 	return useQuery({
-		queryKey: QUERY_KEYS.WORD_DETAILS(id),
+		queryKey: ['word', id],
 		queryFn: () => wordService.getWordById(id),
+		enabled: !!id,
 	})
 }
 
