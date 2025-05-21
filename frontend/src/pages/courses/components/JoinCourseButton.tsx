@@ -1,4 +1,4 @@
-import { useJoinCourse } from '@/hooks/api/course.hooks'
+import { useIsUserInCourse, useJoinCourse } from '@/hooks/api/course.hooks'
 import { Button, notification } from 'antd'
 
 type Props = {
@@ -7,6 +7,7 @@ type Props = {
 
 export const JoinCourseButton = ({ courseId }: Props) => {
 	const { mutate, isPending } = useJoinCourse()
+	const { isUserInCourse } = useIsUserInCourse(courseId)
 
 	const handleJoin = () => {
 		mutate(courseId, {
@@ -21,6 +22,10 @@ export const JoinCourseButton = ({ courseId }: Props) => {
 				})
 			},
 		})
+	}
+
+	if (isUserInCourse) {
+		return <Button disabled>Вы уже подписаны на курс</Button>
 	}
 
 	return (

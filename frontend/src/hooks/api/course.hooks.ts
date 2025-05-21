@@ -9,6 +9,15 @@ export const useUserCourses = () => {
 		queryFn: () => courseService.getUserCourses(),
 	})
 }
+
+export const useIsUserInCourse = (courseId: number | undefined) => {
+	const { data: userCourses } = useUserCourses()
+	return {
+		isUserInCourse:
+			userCourses?.some(course => course.id === courseId) ?? false,
+	}
+}
+
 export const useCreateCourse = () => {
 	const queryClient = useQueryClient()
 
@@ -21,6 +30,7 @@ export const useCreateCourse = () => {
 		},
 	})
 }
+
 export const useCourseProgressUsers = (courseId: number | undefined) => {
 	return useQuery({
 		queryKey: courseId ? QUERY_KEYS.COURSE_PROGRESS_USERS(courseId) : [],
@@ -28,6 +38,7 @@ export const useCourseProgressUsers = (courseId: number | undefined) => {
 		enabled: !!courseId,
 	})
 }
+
 export const useCourseDetails = (id: number) => {
 	return useQuery({
 		queryKey: ['course-details', id],
@@ -35,6 +46,7 @@ export const useCourseDetails = (id: number) => {
 		enabled: !!id,
 	})
 }
+
 export const useJoinCourse = () => {
 	const queryClient = useQueryClient()
 
