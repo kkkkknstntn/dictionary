@@ -14,6 +14,8 @@ public abstract class WordMapper {
     @Mapping(target = "imagePath", source = "imagePath")
     @Mapping(target = "audioPath", source = "audioPath")
     @Mapping(target = "videoPath", source = "videoPath")
+    @Mapping(target = "courseId", source = "level.course.id")
+    @Mapping(target = "levelId", source = "level.id")
     public abstract WordResponseDTO toWordDto(Word word);
 
     @Mapping(target = "id", ignore = true)
