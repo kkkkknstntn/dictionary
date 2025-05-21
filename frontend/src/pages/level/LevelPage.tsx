@@ -62,7 +62,6 @@ export const LevelPage = () => {
 		data: material,
 		isLoading,
 		refetch,
-		isFetching,
 	} = useLearningMaterial({ levelId: Number(id), type }, { enabled: started })
 
 	const startHandler = () => {
