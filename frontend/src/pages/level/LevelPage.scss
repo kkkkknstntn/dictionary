@@ -85,6 +85,19 @@
 			padding: 12px 0;
 			font-size: 15px;
 			line-height: 1.6;
+			transition: all 0.3s ease;
+			border-radius: 4px;
+			margin: 0 12px;
+			padding: 12px;
+
+			&:hover {
+				background: linear-gradient(
+					90deg,
+					rgba(255, 107, 53, 0.1) 0%,
+					rgba(78, 205, 196, 0.1) 100%
+				);
+				transform: translateX(4px);
+			}
 		}
 
 		.word-list-item {
