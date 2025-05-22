@@ -1,5 +1,5 @@
 import { useWordsByLevel } from '@/hooks/api/word.hooks'
-import { Card, List, Space, Tag, Typography } from 'antd'
+import { Card, List, Tag, Typography } from 'antd'
 import { Link } from 'react-router-dom'
 import './WordList.scss'
 
@@ -14,20 +14,18 @@ export const WordList = ({ levelId }: Props) => {
 
 	return (
 		<List
-			grid={{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 3, xl: 4, xxl: 4 }}
+			grid={{ gutter: 24, xs: 1, sm: 2, md: 2, lg: 3, xl: 3, xxl: 4 }}
 			dataSource={words}
 			loading={isLoading}
 			renderItem={word => (
 				<List.Item>
 					<Link to={`/word/${word.id}`}>
 						<Card hoverable className='word-card'>
-							<Space
-								direction='vertical'
-								size='small'
-								style={{ width: '100%' }}
-							>
-								<Title level={4}>{word.word}</Title>
-								<Text type='secondary' ellipsis={{ rows: 2 }}>
+							<div className='word-content'>
+								<Title level={4} className='word-title'>
+									{word.word}
+								</Title>
+								<Text type='secondary' className='word-definition'>
 									{word.definition}
 								</Text>
 								{word.imagePath && (
@@ -37,12 +35,16 @@ export const WordList = ({ levelId }: Props) => {
 										className='word-image'
 									/>
 								)}
-								<Space>
-									{word.audioPath && <Tag color='blue'>Аудио</Tag>}
-									{word.videoPath && <Tag color='green'>Видео</Tag>}
-									{word.imagePath && <Tag color='purple'>Изображение</Tag>}
-								</Space>
-							</Space>
+								<div className='word-tags'>
+									<div className='tags-row'>
+										{word.audioPath && <Tag color='blue'>Аудио</Tag>}
+										{word.videoPath && <Tag color='green'>Видео</Tag>}
+									</div>
+									<div className='tags-row'>
+										{word.imagePath && <Tag color='purple'>Изображение</Tag>}
+									</div>
+								</div>
+							</div>
 						</Card>
 					</Link>
 				</List.Item>
