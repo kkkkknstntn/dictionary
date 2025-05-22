@@ -15,6 +15,7 @@ interface Props {
 	onNext: () => void
 	onRestart: () => void
 	levelId: number
+	setStarted: (started: boolean) => void
 }
 
 export const LearningExercise = ({
@@ -22,6 +23,7 @@ export const LearningExercise = ({
 	onNext,
 	onRestart,
 	levelId,
+	setStarted,
 }: Props) => {
 	const screens = useBreakpoint()
 	const navigate = useNavigate()
@@ -59,6 +61,7 @@ export const LearningExercise = ({
 	}
 
 	const handleBack = () => {
+		setStarted(false)
 		navigate(`/level/${levelId}`)
 	}
 

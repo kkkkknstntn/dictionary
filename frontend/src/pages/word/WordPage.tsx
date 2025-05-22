@@ -23,6 +23,12 @@ export const WordPage = () => {
 		}
 	}
 
+	const handleBackToLevel = () => {
+		if (word?.levelId) {
+			navigate(`/level/${word.levelId}`)
+		}
+	}
+
 	if (isLoading) {
 		return <div>Загрузка...</div>
 	}
@@ -36,9 +42,14 @@ export const WordPage = () => {
 			<Card className='word-content'>
 				<Space direction='vertical' size='large' style={{ width: '100%' }}>
 					<div className='word-header'>
-						<Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
-							Вернуться к курсу
-						</Button>
+						<Space>
+							<Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
+								Вернуться к курсу
+							</Button>
+							<Button icon={<ArrowLeftOutlined />} onClick={handleBackToLevel}>
+								Вернуться к уровню
+							</Button>
+						</Space>
 						<Space>
 							<Button
 								icon={<ArrowLeftOutlined />}

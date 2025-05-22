@@ -6,7 +6,7 @@ import { useCurrentUser } from '@/hooks/api/user.hooks'
 import { useLevelDetails, useWordsByLevel } from '@/hooks/api/word.hooks'
 import { QUERY_KEYS } from '@/shared/constants/queryKeys'
 import type { LearningType } from '@/shared/types/learn'
-import { PlusOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons'
 import {
 	Button,
 	Card,
@@ -19,7 +19,7 @@ import {
 	Typography,
 } from 'antd'
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { LearningExercise } from './components/LearningExercise'
 import { WordFormModal } from './components/WordFormModal'
 import './LevelPage.scss'
@@ -50,6 +50,7 @@ const learningModes = [
 export const LevelPage = () => {
 	const { id } = useParams<{ id: string }>()
 	const levelId = Number(id)
+	const navigate = useNavigate()
 	const { data: currentUser } = useCurrentUser()
 	const [wordModal, setWordModal] = useState(false)
 	const { data: isAuthor } = useIsCourseAuthor(levelId, currentUser?.username)
@@ -63,6 +64,10 @@ export const LevelPage = () => {
 		isLoading,
 		refetch,
 	} = useLearningMaterial({ levelId: Number(id), type }, { enabled: started })
+
+	const handleBack = () => {
+		navigate(-1)
+	}
 
 	const startHandler = () => {
 		queryClient.removeQueries({
@@ -97,12 +102,19 @@ export const LevelPage = () => {
 		) : null
 	}
 
+	const handleWordClick = (wordId: number) => {
+		navigate(`/word/${wordId}`)
+	}
+
 	return (
 		<div className='level-page'>
 			<Card className='learning-card'>
 				{!started ? (
 					<>
 						<div className='level-header'>
+							<Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
+								Назад
+							</Button>
 							<Title level={3}>
 								Уровень {level?.orderNumber} {level?.title}
 							</Title>
@@ -177,6 +189,7 @@ export const LevelPage = () => {
 								onNext={refetch}
 								onRestart={restartHandler}
 								levelId={levelId}
+								setStarted={setStarted}
 							/>
 						</>
 					)
@@ -192,7 +205,10 @@ export const LevelPage = () => {
 					<List
 						dataSource={words}
 						renderItem={w => (
-							<List.Item>
+							<List.Item
+								onClick={() => handleWordClick(w.id)}
+								style={{ cursor: 'pointer' }}
+							>
 								<div className='word-list-item'>
 									<div className='word-content'>
 										<strong>{w.word}</strong>&nbsp;—&nbsp;{w.definition}
