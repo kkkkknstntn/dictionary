@@ -16,7 +16,7 @@ export const useWordsByLevel = (levelId: number) => {
 export const useWordDetails = (wordId: number) => {
 	return useQuery({
 		queryKey: ['word', wordId],
-		queryFn: () => wordService.getWordDetails(wordId),
+		queryFn: () => wordService.getWordById(wordId),
 		enabled: !!wordId,
 	})
 }
