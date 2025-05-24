@@ -1,4 +1,5 @@
 import { authAxios } from '@/services/api'
+import { wordApi } from '@/services/api/word.api'
 import { wordService } from '@/services/api/word.service'
 import { QUERY_KEYS } from '@/shared/constants/queryKeys'
 import type { LevelDTO, WordRequestDTO } from '@/shared/types/word'
@@ -45,15 +46,16 @@ export const useCreateWord = () => {
 	})
 }
 
-export const useUpdateWord = (id: number) => {
+export const useUpdateWord = () => {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: (data: WordRequestDTO) => wordService.updateWord(id, data),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.WORDS })
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEVELS })
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.WORD_DETAILS(id) })
+		mutationFn: ({ id, formData }: { id: number; formData: FormData }) =>
+			wordApi.updateWord(id, formData),
+		onSuccess: (_, { id }) => {
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.WORD_DETAILS(id),
+			})
 		},
 	})
 }
@@ -62,11 +64,11 @@ export const useDeleteWord = () => {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: (id: number) => wordService.deleteWord(id),
+		mutationFn: (id: number) => wordApi.deleteWord(id),
 		onSuccess: (_, id) => {
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.WORDS })
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEVELS })
-			queryClient.removeQueries({ queryKey: QUERY_KEYS.WORD_DETAILS(id) })
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.WORD_DETAILS(id),
+			})
 		},
 	})
 }
