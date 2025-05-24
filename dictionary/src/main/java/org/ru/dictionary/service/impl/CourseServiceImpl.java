@@ -118,6 +118,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
 
+    @Transactional
     @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
     public List<CourseResponseDTO> getUserCourses() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();

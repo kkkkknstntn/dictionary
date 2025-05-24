@@ -2,7 +2,10 @@ package org.ru.dictionary.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.hibernate.annotations.Cascade;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -12,12 +15,13 @@ import java.util.Set;
 @Data
 public class Level {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
-    @Cascade(org.hibernate.annotations.CascadeType.ALL)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Course course;
 
     @Column(nullable = false)
@@ -31,5 +35,6 @@ public class Level {
             orphanRemoval = true
     )
     @OrderBy("orderNumber ASC")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Set<Word> words = new HashSet<>();
 }

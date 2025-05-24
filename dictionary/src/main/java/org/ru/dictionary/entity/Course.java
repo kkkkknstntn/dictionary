@@ -1,11 +1,10 @@
 package org.ru.dictionary.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,6 +25,8 @@ public class Course {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private User author;
 
     @Column(nullable = false)
@@ -37,7 +38,7 @@ public class Course {
     @Column(name = "imagePath")
     private String imagePath;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "course_participants",
             joinColumns = @JoinColumn(name = "course_id"),
@@ -45,8 +46,13 @@ public class Course {
     )
     private Set<User> participants = new HashSet<>();
 
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+            mappedBy = "course",
+            cascade = CascadeType.ALL, // Каскадное удаление
+            orphanRemoval = true       // Удаление "осиротевших" уровней
+    )
     @OrderBy("orderNumber ASC")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<Level> levels = new ArrayList<>();
 
     @CreationTimestamp

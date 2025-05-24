@@ -73,7 +73,6 @@ public class LevelServiceImpl implements LevelService {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = "levelDetails", key = "#levelId"),
-            @CacheEvict(value = "courseLevels", key = "#level.course.id"),
             @CacheEvict(value = "words", allEntries = true)
     })
     public LevelResponseDTO updateLevel(Long levelId, LevelRequestDTO dto, UserDetails userDetails) {
@@ -92,7 +91,6 @@ public class LevelServiceImpl implements LevelService {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = "levelDetails", key = "#levelId"),
-            @CacheEvict(value = "courseLevels", key = "#level.course.id"),
             @CacheEvict(value = "words", allEntries = true),
             @CacheEvict(value = "userLearningMaterials", allEntries = true)
     })

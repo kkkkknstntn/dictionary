@@ -21,6 +21,5 @@ public interface CourseService {
 
     List<ProgressAverageDTO> getCourseUserProgress(Long courseId);
 
-    @Cacheable(value = "courses", key = "#id")
     CourseResponseDTO getCourseById(Long id);
 }

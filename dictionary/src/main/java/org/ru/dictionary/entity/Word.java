@@ -15,7 +15,7 @@ import org.hibernate.annotations.Cascade;
 @AllArgsConstructor
 public class Word {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "word")
@@ -35,7 +35,6 @@ public class Word {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "level_id", nullable = false)
-    @Cascade(org.hibernate.annotations.CascadeType.ALL)
     private Level level;
 
     @Column(name = "active_for_testing", columnDefinition = "boolean default true")

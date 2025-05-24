@@ -51,11 +51,13 @@ spring:
     password: postgres
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop # Временно установите это значение
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+        hbm2ddl:
+          foreign_keys: true
     database: postgresql
   data:
     elasticsearch:
