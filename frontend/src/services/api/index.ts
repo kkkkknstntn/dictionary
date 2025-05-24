@@ -25,6 +25,8 @@ authAxios.interceptors.response.use(
 	response => response,
 	async error => {
 		const originalRequest = error.config
+
+		// Обработка ошибки обновления токена
 		if (error.response?.status === 403 && !originalRequest._retry) {
 			originalRequest._retry = true
 			try {
@@ -38,6 +40,8 @@ authAxios.interceptors.response.use(
 				return Promise.reject(refreshError)
 			}
 		}
+
+		// Пробрасываем ошибку дальше для обработки в компонентах
 		return Promise.reject(error)
 	}
 )

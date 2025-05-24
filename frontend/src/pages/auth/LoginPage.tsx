@@ -1,6 +1,8 @@
 import { useLogin } from '@/hooks/api/auth.hooks'
 import type { LoginFormData } from '@/shared/types/auth'
-import { Button, Card, Form, Input, Modal } from 'antd'
+import { Button, Card, Form, Input } from 'antd'
+import axios from 'axios'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './AuthPages.scss'
 
@@ -8,17 +10,36 @@ export const LoginPage = () => {
 	const [form] = Form.useForm()
 	const { mutate, isPending } = useLogin()
 	const navigate = useNavigate()
+	const [loginError, setLoginError] = useState<string>('')
+
+	const getErrorMessage = (error: unknown) => {
+		if (axios.isAxiosError(error)) {
+			const status = error.response?.status
+			const message = error.response?.data?.message
+
+			switch (status) {
+				case 401:
+					return 'Неверный email или пароль'
+				case 403:
+					return 'Аккаунт не активирован. Пожалуйста, проверьте вашу почту'
+				case 404:
+					return 'Аккаунт не найден'
+				default:
+					return message || 'Произошла ошибка при входе. Попробуйте позже'
+			}
+		}
+		return 'Произошла неизвестная ошибка'
+	}
 
 	const handleSubmit = (values: LoginFormData) => {
+		setLoginError('')
 		mutate(values, {
 			onSuccess: () => {
 				navigate('/courses')
 			},
-			onError: () => {
-				Modal.error({
-					title: 'Ошибка входа',
-					content: 'Неверные учетные данные или аккаунт не активирован',
-				})
+			onError: (error: unknown) => {
+				const errorMessage = getErrorMessage(error)
+				setLoginError(errorMessage)
 			},
 		})
 	}
@@ -30,6 +51,13 @@ export const LoginPage = () => {
 					Добро пожаловать! Войдите в свой аккаунт, чтобы продолжить обучение
 				</div>
 				<Form form={form} onFinish={handleSubmit}>
+					{loginError && (
+						<Form.Item>
+							<div style={{ color: '#ff4d4f', marginBottom: '16px' }}>
+								{loginError}
+							</div>
+						</Form.Item>
+					)}
 					<Form.Item
 						name='username'
 						rules={[
