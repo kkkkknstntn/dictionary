@@ -121,7 +121,6 @@ public class WordServiceImpl implements WordService {
     @Transactional
     @Caching(evict = {
             @CacheEvict(value = "wordDetails", key = "#id"),
-            @CacheEvict(value = "levelWords", key = "#word.level.id"),
             @CacheEvict(value = "userWordProgress", key = "{#userDetails.username, #id}")
     })
     public void deleteWord(Long id, UserDetails userDetails) {
