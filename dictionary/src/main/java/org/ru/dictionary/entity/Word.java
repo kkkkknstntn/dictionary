@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.annotations.Cascade;
 
 @Data
 @RequiredArgsConstructor
@@ -34,6 +35,7 @@ public class Word {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "level_id", nullable = false)
+    @Cascade(org.hibernate.annotations.CascadeType.ALL)
     private Level level;
 
     @Column(name = "active_for_testing", columnDefinition = "boolean default true")
