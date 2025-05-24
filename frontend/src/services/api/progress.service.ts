@@ -1,4 +1,4 @@
-import { ProgressAverageDTO } from '@/shared/types/progress'
+import type { ProgressAverageDTO } from '@/shared/types/progress'
 import { authAxios } from './index'
 
 export const progressService = {

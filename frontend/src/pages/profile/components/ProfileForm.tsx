@@ -16,7 +16,9 @@ export const ProfileForm = ({ user }: Props) => {
 
 	const handleSubmit = (values: UserUpdateData) => {
 		const formData = new FormData()
-		formData.append('username', values.username)
+		if (values.username) {
+			formData.append('username', values.username)
+		}
 		if (values.password) {
 			formData.append('password', values.password)
 		}
