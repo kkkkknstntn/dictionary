@@ -24,5 +24,6 @@ public abstract class LevelMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "course", ignore = true)
+    @Mapping(target = "orderNumber", ignore = true)
     public abstract void updateFromDto(LevelRequestDTO dto, @MappingTarget Level entity);
 }
