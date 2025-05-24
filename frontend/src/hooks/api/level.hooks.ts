@@ -48,10 +48,8 @@ export const useDeleteLevel = () => {
 
 	return useMutation({
 		mutationFn: (id: number) => levelService.deleteLevel(id),
-		onSuccess: (_, id) => {
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEVELS })
+		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COURSES })
-			queryClient.removeQueries({ queryKey: QUERY_KEYS.LEVEL_DETAILS(id) })
 		},
 	})
 }

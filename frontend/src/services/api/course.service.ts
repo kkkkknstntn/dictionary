@@ -49,9 +49,23 @@ export const courseService = {
 		id: number,
 		data: CourseRequestDTO
 	): Promise<CourseResponseDTO> => {
+		const formData = new FormData()
+		formData.append('title', data.title)
+		if (data.description) {
+			formData.append('description', data.description)
+		}
+		if (data.imageFile) {
+			formData.append('imageFile', data.imageFile)
+		}
+
 		const response = await authAxios.put<CourseResponseDTO>(
 			`/api/courses/${id}`,
-			data
+			formData,
+			{
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			}
 		)
 		return response.data
 	},

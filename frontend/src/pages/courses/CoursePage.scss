@@ -2,25 +2,63 @@
 	padding: 0;
 
 	.course-header {
-		margin-bottom: 2%;
+		margin-bottom: 24px;
 
-		.course-avatar {
-			width: 64px;
-			height: 64px;
-			border-radius: 8px;
-			object-fit: cover;
+		.course-avatar-container {
+			position: relative;
+			width: 200px;
+			height: 200px;
+			flex-shrink: 0;
+
+			.course-avatar {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				border-radius: 8px;
+			}
+
+			.course-avatar-upload {
+				position: relative;
+				display: block;
+				width: 100%;
+				height: 100%;
+				cursor: pointer;
+
+				.course-avatar-overlay {
+					position: absolute;
+					top: 0;
+					left: 0;
+					width: 100%;
+					height: 100%;
+					background: rgba(0, 0, 0, 0.5);
+					display: flex;
+					flex-direction: column;
+					align-items: center;
+					justify-content: center;
+					color: white;
+					border-radius: 8px;
+					opacity: 0;
+					transition: opacity 0.3s;
+
+					.anticon {
+						font-size: 24px;
+						margin-bottom: 8px;
+					}
+				}
+
+				&:hover .course-avatar-overlay {
+					opacity: 1;
+				}
+			}
 		}
 
 		.course-meta {
-			margin-top: 2%;
-			display: flex;
-			align-items: center;
-			gap: 2%;
+			margin-top: 16px;
 		}
 	}
 
 	.course-progress-card {
-		margin-bottom: 2%;
+		margin-bottom: 24px;
 	}
 
 	.course-tabs {
@@ -28,9 +66,10 @@
 		padding: 2%;
 		border-radius: 8px;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+		margin-bottom: 24px;
 
 		.level-words {
-			margin-bottom: 3%;
+			margin-bottom: 24px;
 
 			&:last-child {
 				margin-bottom: 0;
@@ -40,7 +79,7 @@
 
 	.course-rating-card {
 		position: sticky;
-		top: 2%;
+		top: 24px;
 		height: fit-content;
 
 		.ant-list-item {

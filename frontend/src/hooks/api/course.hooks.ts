@@ -81,3 +81,29 @@ export const useCourseProgress = (courseId: number | undefined) => {
 		enabled: !!courseId,
 	})
 }
+
+export const useUpdateCourse = () => {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: ({ id, data }: { id: number; data: CourseRequestDTO }) =>
+			courseService.updateCourse(id, data),
+		onSuccess: (_, { id }) => {
+			queryClient.invalidateQueries({ queryKey: ['course-details', id] })
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COURSES })
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER_COURSES })
+		},
+	})
+}
+
+export const useDeleteCourse = () => {
+	const queryClient = useQueryClient()
+
+	return useMutation({
+		mutationFn: (id: number) => courseService.deleteCourse(id),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COURSES })
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER_COURSES })
+		},
+	})
+}
