@@ -259,27 +259,26 @@ export const WordPage = () => {
 												<span>Загрузить изображение</span>
 											</div>
 										)}
-										<div className='upload-button-row'>
-											<label>
-												<Button
-													icon={<UploadOutlined />}
-													size='small'
-													type='primary'
-													style={{
-														background: '#1890ff',
-														borderColor: '#1890ff',
-													}}
-												>
-													Загрузить новое изображение
-												</Button>
-												<input
-													type='file'
-													accept='image/*'
-													onChange={e => handleFileChange(e, 'image')}
-													style={{ display: 'none' }}
-												/>
-											</label>
-										</div>
+									</div>
+									<div className='upload-button-row'>
+										<input
+											type='file'
+											accept='image/*'
+											onChange={e => handleFileChange(e, 'image')}
+											id='image-upload'
+											style={{ display: 'none' }}
+										/>
+										<Button
+											icon={<UploadOutlined />}
+											size='large'
+											type='default'
+											className='upload-button'
+											onClick={() =>
+												document.getElementById('image-upload')?.click()
+											}
+										>
+											Загрузить новое изображение
+										</Button>
 									</div>
 								</div>
 
@@ -298,27 +297,26 @@ export const WordPage = () => {
 												<span>Загрузить аудио</span>
 											</div>
 										)}
-										<div className='upload-button-row'>
-											<label>
-												<Button
-													icon={<UploadOutlined />}
-													size='small'
-													type='primary'
-													style={{
-														background: '#52c41a',
-														borderColor: '#52c41a',
-													}}
-												>
-													Загрузить новое аудио
-												</Button>
-												<input
-													type='file'
-													accept='audio/*'
-													onChange={e => handleFileChange(e, 'audio')}
-													style={{ display: 'none' }}
-												/>
-											</label>
-										</div>
+									</div>
+									<div className='upload-button-row'>
+										<input
+											type='file'
+											accept='audio/*'
+											onChange={e => handleFileChange(e, 'audio')}
+											id='audio-upload'
+											style={{ display: 'none' }}
+										/>
+										<Button
+											icon={<UploadOutlined />}
+											size='large'
+											type='default'
+											className='upload-button'
+											onClick={() =>
+												document.getElementById('audio-upload')?.click()
+											}
+										>
+											Загрузить новое аудио
+										</Button>
 									</div>
 								</div>
 
@@ -337,27 +335,26 @@ export const WordPage = () => {
 												<span>Загрузить видео</span>
 											</div>
 										)}
-										<div className='upload-button-row'>
-											<label>
-												<Button
-													icon={<UploadOutlined />}
-													size='small'
-													type='primary'
-													style={{
-														background: '#722ed1',
-														borderColor: '#722ed1',
-													}}
-												>
-													Загрузить новое видео
-												</Button>
-												<input
-													type='file'
-													accept='video/*'
-													onChange={e => handleFileChange(e, 'video')}
-													style={{ display: 'none' }}
-												/>
-											</label>
-										</div>
+									</div>
+									<div className='upload-button-row'>
+										<input
+											type='file'
+											accept='video/*'
+											onChange={e => handleFileChange(e, 'video')}
+											id='video-upload'
+											style={{ display: 'none' }}
+										/>
+										<Button
+											icon={<UploadOutlined />}
+											size='large'
+											type='default'
+											className='upload-button'
+											onClick={() =>
+												document.getElementById('video-upload')?.click()
+											}
+										>
+											Загрузить новое видео
+										</Button>
 									</div>
 								</div>
 							</>
