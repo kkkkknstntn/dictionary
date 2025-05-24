@@ -1,21 +1,36 @@
 import { queryClient } from '@/app/QueryProvider'
 import { useLearningMaterial } from '@/hooks/api/learn.hooks'
 import { useIsCourseAuthor } from '@/hooks/api/level-extra.hooks'
+import { useDeleteLevel, useUpdateLevel } from '@/hooks/api/level.hooks'
 import { useLevelProgress, useWordProgress } from '@/hooks/api/progress.hooks'
 import { useCurrentUser } from '@/hooks/api/user.hooks'
-import { useLevelDetails, useWordsByLevel } from '@/hooks/api/word.hooks'
+import {
+	useDeleteWord,
+	useLevelDetails,
+	useWordsByLevel,
+} from '@/hooks/api/word.hooks'
 import { QUERY_KEYS } from '@/shared/constants/queryKeys'
 import type { LearningType } from '@/shared/types/learn'
-import { ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons'
+import {
+	ArrowLeftOutlined,
+	CloseOutlined,
+	DeleteOutlined,
+	EditOutlined,
+	PlusOutlined,
+	SaveOutlined,
+} from '@ant-design/icons'
 import {
 	Button,
 	Card,
 	Col,
+	Input,
 	List,
+	message,
 	Progress,
 	Row,
 	Select,
 	Skeleton,
+	Space,
 	Typography,
 } from 'antd'
 import { useState } from 'react'
@@ -59,6 +74,12 @@ export const LevelPage = () => {
 	const { data: words, isLoading: wordsLoading } = useWordsByLevel(levelId)
 	const { data: progress } = useLevelProgress(levelId)
 	const { data: level } = useLevelDetails(levelId)
+	const [isEditing, setIsEditing] = useState(false)
+	const [editedTitle, setEditedTitle] = useState('')
+	const deleteWord = useDeleteWord()
+	const updateLevel = useUpdateLevel()
+	const deleteLevel = useDeleteLevel()
+
 	const {
 		data: material,
 		isLoading,
@@ -106,18 +127,119 @@ export const LevelPage = () => {
 		navigate(`/word/${wordId}`)
 	}
 
+	const handleStartEditing = () => {
+		setEditedTitle(level?.title || '')
+		setIsEditing(true)
+	}
+
+	const handleCancelEditing = () => {
+		setIsEditing(false)
+		setEditedTitle(level?.title || '')
+	}
+
+	const handleSave = async () => {
+		if (!levelId || !level?.courseId) {
+			message.error('Не удалось обновить уровень')
+			return
+		}
+
+		try {
+			console.log('Updating level:', {
+				levelId,
+				title: editedTitle,
+				courseId: level.courseId,
+			})
+			await updateLevel.mutateAsync({
+				id: levelId,
+				data: {
+					name: editedTitle,
+					courseId: level.courseId,
+				},
+			})
+			setIsEditing(false)
+			message.success('Уровень успешно обновлен')
+		} catch {
+			message.error('Ошибка при обновлении уровня')
+		}
+	}
+
+	const handleDeleteLevel = async () => {
+		if (!levelId) {
+			message.error('Не удалось удалить уровень')
+			return
+		}
+
+		if (window.confirm('Вы уверены, что хотите удалить этот уровень?')) {
+			try {
+				console.log('Deleting level:', levelId)
+				await deleteLevel.mutateAsync(levelId)
+				navigate(-1)
+			} catch {
+				message.error('Ошибка при удалении уровня')
+			}
+		}
+	}
+
+	const handleDeleteWord = async (wordId: number, event: React.MouseEvent) => {
+		event.stopPropagation()
+
+		try {
+			console.log('Deleting word:', wordId)
+			await deleteWord.mutateAsync(wordId)
+			message.success('Слово успешно удалено')
+		} catch {
+			message.error('Ошибка при удалении слова')
+		}
+	}
+
 	return (
 		<div className='level-page'>
 			<Card className='learning-card'>
 				{!started ? (
 					<>
 						<div className='level-header'>
-							<Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
-								Назад
-							</Button>
-							<Title level={3}>
-								Уровень {level?.orderNumber} {level?.title}
-							</Title>
+							<Space>
+								<Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
+									Назад
+								</Button>
+								{isEditing ? (
+									<Space>
+										<Input
+											value={editedTitle}
+											onChange={e => setEditedTitle(e.target.value)}
+											style={{ width: 300 }}
+										/>
+										<Button
+											type='primary'
+											icon={<SaveOutlined />}
+											onClick={handleSave}
+										/>
+										<Button
+											icon={<CloseOutlined />}
+											onClick={handleCancelEditing}
+										/>
+									</Space>
+								) : (
+									<Space>
+										<Title level={3}>
+											Уровень {level?.orderNumber} {level?.title}
+										</Title>
+										{isAuthor && (
+											<Space>
+												<Button
+													icon={<EditOutlined />}
+													onClick={handleStartEditing}
+												/>
+												<Button
+													danger
+													icon={<DeleteOutlined />}
+													onClick={handleDeleteLevel}
+												/>
+											</Space>
+										)}
+									</Space>
+								)}
+							</Space>
 						</div>
 
 						<Row gutter={24}>
@@ -206,8 +328,21 @@ export const LevelPage = () => {
 						dataSource={words}
 						renderItem={w => (
 							<List.Item
-								onClick={() => handleWordClick(w.id)}
-								style={{ cursor: 'pointer' }}
+								onClick={() => !isEditing && handleWordClick(w.id)}
+								style={{ cursor: isEditing ? 'default' : 'pointer' }}
+								actions={
+									isEditing
+										? [
+												<Button
+													key='delete'
+													type='text'
+													danger
+													icon={<DeleteOutlined />}
+													onClick={e => handleDeleteWord(w.id, e)}
+												/>,
+										  ]
+										: undefined
+								}
 							>
 								<div className='word-list-item'>
 									<div className='word-content'>
@@ -222,7 +357,7 @@ export const LevelPage = () => {
 				</Card>
 			)}
 
-			{isAuthor && !started && (
+			{isAuthor && !started && isEditing && (
 				<Button
 					type='dashed'
 					icon={<PlusOutlined />}

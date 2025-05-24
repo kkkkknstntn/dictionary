@@ -1,3 +1,4 @@
+import { levelApi } from '@/services/api/level.api'
 import { levelService } from '@/services/api/level.service'
 import { QUERY_KEYS } from '@/shared/constants/queryKeys'
 import type { LevelRequestDTO } from '@/shared/types/level'
@@ -30,15 +31,21 @@ export const useCreateLevel = () => {
 	})
 }
 
-export const useUpdateLevel = (id: number) => {
+export const useUpdateLevel = () => {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: (data: LevelRequestDTO) => levelService.updateLevel(id, data),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEVELS })
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COURSES })
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEVEL_DETAILS(id) })
+		mutationFn: ({
+			id,
+			data,
+		}: {
+			id: number
+			data: { name: string; courseId: number }
+		}) => levelApi.updateLevel(id, data),
+		onSuccess: (_, { id }) => {
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.LEVEL_DETAILS(id),
+			})
 		},
 	})
 }
@@ -47,9 +54,11 @@ export const useDeleteLevel = () => {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: (id: number) => levelService.deleteLevel(id),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.COURSES })
+		mutationFn: (id: number) => levelApi.deleteLevel(id),
+		onSuccess: (_, id) => {
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.LEVEL_DETAILS(id),
+			})
 		},
 	})
 }

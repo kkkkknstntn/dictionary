@@ -16,7 +16,6 @@ authAxios.interceptors.request.use(config => {
 		config.headers.Authorization = `Bearer ${accessToken}`
 	}
 	if (config.url === '/api/users/me' && !localStorage.getItem('accessToken')) {
-		// Тут мутня какая-то
 		return Promise.reject(new Error('No access token'))
 	}
 	return config
