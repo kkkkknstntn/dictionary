@@ -14,4 +14,5 @@ export type LevelResponseDTO = {
 	courseId: number
 	words: WordResponseDTO[]
 	course?: CourseResponseDTO
+	wordsCount: number
 }

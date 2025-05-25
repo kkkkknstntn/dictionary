@@ -1,4 +1,4 @@
-import { UserResponseDTO } from './user'
+import type { UserResponseDTO } from './user'
 
 export type ProgressAverageDTO = {
 	user: UserResponseDTO

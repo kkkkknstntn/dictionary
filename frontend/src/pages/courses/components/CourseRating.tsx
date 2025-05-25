@@ -1,5 +1,5 @@
 import { useCourseProgressUsers } from '@/hooks/api/course.hooks'
-import { ProgressAverageDTO } from '@/shared/types/progress'
+import type { ProgressAverageDTO } from '@/shared/types/progress'
 import { TrophyOutlined } from '@ant-design/icons'
 import { List, Skeleton, Typography } from 'antd'
 

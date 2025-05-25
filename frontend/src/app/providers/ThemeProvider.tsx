@@ -1,6 +1,8 @@
-import { THEMES, ThemeType } from '@/shared/theme/theme'
+import type { ThemeType } from '@/shared/theme/theme'
+import { THEMES } from '@/shared/theme/theme'
 import { ConfigProvider } from 'antd'
-import { ReactNode, useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 
 interface ThemeProviderProps {
 	children: ReactNode
@@ -22,12 +24,6 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 			setCurrentTheme(prefersDark ? 'dark' : 'light')
 		}
 	}, [])
-
-	const toggleTheme = () => {
-		const newTheme = currentTheme === 'light' ? 'dark' : 'light'
-		setCurrentTheme(newTheme)
-		localStorage.setItem('theme', newTheme)
-	}
 
 	return (
 		<ConfigProvider theme={THEMES[currentTheme]}>{children}</ConfigProvider>

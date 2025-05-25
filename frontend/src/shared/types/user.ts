@@ -12,4 +12,5 @@ export type UserResponseDTO = {
 	roles: string[]
 	createdAt: string
 	courses?: CourseResponseDTO[]
+	imagePath?: string
 }
