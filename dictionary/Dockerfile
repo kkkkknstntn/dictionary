@@ -22,7 +22,8 @@ FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /opt/app
 
-# Копирование собранного JAR файла
-COPY --from=builder /opt/app/build/libs/*.jar /opt/app/app.jar
+# Копирование собранного JAR файла в директорию
+COPY --from=builder /opt/app/build/libs/*.jar /opt/app/
 
+# Указание JAR файла для запуска
 ENTRYPOINT ["java", "-jar", "/opt/app/app.jar"]
