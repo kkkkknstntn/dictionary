@@ -1,5 +1,6 @@
 import { useIsUserInCourse, useJoinCourse } from '@/hooks/api/course.hooks'
 import { Button, notification } from 'antd'
+import './JoinCourseButton.scss'
 
 type Props = {
 	courseId: number
@@ -25,12 +26,23 @@ export const JoinCourseButton = ({ courseId }: Props) => {
 	}
 
 	if (isUserInCourse) {
-		return <Button disabled>Вы уже подписаны на курс</Button>
+		return (
+			<Button disabled className='join-button'>
+				<span className='full-label'>Вы уже подписаны на курс</span>
+				<span className='short-label'>Подписаны</span>
+			</Button>
+		)
 	}
 
 	return (
-		<Button type='primary' loading={isPending} onClick={handleJoin}>
-			Присоединиться
+		<Button
+			type='primary'
+			loading={isPending}
+		 onClick={handleJoin}
+			className='join-button'
+		>
+			<span className='full-label'>Присоединиться</span>
+			<span className='short-label'>Подписаться</span>
 		</Button>
 	)
 }

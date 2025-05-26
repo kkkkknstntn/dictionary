@@ -203,9 +203,9 @@ export const WordPage = () => {
 
 					<div className='word-info'>
 						<div className='word-section'>
-							<Title level={4} className='section-title'>
+							{/* <Title level={4} className='section-title'>
 								Слово
-							</Title>
+							</Title> */}
 							{isEditing ? (
 								<Input
 									value={editedWord}
@@ -218,9 +218,9 @@ export const WordPage = () => {
 						</div>
 
 						<div className='definition-section'>
-							<Title level={4} className='section-title'>
+							{/* <Title level={4} className='section-title'>
 								Определение
-							</Title>
+							</Title> */}
 							{isEditing ? (
 								<TextArea
 									value={editedDefinition}
@@ -283,9 +283,9 @@ export const WordPage = () => {
 								</div>
 
 								<div className='media-item'>
-									<Title level={4} className='section-title'>
+									{/* <Title level={4} className='section-title'>
 										Аудио
-									</Title>
+									</Title> */}
 									<div className='media-content'>
 										{word.audioPath ? (
 											<audio controls src={word.audioPath}>
@@ -362,9 +362,9 @@ export const WordPage = () => {
 							<>
 								{word.imagePath && (
 									<div className='media-item'>
-										<Title level={4} className='section-title'>
+										{/* <Title level={4} className='section-title'>
 											Изображение
-										</Title>
+										</Title> */}
 										<img
 											src={word.imagePath}
 											alt={word.word}
@@ -375,9 +375,9 @@ export const WordPage = () => {
 
 								{word.audioPath && (
 									<div className='media-item'>
-										<Title level={4} className='section-title'>
+										{/* <Title level={4} className='section-title'>
 											Аудио
-										</Title>
+										</Title> */}
 										<audio controls src={word.audioPath}>
 											Ваш браузер не поддерживает аудио элемент.
 										</audio>
@@ -386,9 +386,9 @@ export const WordPage = () => {
 
 								{word.videoPath && (
 									<div className='media-item'>
-										<Title level={4} className='section-title'>
+										{/* <Title level={4} className='section-title'>
 											Видео
-										</Title>
+										</Title> */}
 										<video controls src={word.videoPath}>
 											Ваш браузер не поддерживает видео элемент.
 										</video>

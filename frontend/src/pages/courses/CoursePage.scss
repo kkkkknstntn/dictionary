@@ -105,6 +105,27 @@
 	}
 }
 
+.course-title-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 8px;
+
+	.course-actions {
+		display: flex;
+		gap: 8px;
+	}
+}
+
+.course-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin-top: 16px;
+}
+
 .course-progress {
 	.progress-content {
 		display: flex;
@@ -118,5 +139,39 @@
 			font-size: 16px;
 			max-width: 400px;
 		}
+	}
+}
+
+.author-tag .full-label {
+	display: inline;
+}
+
+.author-tag .short-label {
+	display: none;
+}
+
+.join-button .full-label {
+	display: inline;
+}
+
+.join-button .short-label {
+	display: none;
+}
+
+@media (max-width: 576px) {
+	.author-tag .full-label {
+		display: none;
+	}
+
+	.author-tag .short-label {
+		display: inline;
+	}
+
+	.join-button .full-label {
+		display: none;
+	}
+
+	.join-button .short-label {
+		display: inline;
 	}
 }

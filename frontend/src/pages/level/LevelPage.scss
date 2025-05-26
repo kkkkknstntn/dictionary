@@ -136,3 +136,9 @@
 		height: 40px;
 	}
 }
+
+@media (max-width: 576px) {
+	.word-definition {
+		display: none;
+	}
+}

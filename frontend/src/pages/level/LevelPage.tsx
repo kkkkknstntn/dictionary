@@ -346,12 +346,14 @@ export const LevelPage = () => {
 										: undefined
 								}
 							>
-								<div className='word-list-item'>
-									<div className='word-content'>
-										<strong>{w.word}</strong>&nbsp;—&nbsp;{w.definition}
-									</div>
-									<WordProgress wordId={w.id} />
+							<div className='word-list-item'>
+								<div className='word-content'>
+									<strong className='word-text'>{w.word}</strong>
+									<span className='word-definition'> — {w.definition}</span>
 								</div>
+								<WordProgress wordId={w.id} />
+							</div>
+
 							</List.Item>
 						)}
 						style={{ maxHeight: 400, overflowY: 'auto' }}
