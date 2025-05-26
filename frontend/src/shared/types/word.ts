@@ -11,7 +11,7 @@ export interface WordDTO {
 
 export interface LevelDTO {
 	id: number
-	title: string
+	name: string
 	orderNumber: number
 	courseId: number
 }

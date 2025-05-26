@@ -74,6 +74,27 @@
 	}
 }
 
+.mobile-links {
+	display: flex;
+	gap: 16px;
+
+	a {
+		color: #2d3436;
+		font-size: 16px;
+		font-weight: 500;
+		text-decoration: none;
+
+		&.active {
+			color: #ff6b35;
+		}
+
+		&:hover {
+			color: #ff6b35;
+		}
+	}
+}
+
+
 @media (max-width: 576px) {
 	.main-layout {
 		.header {

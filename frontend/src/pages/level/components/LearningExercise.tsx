@@ -36,7 +36,6 @@ export const LearningExercise = ({
 	const isWordToImage = material?.type === 'WORD_TO_IMAGE'
 	const isImageToWord = material?.type === 'IMAGE_TO_WORD'
 
-	// Реф для управления аудиоплеером
 	const audioPlayerRef = useRef<{ play: () => void; stop: () => void }>(null)
 
 	const stopAudio = () => {
@@ -44,7 +43,7 @@ export const LearningExercise = ({
 	}
 
 	const handleAnswer = (answer: string) => {
-		if (!material || selected) return // уже ответили
+		if (!material || selected) return // если уже ответили, игнорируем
 
 		stopAudio()
 		setSelected(answer)
@@ -53,9 +52,11 @@ export const LearningExercise = ({
 			{ wordId: material.targetWord.id, answer, type: material.type },
 			{
 				onSuccess: res => {
+					// СРАЗУ ставим правильный финальный isCorrect
 					setIsCorrect(res.correct)
 
 					setTimeout(() => {
+						// сбрасываем после задержки
 						setSelected(null)
 						setIsCorrect(null)
 						onNext()
@@ -79,12 +80,10 @@ export const LearningExercise = ({
 				</Button>
 			</div>
 
-			{/* AUDIO_TO_WORD → аудио-плеер */}
 			{isAudioToWord && (
 				<AudioPlayer ref={audioPlayerRef} src={material?.targetWord.audioPath} />
 			)}
 
-			{/* IMAGE_TO_WORD → картинка */}
 			{isImageToWord && (
 				<div className='target-wrapper'>
 					<img
@@ -95,45 +94,41 @@ export const LearningExercise = ({
 				</div>
 			)}
 
-			{/* WORD_TO_IMAGE → показываем само слово */}
-			{isWordToImage && (
-				<div className='target-word'>
-					<h2>{material?.targetWord.word}</h2>
-				</div>
-			)}
-
-			{/* Варианты ответа */}
 			<div className={`options-grid ${screens.md ? 'desktop' : 'mobile'}`}>
-				{material?.options.map(option => {
-					let state: 'correct' | 'wrong' | undefined
-					if (selected && option === selected) {
-						state = isCorrect ? 'correct' : 'wrong'
-					}
+	{material?.options.map(option => {
+		let state // undefined, 'correct' или 'wrong'
 
-					return (
-						<Button
-							key={option}
-							size='large'
-							className='option-button'
-							data-state={state}
-							disabled={!!selected}
-							onClick={() => handleAnswer(option)}
-						>
-							{isWordToImage ? (
-								<img src={option} alt='Вариант' className='image-option' />
-							) : (
-								option
-							)}
-						</Button>
-					)
-				})}
-			</div>
+		if (selected === option && isCorrect !== null) {
+			state = isCorrect ? 'correct' : 'wrong'
+		}
+
+		return (
+			<Button
+				key={option}
+				size='large'
+				className='option-button'
+				data-state={state}
+				disabled={!!selected}
+				onClick={() => handleAnswer(option)}
+			>
+				{isWordToImage ? (
+					<img src={option} alt='Вариант' className='image-option' />
+				) : (
+					option
+				)}
+			</Button>
+		)
+	})}
+</div>
 
 			<div className='exercise-footer'>
-				<Button icon={<ReloadOutlined />} onClick={() => {
-					stopAudio()
-					onRestart()
-				}}>
+				<Button
+					icon={<ReloadOutlined />}
+					onClick={() => {
+						stopAudio()
+						onRestart()
+					}}
+				>
 					Перезапустить уровень
 				</Button>
 			</div>
