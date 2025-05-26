@@ -361,7 +361,7 @@ export const LevelPage = () => {
 				</Card>
 			)}
 
-			{isAuthor && !started && isEditing && (
+			{isAuthor && !started && (
 				<Button
 					type='dashed'
 					icon={<PlusOutlined />}
