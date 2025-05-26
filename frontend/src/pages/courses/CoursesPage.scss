@@ -1,25 +1,28 @@
 .courses-page {
-	.title {
-		margin-bottom: 24px;
-	}
+  .courses-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
 
-	.courses-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 24px;
-		flex-wrap: wrap;
-		gap: 16px;
+    .courses-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
 
-		.courses-actions {
-			display: flex;
-			gap: 16px;
-			align-items: center;
-			flex-wrap: wrap;
+      .search-input {
+        width: 300px;
+      }
+    }
 
-			.search-input {
-				width: 300px;
-			}
-		}
-	}
+    @media (max-width: 576px) {
+      /* Подвинуть заголовок «Все курсы» вправо */
+      .ant-typography {
+       visibility: hidden;
+      }
+    }
+  }
 }

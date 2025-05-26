@@ -6,9 +6,10 @@ type Props = {
 	open: boolean
 	courseId: number
 	onClose: () => void
+	onSuccess: () => void // <<< добавили сюда
 }
 
-export const AddLevelModal = ({ open, courseId, onClose }: Props) => {
+export const AddLevelModal = ({ open, courseId, onClose, onSuccess }: Props) => {
 	const [form] = Form.useForm<Omit<LevelRequestDTO, 'courseId'>>()
 	const { mutate, isPending } = useCreateLevel()
 
@@ -19,6 +20,7 @@ export const AddLevelModal = ({ open, courseId, onClose }: Props) => {
 				{
 					onSuccess: () => {
 						notification.success({ message: 'Уровень создан' })
+						onSuccess() // <<< вызываем родительский перезапрос
 						onClose()
 						form.resetFields()
 					},

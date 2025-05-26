@@ -44,7 +44,7 @@ const { TextArea } = Input
 
 export const CoursePage = () => {
 	const { id } = useParams<{ id: string }>()
-	const { data: course, isLoading } = useCourseDetails(Number(id))
+	const { data: course, isLoading, refetch } = useCourseDetails(Number(id))
 	const { data: currentUser } = useCurrentUser()
 	const isAuthor = currentUser?.username === course?.author.username
 	const [levelModalOpen, setLevelModalOpen] = useState(false)
@@ -259,6 +259,7 @@ export const CoursePage = () => {
 									open={levelModalOpen}
 									courseId={Number(id)}
 									onClose={() => setLevelModalOpen(false)}
+									onSuccess={() => refetch()} // 👈 передаём refetch сюда
 								/>
 							</TabPane>
 

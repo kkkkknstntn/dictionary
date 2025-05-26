@@ -222,7 +222,7 @@ export const LevelPage = () => {
 								) : (
 									<Space>
 										<Title level={3}>
-											Уровень {level?.orderNumber} {level?.title}
+											Уровень {level?.orderNumber} {level?.name}
 										</Title>
 										{isAuthor && (
 											<Space>
@@ -301,17 +301,19 @@ export const LevelPage = () => {
 					<Skeleton active />
 				) : (
 					material && (
-						<>
+  <>
+							{(material.type === 'WORD_TO_IMAGE') && (
 							<Title level={3} className='exercise-title'>
 								{material.targetWord.word}
 							</Title>
+							)}
 
 							<LearningExercise
-								material={material}
-								onNext={refetch}
-								onRestart={restartHandler}
-								levelId={levelId}
-								setStarted={setStarted}
+							material={material}
+							onNext={refetch}
+							onRestart={restartHandler}
+							levelId={levelId}
+							setStarted={setStarted}
 							/>
 						</>
 					)
