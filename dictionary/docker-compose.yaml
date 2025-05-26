@@ -105,20 +105,20 @@ services:
       - ./conf/courses-template.json:/usr/share/logstash/templates/courses-template.json
     networks:
       - app-network
-  redis:
-    image: redis:alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - app-network
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 5s
-      timeout: 3s
-      retries: 3
+#  redis:
+#    image: redis:alpine
+#    container_name: redis
+#    ports:
+#      - "6379:6379"
+#    volumes:
+#      - redis_data:/data
+#    networks:
+#      - app-network
+#    healthcheck:
+#      test: [ "CMD", "redis-cli", "ping" ]
+#      interval: 5s
+#      timeout: 3s
+#      retries: 3
 
 volumes:
   pgdata:
