@@ -12,12 +12,8 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
-			"https://sgucrs.ru",
-			"https://frontend"
-                        //"http://localhost:3000",
-                        //"http://frontend",
-                        //"http://nginx-proxy",
-                        //"http://sgucrs.ru"
+			        "https://sgucrs.ru",
+			        "https://frontend"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*")
