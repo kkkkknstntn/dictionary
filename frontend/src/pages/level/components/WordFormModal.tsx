@@ -1,4 +1,5 @@
 import { useCreateWord } from '@/hooks/api/word.hooks'
+import { useEffect } from 'react'
 import type { WordRequestDTO } from '@/shared/types/word'
 import { UploadOutlined } from '@ant-design/icons'
 import { Button, Form, Input, Modal, Switch, Upload, notification } from 'antd'
@@ -12,6 +13,12 @@ type Props = {
 export const WordFormModal = ({ open, onClose, levelId }: Props) => {
 	const [form] = Form.useForm<Omit<WordRequestDTO, 'levelId'>>()
 	const { mutate, isPending } = useCreateWord()
+
+	useEffect(() => {
+		if (open) {
+			form.resetFields()
+		}
+	}, [open, form])
 
 	const handleOk = () => {
 		form.validateFields().then(values => {

@@ -105,13 +105,11 @@ export const CoursePage = () => {
 		if (e.target.files && e.target.files[0]) {
 			const file = e.target.files[0]
 			setFileList([file])
-			// Создаем URL для превью
 			const url = URL.createObjectURL(file)
 			setPreviewUrl(url)
 		}
 	}
 
-	// Очищаем URL при размонтировании компонента
 	useEffect(() => {
 		return () => {
 			if (previewUrl) {
@@ -133,17 +131,9 @@ export const CoursePage = () => {
 									{isEditing ? (
 										<label className='course-avatar-upload'>
 											{previewUrl ? (
-												<img
-													src={previewUrl}
-													alt='Preview'
-													className='course-avatar'
-												/>
+												<img src={previewUrl} alt='Preview' className='course-avatar' />
 											) : course?.imagePath ? (
-												<img
-													src={course.imagePath}
-													alt={course.title}
-													className='course-avatar'
-												/>
+												<img src={course.imagePath} alt={course.title} className='course-avatar' />
 											) : (
 												<Avatar
 													size={64}
@@ -164,11 +154,7 @@ export const CoursePage = () => {
 											/>
 										</label>
 									) : course?.imagePath ? (
-										<img
-											src={course.imagePath}
-											alt={course.title}
-											className='course-avatar'
-										/>
+										<img src={course.imagePath} alt={course.title} className='course-avatar' />
 									) : (
 										<Avatar
 											size={64}
@@ -179,61 +165,55 @@ export const CoursePage = () => {
 									)}
 								</div>
 								<div style={{ flex: 1 }}>
-									<Space direction='vertical' style={{ width: '100%' }}>
-										<Space>
-											{isEditing ? (
-												<Input
-													value={editedTitle}
-													onChange={e => setEditedTitle(e.target.value)}
-													style={{ fontSize: '24px', fontWeight: 'bold' }}
-												/>
-											) : (
-												<Title level={2}>{course?.title}</Title>
-											)}
+									<div className='course-title-row'>
+										{isEditing ? (
+											<Input
+												value={editedTitle}
+												onChange={e => setEditedTitle(e.target.value)}
+												style={{ fontSize: '24px', fontWeight: 'bold' }}
+											/>
+										) : (
+											<Title level={2} style={{ margin: 0 }}>
+												{course?.title}
+											</Title>
+										)}
+										<div className='course-actions'>
 											{isAuthor && !isEditing && (
-												<Space>
-													<Button
-														icon={<EditOutlined />}
-														onClick={handleStartEditing}
-													/>
-													<Button
-														danger
-														icon={<DeleteOutlined />}
-														onClick={handleDeleteCourse}
-													/>
-												</Space>
+												<>
+													<Button icon={<EditOutlined />} onClick={handleStartEditing} />
+													<Button danger icon={<DeleteOutlined />} onClick={handleDeleteCourse} />
+												</>
 											)}
 											{isEditing && (
-												<Space>
+												<>
 													<Button
 														type='primary'
 														icon={<SaveOutlined />}
 														onClick={handleSave}
 														loading={updateCourse.isPending}
 													/>
-													<Button
-														icon={<CloseOutlined />}
-														onClick={handleCancelEditing}
-													/>
-												</Space>
+													<Button icon={<CloseOutlined />} onClick={handleCancelEditing} />
+												</>
 											)}
-										</Space>
-
-										{isEditing ? (
-											<TextArea
-												value={editedDescription}
-												onChange={e => setEditedDescription(e.target.value)}
-												rows={4}
-											/>
-										) : (
-											<Paragraph>{course?.description}</Paragraph>
-										)}
-
-										<div className='course-meta'>
-											<Tag color='blue'>Автор: {course?.author.username}</Tag>
-											<JoinCourseButton courseId={Number(id)} />
 										</div>
-									</Space>
+									</div>
+
+									{isEditing ? (
+										<TextArea
+											value={editedDescription}
+											onChange={e => setEditedDescription(e.target.value)}
+											rows={4}
+										/>
+									) : (
+										<Paragraph>{course?.description}</Paragraph>
+									)}
+
+									<div className='course-meta'>
+										<Tag color='blue' className='author-tag'>
+											<span className='full-label'>Автор:</span> {course?.author.username}
+										</Tag>
+										<JoinCourseButton courseId={Number(id)} />
+									</div>
 								</div>
 							</Space>
 						</Card>
@@ -259,7 +239,7 @@ export const CoursePage = () => {
 									open={levelModalOpen}
 									courseId={Number(id)}
 									onClose={() => setLevelModalOpen(false)}
-									onSuccess={() => refetch()} // 👈 передаём refetch сюда
+									onSuccess={() => refetch()}
 								/>
 							</TabPane>
 

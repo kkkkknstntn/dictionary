@@ -124,4 +124,50 @@
 			border-radius: 4px;
 			object-fit: contain;
 	}
+	.word-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 24px;
+
+	// Левая группа кнопок (вернуться к курсу и уровню)
+	> div:first-child {
+		display: flex;
+		gap: 12px;
+		flex-wrap: nowrap;
+	}
+
+	// Правая группа кнопок (назад, далее, редактирование, удаление)
+	> div:last-child {
+		display: flex;
+		gap: 8px;
+		flex-wrap: nowrap;
+		align-items: center;
+	}
+
+	// Медиа-запрос для маленьких экранов
+	@media (max-width: 480px) {
+		flex-wrap: wrap;
+
+		> div:first-child {
+			flex-direction: column;
+			gap: 8px;
+			flex: 1 1 100%;
+			margin-bottom: 12px;
+		}
+
+		> div:last-child {
+			flex-wrap: wrap;
+			justify-content: center;
+			flex: 1 1 100%;
+
+			button {
+				flex: 1 1 45%;
+				min-width: unset;
+				margin-bottom: 8px;
+			}
+		}
+	}
+}
+
 }
