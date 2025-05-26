@@ -1,0 +1,17 @@
+.join-button .full-label {
+	display: inline;
+}
+
+.join-button .short-label {
+	display: none;
+}
+
+@media (max-width: 576px) {
+	.join-button .full-label {
+		display: none;
+	}
+
+	.join-button .short-label {
+		display: inline;
+	}
+}
