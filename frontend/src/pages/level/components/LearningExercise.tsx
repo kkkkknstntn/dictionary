@@ -2,13 +2,13 @@ import { useCheckAnswer } from '@/hooks/api/learn.hooks'
 import type { LearningMaterialDTO } from '@/shared/types/learn'
 import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons'
 import { Button, Grid } from 'antd'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AudioPlayer } from './AudioPlayer'
 import './LearningExercise.scss'
 
 const { useBreakpoint } = Grid
-const FEEDBACK_DELAY = 900 // - время, пока подсветка видна (мс)
+const FEEDBACK_DELAY = 900 // время, пока подсветка видна (мс)
 
 interface Props {
 	material?: LearningMaterialDTO
@@ -29,18 +29,24 @@ export const LearningExercise = ({
 	const navigate = useNavigate()
 	const { mutate: checkAnswer } = useCheckAnswer()
 
-	/** выбранный пользователем вариант */
 	const [selected, setSelected] = useState<string | null>(null)
-	/** правильность последнего ответа */
 	const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
 
 	const isAudioToWord = material?.type === 'AUDIO_TO_WORD'
 	const isWordToImage = material?.type === 'WORD_TO_IMAGE'
 	const isImageToWord = material?.type === 'IMAGE_TO_WORD'
 
+	// Реф для управления аудиоплеером
+	const audioPlayerRef = useRef<{ play: () => void; stop: () => void }>(null)
+
+	const stopAudio = () => {
+		audioPlayerRef.current?.stop()
+	}
+
 	const handleAnswer = (answer: string) => {
 		if (!material || selected) return // уже ответили
 
+		stopAudio()
 		setSelected(answer)
 
 		checkAnswer(
@@ -49,7 +55,6 @@ export const LearningExercise = ({
 				onSuccess: res => {
 					setIsCorrect(res.correct)
 
-					// ждём, чтобы пользователь увидел цвет/подсказку, и берём след. вопрос
 					setTimeout(() => {
 						setSelected(null)
 						setIsCorrect(null)
@@ -61,6 +66,7 @@ export const LearningExercise = ({
 	}
 
 	const handleBack = () => {
+		stopAudio()
 		setStarted(false)
 		navigate(`/level/${levelId}`)
 	}
@@ -73,10 +79,12 @@ export const LearningExercise = ({
 				</Button>
 			</div>
 
-			{/* 1. Аудио-подсказка (AUDIO_TO_WORD) */}
-			{isAudioToWord && <AudioPlayer src={material?.targetWord.audioPath} />}
+			{/* AUDIO_TO_WORD → аудио-плеер */}
+			{isAudioToWord && (
+				<AudioPlayer ref={audioPlayerRef} src={material?.targetWord.audioPath} />
+			)}
 
-			{/* 2. Целевая картинка (IMAGE_TO_WORD) */}
+			{/* IMAGE_TO_WORD → картинка */}
 			{isImageToWord && (
 				<div className='target-wrapper'>
 					<img
@@ -87,10 +95,16 @@ export const LearningExercise = ({
 				</div>
 			)}
 
-			{/* 3. Варианты ответа */}
+			{/* WORD_TO_IMAGE → показываем само слово */}
+			{isWordToImage && (
+				<div className='target-word'>
+					<h2>{material?.targetWord.word}</h2>
+				</div>
+			)}
+
+			{/* Варианты ответа */}
 			<div className={`options-grid ${screens.md ? 'desktop' : 'mobile'}`}>
 				{material?.options.map(option => {
-					/** подсвечиваем только выбранную кнопку */
 					let state: 'correct' | 'wrong' | undefined
 					if (selected && option === selected) {
 						state = isCorrect ? 'correct' : 'wrong'
@@ -102,7 +116,7 @@ export const LearningExercise = ({
 							size='large'
 							className='option-button'
 							data-state={state}
-							disabled={!!selected} // блокируем клики, пока показываем фидбек
+							disabled={!!selected}
 							onClick={() => handleAnswer(option)}
 						>
 							{isWordToImage ? (
@@ -116,7 +130,10 @@ export const LearningExercise = ({
 			</div>
 
 			<div className='exercise-footer'>
-				<Button icon={<ReloadOutlined />} onClick={onRestart}>
+				<Button icon={<ReloadOutlined />} onClick={() => {
+					stopAudio()
+					onRestart()
+				}}>
 					Перезапустить уровень
 				</Button>
 			</div>

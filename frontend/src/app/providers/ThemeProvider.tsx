@@ -21,7 +21,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 			const prefersDark = window.matchMedia(
 				'(prefers-color-scheme: dark)'
 			).matches
-			setCurrentTheme(prefersDark ? 'dark' : 'light')
+			setCurrentTheme(prefersDark ? 'light' : 'light')
 		}
 	}, [])
 
