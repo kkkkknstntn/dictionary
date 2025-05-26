@@ -15,18 +15,17 @@ import {
 	UploadOutlined,
 } from '@ant-design/icons'
 import {
-	Avatar,
-	Button,
-	Card,
-	Col,
-	Input,
-	message,
-	Row,
-	Skeleton,
-	Space,
-	Tabs,
-	Tag,
-	Typography,
+  Avatar,
+  Button,
+  Card,
+  Col,
+  Input,
+  message,
+  Row,
+  Skeleton,
+  Tag,
+  Tabs,      // <-- вот этот импорт добавь
+  Typography,
 } from 'antd'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -39,7 +38,6 @@ import { LevelList } from './components/LevelList'
 import { WordList } from './components/WordList'
 
 const { Title, Paragraph } = Typography
-const { TabPane } = Tabs
 const { TextArea } = Input
 
 export const CoursePage = () => {
@@ -126,7 +124,8 @@ export const CoursePage = () => {
 				<Row gutter={24}>
 					<Col xs={24} lg={18}>
 						<Card className='course-header'>
-							<Space align='start' size='large'>
+							{/* Заменили Space на flex-контейнер */}
+							<div className='course-flex-container'>
 								<div className='course-avatar-container'>
 									{isEditing ? (
 										<label className='course-avatar-upload'>
@@ -215,12 +214,12 @@ export const CoursePage = () => {
 										<JoinCourseButton courseId={Number(id)} />
 									</div>
 								</div>
-							</Space>
+							</div>
 						</Card>
 
 						<Tabs defaultActiveKey='1' className='course-tabs'>
-							<TabPane tab='Уровни' key='1'>
-								{isAuthor && isEditing && (
+							<Tabs.TabPane tab='Уровни' key='1'>
+								{isAuthor && (
 									<Button
 										type='dashed'
 										icon={<PlusOutlined />}
@@ -241,16 +240,16 @@ export const CoursePage = () => {
 									onClose={() => setLevelModalOpen(false)}
 									onSuccess={() => refetch()}
 								/>
-							</TabPane>
+							</Tabs.TabPane>
 
-							<TabPane tab='Слова' key='2'>
+							<Tabs.TabPane tab='Слова' key='2'>
 								{course?.levels.map(level => (
 									<div key={level.id} className='level-words'>
 										<Title level={3}>{level.name}</Title>
 										<WordList levelId={level.id} />
 									</div>
 								))}
-							</TabPane>
+							</Tabs.TabPane>
 						</Tabs>
 
 						<Card className='course-progress-card' style={{ marginTop: 24 }}>

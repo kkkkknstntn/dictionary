@@ -26,3 +26,29 @@
     }
   }
 }
+.course-flex-container {
+	display: flex;
+	align-items: flex-start;
+	gap: 24px;
+	width: 100%;
+
+	@media (max-width: 576px) {
+		flex-direction: column;
+		align-items: center;
+	}
+}
+
+.course-avatar-container {
+	flex-shrink: 0;
+}
+
+.course-title-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 8px;
+}
+
+.course-actions > button {
+	margin-left: 8px;
+}

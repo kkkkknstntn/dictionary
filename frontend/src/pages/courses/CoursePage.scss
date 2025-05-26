@@ -174,4 +174,24 @@
 	.join-button .short-label {
 		display: inline;
 	}
+
+	/* NEW: force ant-space inside .course-header to stack vertically */
+	.course-header > .ant-space {
+		display: flex !important;
+		flex-direction: column !important;
+		align-items: center !important;
+		width: 100%;
+	}
+
+	.course-title-row {
+		width: 100%;
+		text-align: center;
+		justify-content: center;
+		flex-direction: column;
+		margin-top: 12px;
+	}
+
+	.course-meta {
+		justify-content: center;
+	}
 }
