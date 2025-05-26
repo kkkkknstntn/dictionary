@@ -11,7 +11,7 @@ logging:
   level:
     org.springdoc: DEBUG
     org.springframework: DEBUG
-    ru.dictionary: DEBUG
+    ru.backend: DEBUG
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -51,13 +51,11 @@ spring:
     password: postgres
   jpa:
     hibernate:
-      ddl-auto: create-drop # Временно установите это значение
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        hbm2ddl:
-          foreign_keys: true
     database: postgresql
   data:
     elasticsearch:
@@ -76,27 +74,26 @@ spring:
       time-to-live: 600000
   mail:
     host: smtp.yandex.ru
-    port: 465
-    username: "doedating@yandex.ru"
-    password: "mrzvlstuwsgocmue"
-    test-connection: true
-    protocol: smtps
+    port: 587
+    username: kirilenko.konstantyn@yandex.ru
+    password: snzvxjglzsiwmpeu
     properties:
       mail:
+        debug:
+          true
         smtp:
           auth: true
-          ssl:
-            enable: true
           starttls:
             enable: true
           connectiontimeout: 5000
           timeout: 3000
           writetimeout: 5000
+          localaddress: 0.0.0.0
 
 mailing:
-  activation-url: http://localhost:5173/activate-account
-  email-address-sender: "doedating@yandex.ru"
-  activation-token-expiration: 7200
+  activation-url: https://sgucrs.ru/activate-account
+  email-address-sender: "kirilenko.konstantyn@yandex.ru"
+  activation-token-expiration: 3600
 
 elasticsearch:
   index:

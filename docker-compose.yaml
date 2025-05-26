@@ -151,6 +151,7 @@ services:
       timeout: 5s
       retries: 3
   backend:
+    container_name: backend
     build:
       context: ./dictionary
       dockerfile: Dockerfile

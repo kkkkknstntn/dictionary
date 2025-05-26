@@ -61,15 +61,19 @@ public class ActivationServiceImpl implements ActivationService {
 
     @Override
     public void sendActivationEmail(User user) {
-        String token = generateAndSaveActivationToken(user.getUsername());
-        emailService.sendEmail(
-                user.getUsername(),
-                user.getUsername(),
-                EmailTemplateName.ACTIVATE_ACCOUNT,
-                emailConfig.getActivationUrl() + "?email=" + user.getUsername() + "&token=" + token,
-                token,
-                "Account Activation"
-        );
+        try {
+            String token = generateAndSaveActivationToken(user.getUsername());
+            emailService.sendEmail(
+                    user.getUsername(),
+                    user.getUsername(),
+                    EmailTemplateName.ACTIVATE_ACCOUNT,
+                    emailConfig.getActivationUrl() + "?email=" + user.getUsername() + "&token=" + token,
+                    token,
+                    "Account Activation"
+            );
+        } catch (Exception e) {
+            enableUser(user);
+        }
     }
 
     private void deactivateExistingTokens(String email, MailTokenType tokenType) {
