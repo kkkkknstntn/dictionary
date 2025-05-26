@@ -56,7 +56,7 @@ public class CourseServiceImpl implements CourseService {
         }
     }
 
-    @Cacheable("allCourses")
+    //@Cacheable("allCourses")
     public List<CourseResponseDTO> getAllCourses() {
         return courseRepository.findAll().stream()
                 .map(courseMapper::toResponseDTO)
@@ -64,7 +64,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    @Cacheable(value = "courses", key = "#query")
+    //@Cacheable(value = "courses", key = "#query")
     public List<CourseResponseDTO> getCourses(String query) {
         List<Long> courseIds = courseDocumentRepository.searchCourses(query)
                 .stream()
@@ -173,7 +173,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Transactional
-    @Cacheable(value = "courseProgress", key = "#courseId")
+    //@Cacheable(value = "courseProgress", key = "#courseId")
     public List<ProgressAverageDTO> getCourseUserProgress(Long courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND, "Course ID: " + courseId));
@@ -185,7 +185,7 @@ public class CourseServiceImpl implements CourseService {
                 .collect(Collectors.toList());
     }
 
-    @Cacheable(value = "courses", key = "#id")
+    //@Cacheable(value = "courses", key = "#id")
     @Override
     public CourseResponseDTO getCourseById(Long id) {
         Course course = courseRepository.findById(id)

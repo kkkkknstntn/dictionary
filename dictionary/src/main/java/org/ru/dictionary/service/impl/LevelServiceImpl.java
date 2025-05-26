@@ -32,11 +32,11 @@ public class LevelServiceImpl implements LevelService {
     private final LevelMapper levelMapper;
 
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = "levels", key = "#dto.courseId"),
-            @CacheEvict(value = "courseLevels", key = "#dto.courseId"),
-            @CacheEvict(value = "words", allEntries = true)
-    })
+//    @Caching(evict = {
+//            @CacheEvict(value = "levels", key = "#dto.courseId"),
+//            @CacheEvict(value = "courseLevels", key = "#dto.courseId"),
+//            @CacheEvict(value = "words", allEntries = true)
+//    })
     public LevelResponseDTO createLevel(LevelRequestDTO dto, UserDetails userDetails) {
         Course course = courseRepository.findById(dto.getCourseId())
                 .orElseThrow(() -> new ApiException(
@@ -53,7 +53,7 @@ public class LevelServiceImpl implements LevelService {
         return levelMapper.toResponseDTO(levelRepository.save(level));
     }
 
-    @Cacheable(value = "levelDetails", key = "#levelId")
+    //////@Cacheable(value = "levelDetails", key = "#levelId")
     public LevelResponseDTO getLevelById(Long levelId) {
         Level level = levelRepository.findById(levelId)
                 .orElseThrow(() -> new ApiException(
@@ -63,7 +63,7 @@ public class LevelServiceImpl implements LevelService {
         return levelMapper.toResponseDTO(level);
     }
 
-    @Cacheable(value = "courseLevels", key = "#courseId")
+    //////@Cacheable(value = "courseLevels", key = "#courseId")
     public List<LevelResponseDTO> getAllLevelsByCourse(Long courseId) {
         return levelRepository.findByCourseIdOrderByOrderNumberAsc(courseId).stream()
                 .map(levelMapper::toResponseDTO)
@@ -71,10 +71,10 @@ public class LevelServiceImpl implements LevelService {
     }
 
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = "levelDetails", key = "#levelId"),
-            @CacheEvict(value = "words", allEntries = true)
-    })
+//    @Caching(evict = {
+//            @CacheEvict(value = "levelDetails", key = "#levelId"),
+//            @CacheEvict(value = "words", allEntries = true)
+//    })
     public LevelResponseDTO updateLevel(Long levelId, LevelRequestDTO dto, UserDetails userDetails) {
         Level level = levelRepository.findById(levelId)
                 .orElseThrow(() -> new ApiException(
@@ -89,11 +89,11 @@ public class LevelServiceImpl implements LevelService {
     }
 
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = "levelDetails", key = "#levelId"),
-            @CacheEvict(value = "words", allEntries = true),
-            @CacheEvict(value = "userLearningMaterials", allEntries = true)
-    })
+//    @Caching(evict = {
+//            @CacheEvict(value = "levelDetails", key = "#levelId"),
+//            @CacheEvict(value = "words", allEntries = true),
+//            @CacheEvict(value = "userLearningMaterials", allEntries = true)
+//    })
     public void deleteLevel(Long levelId, UserDetails userDetails) {
         Level level = levelRepository.findById(levelId)
                 .orElseThrow(() -> new ApiException(

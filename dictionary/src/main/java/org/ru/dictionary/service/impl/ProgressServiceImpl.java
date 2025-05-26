@@ -31,10 +31,10 @@ public class ProgressServiceImpl implements ProgressService {
 
     @Transactional
     @CacheEvict(value = "userWordProgress", key = "{#user.id, #wordId}")
-    @Caching(evict = {
-            @CacheEvict(value = "words", key = "#wordId"),
-            @CacheEvict(value = "userWordProgress", key = "{#user.id, #wordId}")
-    })
+//    @Caching(evict = {
+//            @CacheEvict(value = "words", key = "#wordId"),
+//            @CacheEvict(value = "userWordProgress", key = "{#user.id, #wordId}")
+//    })
     public void updateProgress(User user, Long wordId, int delta) {
         Word word = wordRepository.findById(wordId)
                 .orElseThrow(() -> new ApiException(
@@ -55,7 +55,7 @@ public class ProgressServiceImpl implements ProgressService {
         progressRepository.save(progress);
     }
 
-    @Cacheable(value = "userWordProgress", key = "{#userId, #wordId}")
+    //@Cacheable(value = "userWordProgress", key = "{#userId, #wordId}")
     public Integer getProgress(Long userId, Long wordId) {
         if (!userRepository.existsById(userId)) {
             throw new ApiException(

@@ -3,6 +3,7 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { createBrowserRouter } from 'react-router-dom'
 import { MainLayout } from './app/layouts/MainLayout'
+import { HomePage } from './pages/home/HomePage'
 import { CoursePage } from './pages/courses/CoursePage'
 import { CoursesPage } from './pages/courses/CoursesPage'
 import { LevelPage } from './pages/level/LevelPage'
@@ -11,6 +12,10 @@ import { UserProgressPage } from './pages/progress/UserProgressPage'
 import { WordPage } from './pages/word/WordPage'
 
 export const router = createBrowserRouter([
+	{
+		path: '/',
+		element: <HomePage />,
+	},
 	{
 		path: '/login',
 		element: <LoginPage />,
