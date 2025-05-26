@@ -128,13 +128,13 @@ export const LevelPage = () => {
 	}
 
 	const handleStartEditing = () => {
-		setEditedTitle(level?.title || '')
+		setEditedTitle(level?.name || '')
 		setIsEditing(true)
 	}
 
 	const handleCancelEditing = () => {
 		setIsEditing(false)
-		setEditedTitle(level?.title || '')
+		setEditedTitle(level?.name || '')
 	}
 
 	const handleSave = async () => {
