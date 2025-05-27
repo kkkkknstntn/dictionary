@@ -5,6 +5,8 @@ import {
 	useWordDetails,
 	useWordNavigation,
 } from '@/hooks/api/word.hooks'
+import { useIsCourseAuthor } from '@/hooks/api/level-extra.hooks'
+import { useCurrentUser } from '@/hooks/api/user.hooks'
 import {
 	ArrowLeftOutlined,
 	ArrowRightOutlined,
@@ -27,6 +29,8 @@ export const WordPage = () => {
 	const navigate = useNavigate()
 	const { data: word, isLoading } = useWordDetails(Number(id))
 	const { data: progress } = useWordProgress(Number(id))
+	const { data: currentUser } = useCurrentUser()
+	const { data: isAuthor } = useIsCourseAuthor(word?.levelId, currentUser?.username)
 	const { canGoNext, canGoPrevious, goToNextWord, goToPreviousWord } =
 		useWordNavigation(Number(id), word?.levelId ?? 0)
 	const [isEditing, setIsEditing] = useState(false)
@@ -174,15 +178,19 @@ export const WordPage = () => {
 									>
 										Далее
 									</Button>
-									<Button
-										icon={<EditOutlined />}
-										onClick={handleStartEditing}
-									/>
-									<Button
-										danger
-										icon={<DeleteOutlined />}
-										onClick={handleDeleteWord}
-									/>
+									{isAuthor && (
+										<>
+											<Button
+												icon={<EditOutlined />}
+												onClick={handleStartEditing}
+											/>
+											<Button
+												danger
+												icon={<DeleteOutlined />}
+												onClick={handleDeleteWord}
+											/>
+										</>
+									)}
 								</>
 							) : (
 								<>
