@@ -53,7 +53,7 @@ export const LevelList = ({ levels, isAuthor, isEditing }: Props) => {
 							<Space>
 								<Typography.Text strong>{level.name}</Typography.Text>
 								<Typography.Text type='secondary'>
-									Слов: {level.wordsCount}
+									Слов: {level.words.length}
 								</Typography.Text>
 							</Space>
 						}
