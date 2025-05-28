@@ -32,7 +32,8 @@ public class Level {
     @OneToMany(
             mappedBy = "level",
             cascade = CascadeType.ALL,
-            orphanRemoval = true
+            orphanRemoval = true,
+            fetch = FetchType.EAGER
     )
     @OrderBy("orderNumber ASC")
     @OnDelete(action = OnDeleteAction.CASCADE)

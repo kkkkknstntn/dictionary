@@ -51,7 +51,7 @@ spring:
     password: postgres
   jpa:
     hibernate:
-      ddl-auto: create-drop # Временно установите это значение
+      ddl-auto: update # Временно установите это значение
     show-sql: true
     properties:
       hibernate:
