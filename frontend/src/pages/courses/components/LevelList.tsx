@@ -1,11 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
 import { useDeleteLevel } from '@/hooks/api/level.hooks'
 import { useWordsByLevel } from '@/hooks/api/word.hooks'
 import type { LevelResponseDTO } from '@/shared/types/level'
 import { DeleteOutlined } from '@ant-design/icons'
 import { Button, List, message, Space, Typography, Spin } from 'antd'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
 
 interface Props {
 	levels: LevelResponseDTO[]
