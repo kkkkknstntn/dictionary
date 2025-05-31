@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: dict_db
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - dictionary_pgdata:/var/lib/postgresql/data
     networks:
       - app-network
     ports:
@@ -171,6 +171,7 @@ services:
 
 volumes:
   pgdata:
+  dictionary_pgdata:
   elasticsearch_data:
   logstash_data:
   redis_data:
