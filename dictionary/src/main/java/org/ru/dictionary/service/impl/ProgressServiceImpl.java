@@ -30,7 +30,7 @@ public class ProgressServiceImpl implements ProgressService {
     private final UserMapper userMapper;
 
     @Transactional
-    @CacheEvict(value = "userWordProgress", key = "{#user.id, #wordId}")
+//    @CacheEvict(value = "userWordProgress", key = "{#user.id, #wordId}")
 //    @Caching(evict = {
 //            @CacheEvict(value = "words", key = "#wordId"),
 //            @CacheEvict(value = "userWordProgress", key = "{#user.id, #wordId}")
