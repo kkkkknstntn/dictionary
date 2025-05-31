@@ -80,7 +80,7 @@ public class CourseServiceImpl implements CourseService {
                 .collect(Collectors.toList());
     }
     @Transactional
-    @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
+//    @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
     public CourseResponseDTO createCourse(CourseRequestDTO dto) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User author = userRepository.findByUsername(username)
@@ -101,7 +101,7 @@ public class CourseServiceImpl implements CourseService {
 
 
     @Transactional
-    @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
+//    @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
     public CourseResponseDTO updateCourse(Long courseId, CourseRequestDTO dto) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND));
@@ -119,7 +119,7 @@ public class CourseServiceImpl implements CourseService {
 
 
     @Transactional
-    @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
+//    @CacheEvict(value = {"allCourses", "courses"}, allEntries = true)
     public List<CourseResponseDTO> getUserCourses() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username)
@@ -132,7 +132,7 @@ public class CourseServiceImpl implements CourseService {
 
 
     @Transactional
-    @CacheEvict(value = {"allCourses", "courses", "userCourses"}, allEntries = true)
+//    @CacheEvict(value = {"allCourses", "courses", "userCourses"}, allEntries = true)
     public void deleteCourse(Long courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,
@@ -153,7 +153,7 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Transactional
-    @CacheEvict(value = "userCourses", key = "#userDetails.username")
+//    @CacheEvict(value = "userCourses", key = "#userDetails.username")
     public CourseResponseDTO joinCourse(Long courseId, UserDetails userDetails) {
         Course course = courseRepository.findByIdWithParticipants(courseId)
                 .orElseThrow(() -> new ApiException(BusinessErrorCodes.COURSE_NOT_FOUND,
